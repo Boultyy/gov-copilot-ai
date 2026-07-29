@@ -48,7 +48,7 @@ export const Route = createFileRoute("/")({
       { property: "og:title", content: "Decision Intelligence Dashboard | GovCopilot" },
       {
         property: "og:description",
-        content: "KPIs, grievance analytics and AI insights for district administration.",
+        content: "Live KPIs, pending cases, citizen grievance analytics and AI insights for district administration in one government dashboard.",
       },
     ],
   }),

@@ -82,20 +82,24 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
     meta: [
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1" },
-      { title: "GovCopilot — AI Copilot for Government" },
+      { title: "Decision Intelligence Dashboard | GovCopilot" },
       {
         name: "description",
         content:
-          "GovCopilot is an AI workspace for government offices: document intelligence, workflow guidance, policy conflict checks, decision dashboards and draft generation.",
+          "Live KPIs, pending cases, citizen grievance analytics and AI insights for district administration in one government dashboard.",
       },
       { name: "author", content: "GovCopilot" },
-      { property: "og:title", content: "GovCopilot — AI Copilot for Government" },
+      { property: "og:title", content: "Decision Intelligence Dashboard | GovCopilot" },
       {
         property: "og:description",
-        content: "AI workspace for government offices, built for Smart India Hackathon.",
+        content: "Live KPIs, pending cases, citizen grievance analytics and AI insights for district administration in one government dashboard.",
       },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
+      { name: "twitter:title", content: "Decision Intelligence Dashboard | GovCopilot" },
+      { name: "twitter:description", content: "Live KPIs, pending cases, citizen grievance analytics and AI insights for district administration in one government dashboard." },
+      { property: "og:image", content: "https://pub-bb2e103a32db4e198524a2e9ed8f35b4.r2.dev/dc8bd9cf-79a0-4b72-b7a5-0ee4d5e60f42/id-preview-05ad64a2--7af24417-ad52-4825-abbf-82e4c88cd467.lovable.app-1785319794089.png" },
+      { name: "twitter:image", content: "https://pub-bb2e103a32db4e198524a2e9ed8f35b4.r2.dev/dc8bd9cf-79a0-4b72-b7a5-0ee4d5e60f42/id-preview-05ad64a2--7af24417-ad52-4825-abbf-82e4c88cd467.lovable.app-1785319794089.png" },
     ],
     links: [
       {
