@@ -8,6 +8,7 @@ import {
   Landmark,
   Route as RouteIcon,
   Search,
+  ArrowRight,
 } from "lucide-react";
 
 import { PageHeader } from "@/components/page-header";
@@ -59,7 +60,7 @@ function Workflow() {
         eyebrow="Module 02"
         title="Workflow Copilot"
         description="Find any citizen service and follow the exact official procedure."
-        icon={<RouteIcon className="h-5 w-5" />}
+        icon={<RouteIcon className="h-6 w-6" />}
       />
 
       <div className="relative animate-rise">
@@ -81,10 +82,10 @@ function Workflow() {
                 setActiveId(s.id);
                 setDone([]);
               }}
-              className={`w-full rounded-xl border p-3 text-left transition-all duration-200 hover:-translate-y-0.5 ${
+              className={`w-full rounded-xl border p-3 text-left transition-all duration-300 hover:shadow-md ${
                 s.id === activeId
-                  ? "border-primary bg-accent/70 shadow-[var(--shadow-card)]"
-                  : "border-border bg-card"
+                  ? "border-primary bg-primary/5 shadow-md shadow-primary/5 ring-1 ring-primary/20"
+                  : "border-border bg-card hover:border-primary/30"
               }`}
             >
               <p className="truncate text-sm font-semibold text-foreground">{s.name}</p>
@@ -105,7 +106,7 @@ function Workflow() {
               { icon: CalendarClock, label: "Timeline", value: active.timeline },
               { icon: CircleDollarSign, label: "Fee", value: active.fee },
             ].map((m) => (
-              <Card key={m.label} className="animate-rise gradient-surface">
+              <Card key={m.label} className="animate-rise border-border/50 bg-muted/30 shadow-sm transition-shadow hover:shadow-md">
                 <CardContent className="flex items-center gap-3 p-4">
                   <m.icon className="h-5 w-5 shrink-0 text-primary" />
                   <div className="min-w-0">
@@ -127,7 +128,7 @@ function Workflow() {
               <ol className="relative space-y-5 border-l border-border pl-6">
                 {active.steps.map((st, i) => (
                   <li key={st.title} className="relative">
-                    <span className="gradient-primary absolute -left-[31px] grid h-6 w-6 place-items-center rounded-full text-[11px] font-bold text-primary-foreground">
+                    <span className="absolute -left-[31px] grid h-6 w-6 place-items-center rounded-full bg-primary text-[10px] font-bold text-white shadow-lg shadow-primary/20">
                       {i + 1}
                     </span>
                     <div className="grid grid-cols-[minmax(0,1fr)_auto] items-start gap-3">
