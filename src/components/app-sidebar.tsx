@@ -6,6 +6,10 @@ import {
   PenLine,
   Route as RouteIcon,
   ShieldCheck,
+  Landmark,
+  Sparkle,
+  Settings,
+  User,
 } from "lucide-react";
 
 import {
@@ -21,13 +25,20 @@ import {
   SidebarMenuItem,
   useSidebar,
 } from "@/components/ui/sidebar";
+import { cn } from "@/lib/utils";
 
-const modules = [
-  { title: "Decision Intelligence", url: "/", icon: BarChart3, hint: "KPIs & insights" },
-  { title: "Document Intelligence", url: "/documents", icon: FileSearch, hint: "Ask your files" },
-  { title: "Workflow Copilot", url: "/workflow", icon: RouteIcon, hint: "Service procedures" },
-  { title: "Policy Conflict Checker", url: "/policy", icon: GitCompareArrows, hint: "Compare policies" },
-  { title: "AI Draft Generator", url: "/drafts", icon: PenLine, hint: "Letters & orders" },
+const primaryNav = [
+  { title: "Dashboard", url: "/", icon: BarChart3 },
+  { title: "Copilot", url: "/copilot", icon: Sparkle },
+  { title: "Schemes", url: "/schemes", icon: Landmark },
+  { title: "Eligibility", url: "/eligibility", icon: ShieldCheck },
+  { title: "Documents", url: "/documents", icon: FileSearch },
+  { title: "Applications", url: "/applications", icon: RouteIcon },
+];
+
+const advancedModules = [
+  { title: "Policy Checker", url: "/policy", icon: GitCompareArrows },
+  { title: "Draft Generator", url: "/drafts", icon: PenLine },
 ];
 
 export function AppSidebar() {
@@ -57,10 +68,10 @@ export function AppSidebar() {
 
       <SidebarContent>
         <SidebarGroup>
-          <SidebarGroupLabel>Modules</SidebarGroupLabel>
+          <SidebarGroupLabel>Menu</SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>
-              {modules.map((item) => {
+              {primaryNav.map((item) => {
                 const active = pathname === item.url;
                 return (
                   <SidebarMenuItem key={item.url}>
@@ -68,16 +79,43 @@ export function AppSidebar() {
                       asChild
                       isActive={active}
                       tooltip={item.title}
-                      className="h-auto py-2"
+                      className="h-10 px-3 transition-all duration-200"
                     >
-                      <Link to={item.url} className="flex items-start gap-3">
-                        <item.icon className="mt-0.5 h-4 w-4 shrink-0" />
+                      <Link to={item.url} className="flex items-center gap-3">
+                        <item.icon className={cn("h-4.5 w-4.5 shrink-0", active ? "text-primary" : "text-muted-foreground")} />
                         {!collapsed && (
-                          <span className="min-w-0 leading-tight">
-                            <span className="block truncate text-sm font-medium">{item.title}</span>
-                            <span className="block truncate text-[11px] text-muted-foreground">
-                              {item.hint}
-                            </span>
+                          <span className={cn("text-sm font-medium", active ? "text-primary" : "text-sidebar-foreground")}>
+                            {item.title}
+                          </span>
+                        )}
+                      </Link>
+                    </SidebarMenuButton>
+                  </SidebarMenuItem>
+                );
+              })}
+            </SidebarMenu>
+          </SidebarGroupContent>
+        </SidebarGroup>
+
+        <SidebarGroup className="mt-4">
+          <SidebarGroupLabel>Advanced Tools</SidebarGroupLabel>
+          <SidebarGroupContent>
+            <SidebarMenu>
+              {advancedModules.map((item) => {
+                const active = pathname === item.url;
+                return (
+                  <SidebarMenuItem key={item.url}>
+                    <SidebarMenuButton
+                      asChild
+                      isActive={active}
+                      tooltip={item.title}
+                      className="h-10 px-3 transition-all duration-200"
+                    >
+                      <Link to={item.url} className="flex items-center gap-3">
+                        <item.icon className={cn("h-4.5 w-4.5 shrink-0", active ? "text-primary" : "text-muted-foreground")} />
+                        {!collapsed && (
+                          <span className={cn("text-sm font-medium", active ? "text-primary" : "text-sidebar-foreground")}>
+                            {item.title}
                           </span>
                         )}
                       </Link>
@@ -90,16 +128,26 @@ export function AppSidebar() {
         </SidebarGroup>
       </SidebarContent>
 
-      {!collapsed && (
-        <SidebarFooter className="p-3">
-          <div className="rounded-xl border border-sidebar-border bg-sidebar-accent/60 p-3">
-            <p className="text-xs font-semibold text-sidebar-accent-foreground">Demo Mode</p>
-            <p className="mt-1 text-[11px] leading-snug text-muted-foreground">
-              Sample data only. Built for Smart India Hackathon.
-            </p>
-          </div>
-        </SidebarFooter>
-      )}
+      <SidebarFooter className="p-3 border-t border-sidebar-border">
+        <SidebarMenu>
+          <SidebarMenuItem>
+            <SidebarMenuButton asChild tooltip="Settings" className="h-10 px-3">
+              <Link to="/" className="flex items-center gap-3">
+                <Settings className="h-4.5 w-4.5 text-muted-foreground" />
+                {!collapsed && <span className="text-sm font-medium text-sidebar-foreground">Settings</span>}
+              </Link>
+            </SidebarMenuButton>
+          </SidebarMenuItem>
+          <SidebarMenuItem>
+            <SidebarMenuButton asChild tooltip="Profile" className="h-10 px-3">
+              <Link to="/" className="flex items-center gap-3">
+                <User className="h-4.5 w-4.5 text-muted-foreground" />
+                {!collapsed && <span className="text-sm font-medium text-sidebar-foreground">Profile</span>}
+              </Link>
+            </SidebarMenuButton>
+          </SidebarMenuItem>
+        </SidebarMenu>
+      </SidebarFooter>
     </Sidebar>
   );
 }

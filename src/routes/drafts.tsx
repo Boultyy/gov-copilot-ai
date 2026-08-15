@@ -58,7 +58,7 @@ function Drafts() {
         eyebrow="Module 05"
         title="AI Draft Generator"
         description="Turn a one-line instruction into a correctly formatted government document."
-        icon={<PenLine className="h-5 w-5" />}
+        icon={<PenLine className="h-6 w-6" />}
       />
 
       <div className="grid gap-4 lg:grid-cols-[380px_minmax(0,1fr)]">
@@ -79,10 +79,10 @@ function Drafts() {
                       setTypeId(d.id);
                       setOutput(null);
                     }}
-                    className={`rounded-xl border p-3 text-left transition-all duration-200 hover:-translate-y-0.5 ${
+                    className={`rounded-xl border p-3 text-left transition-all duration-300 hover:shadow-md ${
                       d.id === typeId
-                        ? "border-primary bg-accent/70 shadow-[var(--shadow-card)]"
-                        : "border-border bg-card"
+                        ? "border-primary bg-primary/5 shadow-md shadow-primary/5 ring-1 ring-primary/20"
+                        : "border-border bg-card hover:border-primary/30"
                     }`}
                   >
                     <p className="text-sm font-semibold">{d.label}</p>
@@ -96,7 +96,7 @@ function Drafts() {
               <Label htmlFor="ref" className="text-xs uppercase tracking-wider text-muted-foreground">
                 Reference number
               </Label>
-              <Input id="ref" value={ref} onChange={(e) => setRef(e.target.value)} />
+              <Input id="ref" value={ref} onChange={(e) => setRef(e.target.value)} className="rounded-xl bg-muted/30" />
             </div>
 
             <div className="space-y-2">
@@ -109,10 +109,11 @@ function Drafts() {
                 value={prompt}
                 onChange={(e) => setPrompt(e.target.value)}
                 placeholder="Describe what the document should convey…"
+                className="rounded-xl bg-muted/30 resize-none focus-visible:ring-primary/20"
               />
             </div>
 
-            <Button className="w-full rounded-xl" onClick={generate} disabled={busy}>
+            <Button className="w-full rounded-xl shadow-lg shadow-primary/20 py-6" onClick={generate} disabled={busy}>
               <Wand2 className="mr-2 h-4 w-4" />
               {busy ? "Drafting…" : "Generate draft"}
             </Button>

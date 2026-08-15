@@ -58,7 +58,7 @@ export function Dropzone({
           className="sr-only"
           onChange={(e) => handleFiles(e.target.files)}
         />
-        <span className="gradient-primary grid h-11 w-11 place-items-center rounded-full text-primary-foreground">
+        <span className="flex h-11 w-11 items-center justify-center rounded-full bg-primary text-primary-foreground shadow-lg shadow-primary/20">
           <UploadCloud className="h-5 w-5" />
         </span>
         <span className="text-sm font-semibold text-foreground">
