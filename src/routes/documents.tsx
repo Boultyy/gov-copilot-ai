@@ -59,7 +59,7 @@ function Documents() {
         eyebrow="Module 01"
         title="AI Document Intelligence"
         description="Ask questions across uploaded files — every answer is backed by source citations."
-        icon={<FileSearch className="h-5 w-5" />}
+        icon={<FileSearch className="h-6 w-6" />}
       />
 
       <div className="grid gap-4 lg:grid-cols-[340px_minmax(0,1fr)]">
@@ -89,7 +89,7 @@ function Documents() {
             {turns.map((t, i) =>
               t.role === "user" ? (
                 <div key={i} className="animate-rise flex justify-end">
-                  <p className="max-w-[80%] rounded-2xl rounded-br-sm bg-primary px-4 py-2.5 text-sm text-primary-foreground">
+                  <p className="max-w-[80%] rounded-2xl rounded-tr-sm bg-primary px-4 py-2.5 text-sm text-primary-foreground shadow-md shadow-primary/10">
                     {t.text}
                   </p>
                 </div>
@@ -104,7 +104,7 @@ function Documents() {
                       {t.citations.map((c, ci) => (
                         <div
                           key={ci}
-                          className="rounded-xl border border-border bg-muted/40 p-3 transition-colors hover:bg-accent/50"
+                          className="rounded-xl border border-border bg-muted/30 p-4 transition-all hover:border-primary/30 hover:bg-card hover:shadow-md"
                         >
                           <div className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-2">
                             <span className="truncate text-xs font-semibold text-primary">
@@ -139,7 +139,7 @@ function Documents() {
                 <button
                   key={q}
                   onClick={() => ask(q)}
-                  className="rounded-full border border-border bg-muted/50 px-3 py-1.5 text-xs text-muted-foreground transition-colors hover:border-primary hover:bg-accent hover:text-accent-foreground"
+                  className="rounded-full border border-border bg-card px-3 py-1.5 text-xs font-medium text-muted-foreground transition-all hover:border-primary/30 hover:bg-primary/5 hover:text-primary"
                 >
                   {q}
                 </button>
