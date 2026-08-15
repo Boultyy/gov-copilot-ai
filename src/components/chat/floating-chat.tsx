@@ -436,3 +436,4 @@ export function FloatingChat() {
       </Button>
     </div>
   );
+}
