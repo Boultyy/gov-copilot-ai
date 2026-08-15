@@ -49,3 +49,43 @@ export const saveSchemeChatMessage = createServerFn({ method: "POST" })
 
     return insertedData;
   });
+
+export const deleteSchemeChatMessage = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .validator((data: { id: string }) =>
+    z.object({ id: z.string().uuid() }).parse(data)
+  )
+  .handler(async ({ data, context }) => {
+    const { supabase, userId } = context;
+
+    const { error } = await supabase
+      .from("scheme_chat_messages")
+      .delete()
+      .eq("id", data.id)
+      .eq("user_id", userId);
+
+    if (error) {
+      console.error("Error deleting chat message:", error);
+      throw new Error("Failed to delete chat message");
+    }
+
+    return { success: true };
+  });
+
+export const clearSchemeChatHistory = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }) => {
+    const { supabase, userId } = context;
+
+    const { error } = await supabase
+      .from("scheme_chat_messages")
+      .delete()
+      .eq("user_id", userId);
+
+    if (error) {
+      console.error("Error clearing chat history:", error);
+      throw new Error("Failed to clear chat history");
+    }
+
+    return { success: true };
+  });
