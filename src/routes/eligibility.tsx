@@ -111,7 +111,7 @@ function Eligibility() {
               </div>
             </div>
 
-            <Separator className="bg-primary/20" />
+            <div className="h-px w-full bg-primary/20" />
 
             <div className="space-y-3">
               <h4 className="text-sm font-bold text-foreground">Next Steps</h4>
