@@ -11,9 +11,13 @@
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as WorkflowRouteImport } from './routes/workflow'
 import { Route as SitemapDotxmlRouteImport } from './routes/sitemap[.]xml'
+import { Route as SchemesRouteImport } from './routes/schemes'
 import { Route as PolicyRouteImport } from './routes/policy'
+import { Route as EligibilityRouteImport } from './routes/eligibility'
 import { Route as DraftsRouteImport } from './routes/drafts'
 import { Route as DocumentsRouteImport } from './routes/documents'
+import { Route as CopilotRouteImport } from './routes/copilot'
+import { Route as ApplicationsRouteImport } from './routes/applications'
 import { Route as IndexRouteImport } from './routes/index'
 
 const WorkflowRoute = WorkflowRouteImport.update({
@@ -26,9 +30,19 @@ const SitemapDotxmlRoute = SitemapDotxmlRouteImport.update({
   path: '/sitemap.xml',
   getParentRoute: () => rootRouteImport,
 } as any)
+const SchemesRoute = SchemesRouteImport.update({
+  id: '/schemes',
+  path: '/schemes',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const PolicyRoute = PolicyRouteImport.update({
   id: '/policy',
   path: '/policy',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const EligibilityRoute = EligibilityRouteImport.update({
+  id: '/eligibility',
+  path: '/eligibility',
   getParentRoute: () => rootRouteImport,
 } as any)
 const DraftsRoute = DraftsRouteImport.update({
@@ -41,6 +55,16 @@ const DocumentsRoute = DocumentsRouteImport.update({
   path: '/documents',
   getParentRoute: () => rootRouteImport,
 } as any)
+const CopilotRoute = CopilotRouteImport.update({
+  id: '/copilot',
+  path: '/copilot',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApplicationsRoute = ApplicationsRouteImport.update({
+  id: '/applications',
+  path: '/applications',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
@@ -49,26 +73,38 @@ const IndexRoute = IndexRouteImport.update({
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/applications': typeof ApplicationsRoute
+  '/copilot': typeof CopilotRoute
   '/documents': typeof DocumentsRoute
   '/drafts': typeof DraftsRoute
+  '/eligibility': typeof EligibilityRoute
   '/policy': typeof PolicyRoute
+  '/schemes': typeof SchemesRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/workflow': typeof WorkflowRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/applications': typeof ApplicationsRoute
+  '/copilot': typeof CopilotRoute
   '/documents': typeof DocumentsRoute
   '/drafts': typeof DraftsRoute
+  '/eligibility': typeof EligibilityRoute
   '/policy': typeof PolicyRoute
+  '/schemes': typeof SchemesRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/workflow': typeof WorkflowRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/applications': typeof ApplicationsRoute
+  '/copilot': typeof CopilotRoute
   '/documents': typeof DocumentsRoute
   '/drafts': typeof DraftsRoute
+  '/eligibility': typeof EligibilityRoute
   '/policy': typeof PolicyRoute
+  '/schemes': typeof SchemesRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/workflow': typeof WorkflowRoute
 }
@@ -76,28 +112,50 @@ export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
+    | '/applications'
+    | '/copilot'
     | '/documents'
     | '/drafts'
+    | '/eligibility'
     | '/policy'
+    | '/schemes'
     | '/sitemap.xml'
     | '/workflow'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/documents' | '/drafts' | '/policy' | '/sitemap.xml' | '/workflow'
+  to:
+    | '/'
+    | '/applications'
+    | '/copilot'
+    | '/documents'
+    | '/drafts'
+    | '/eligibility'
+    | '/policy'
+    | '/schemes'
+    | '/sitemap.xml'
+    | '/workflow'
   id:
     | '__root__'
     | '/'
+    | '/applications'
+    | '/copilot'
     | '/documents'
     | '/drafts'
+    | '/eligibility'
     | '/policy'
+    | '/schemes'
     | '/sitemap.xml'
     | '/workflow'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  ApplicationsRoute: typeof ApplicationsRoute
+  CopilotRoute: typeof CopilotRoute
   DocumentsRoute: typeof DocumentsRoute
   DraftsRoute: typeof DraftsRoute
+  EligibilityRoute: typeof EligibilityRoute
   PolicyRoute: typeof PolicyRoute
+  SchemesRoute: typeof SchemesRoute
   SitemapDotxmlRoute: typeof SitemapDotxmlRoute
   WorkflowRoute: typeof WorkflowRoute
 }
@@ -118,11 +176,25 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof SitemapDotxmlRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/schemes': {
+      id: '/schemes'
+      path: '/schemes'
+      fullPath: '/schemes'
+      preLoaderRoute: typeof SchemesRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/policy': {
       id: '/policy'
       path: '/policy'
       fullPath: '/policy'
       preLoaderRoute: typeof PolicyRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/eligibility': {
+      id: '/eligibility'
+      path: '/eligibility'
+      fullPath: '/eligibility'
+      preLoaderRoute: typeof EligibilityRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/drafts': {
@@ -139,6 +211,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof DocumentsRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/copilot': {
+      id: '/copilot'
+      path: '/copilot'
+      fullPath: '/copilot'
+      preLoaderRoute: typeof CopilotRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/applications': {
+      id: '/applications'
+      path: '/applications'
+      fullPath: '/applications'
+      preLoaderRoute: typeof ApplicationsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/': {
       id: '/'
       path: '/'
@@ -151,9 +237,13 @@ declare module '@tanstack/react-router' {
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  ApplicationsRoute: ApplicationsRoute,
+  CopilotRoute: CopilotRoute,
   DocumentsRoute: DocumentsRoute,
   DraftsRoute: DraftsRoute,
+  EligibilityRoute: EligibilityRoute,
   PolicyRoute: PolicyRoute,
+  SchemesRoute: SchemesRoute,
   SitemapDotxmlRoute: SitemapDotxmlRoute,
   WorkflowRoute: WorkflowRoute,
 }
