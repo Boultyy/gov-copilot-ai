@@ -92,7 +92,7 @@ function Copilot() {
       {/* Copilot Sidebar */}
       <aside className="hidden w-72 flex-col border-r border-border bg-muted/30 lg:flex">
         <div className="p-4">
-          <Button className="w-full justify-start rounded-xl" variant="default">
+          <Button className="w-full justify-start rounded-xl shadow-lg shadow-primary/20 py-6" variant="default">
             <Plus className="mr-2 h-4 w-4" /> New Conversation
           </Button>
         </div>
@@ -134,20 +134,20 @@ function Copilot() {
             </div>
             <h2 className="font-display text-base font-bold">Copilot Assistant</h2>
           </div>
-          <Badge variant="outline" className="bg-success/10 text-success border-success/20">
-            <ShieldCheck className="mr-1.5 h-3 w-3" /> Secure Official Channel
-          </Badge>
+          <div className="flex items-center gap-2 rounded-full bg-success/10 px-3 py-1 border border-success/20 text-[10px] font-bold text-success uppercase tracking-wider">
+            <ShieldCheck className="h-3 w-3" /> Secure Official Channel
+          </div>
         </header>
 
         <div className="flex-1 overflow-y-auto p-6 lg:p-12" ref={scrollRef}>
           <div className="mx-auto max-w-3xl space-y-8">
             {messages.map((msg, i) => (
               <div key={i} className={cn("flex gap-4 animate-rise", msg.role === "user" ? "flex-row-reverse" : "flex-row")}>
-                <div className={cn("flex h-9 w-9 shrink-0 items-center justify-center rounded-xl", msg.role === "assistant" ? "bg-foreground text-white" : "bg-primary text-primary-foreground")}>
+                <div className={cn("flex h-9 w-9 shrink-0 items-center justify-center rounded-xl shadow-lg", msg.role === "assistant" ? "bg-primary text-white shadow-primary/20" : "bg-foreground text-white shadow-foreground/10")}>
                   {msg.role === "assistant" ? <Bot className="h-5 w-5" /> : <User className="h-5 w-5" />}
                 </div>
                 <div className={cn("flex flex-col gap-3", msg.role === "user" ? "items-end" : "items-start")}>
-                  <div className={cn("rounded-2xl px-5 py-3 text-sm leading-relaxed shadow-sm", msg.role === "assistant" ? "bg-muted text-foreground" : "bg-primary text-primary-foreground")}>
+                  <div className={cn("rounded-2xl px-5 py-3 text-sm leading-relaxed shadow-sm ring-1", msg.role === "assistant" ? "bg-card text-foreground ring-border shadow-md" : "bg-foreground text-white ring-foreground")}>
                     {msg.content}
                   </div>
                   {msg.type === "scheme" && (
@@ -174,10 +174,10 @@ function Copilot() {
                   )}
                   {msg.role === "assistant" && (
                     <div className="flex gap-2">
-                      <Button variant="ghost" size="sm" className="h-7 text-[10px] rounded-full px-3 bg-muted hover:bg-accent">
+                      <Button variant="ghost" size="sm" className="h-7 text-[10px] rounded-full px-3 bg-muted/50 hover:bg-primary/10 hover:text-primary transition-colors">
                         Save to Workspace
                       </Button>
-                      <Button variant="ghost" size="sm" className="h-7 text-[10px] rounded-full px-3 bg-muted hover:bg-accent">
+                      <Button variant="ghost" size="sm" className="h-7 text-[10px] rounded-full px-3 bg-muted/50 hover:bg-primary/10 hover:text-primary transition-colors">
                         Share Result
                       </Button>
                     </div>
@@ -207,7 +207,7 @@ function Copilot() {
                 placeholder="Ask GovCopilot about schemes, documents, or eligibility..."
                 className="h-14 rounded-2xl border-border bg-muted/30 pl-6 pr-14 shadow-inner"
               />
-              <Button onClick={handleSend} size="icon" className="absolute right-2 top-2 h-10 w-10 rounded-xl bg-foreground text-white hover:bg-foreground/90">
+              <Button onClick={handleSend} size="icon" className="absolute right-2 top-2 h-10 w-10 rounded-xl bg-primary text-white hover:bg-primary/90 shadow-lg shadow-primary/20 transition-all active:scale-95">
                 <SendHorizonal className="h-5 w-5" />
               </Button>
             </div>
