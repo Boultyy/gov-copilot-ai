@@ -172,7 +172,6 @@ export function FloatingChat() {
                   </div>
                 )}
               </div>
-            </div>
           </CardContent>
 
           <CardFooter className="flex flex-col gap-3 border-t bg-muted/30 p-4">
