@@ -433,6 +433,7 @@ export function FloatingChat() {
                   )}
                 </>
               )}
+              </div>
             </div>
           </CardContent>
 
