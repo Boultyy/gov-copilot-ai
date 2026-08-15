@@ -157,41 +157,49 @@ export function FloatingChat() {
           
           <CardContent className="flex-1 p-0 overflow-hidden flex flex-col">
             <div className="flex-1 overflow-y-auto p-4 space-y-4" ref={scrollRef}>
-              {messages.map((msg, i) => (
-                <div 
-                  key={i} 
-                  className={cn(
-                    "flex items-start gap-2.5 animate-in fade-in slide-in-from-bottom-2",
-                    msg.role === "user" ? "flex-row-reverse" : "flex-row"
+              {isLoading ? (
+                <div className="flex h-full items-center justify-center">
+                  <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+                </div>
+              ) : (
+                <>
+                  {messages.map((msg, i) => (
+                    <div 
+                      key={i} 
+                      className={cn(
+                        "flex items-start gap-2.5 animate-in fade-in slide-in-from-bottom-2",
+                        msg.role === "user" ? "flex-row-reverse" : "flex-row"
+                      )}
+                    >
+                      <div className={cn(
+                        "flex h-8 w-8 shrink-0 select-none items-center justify-center rounded-full text-[10px] font-bold",
+                        msg.role === "assistant" ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground border"
+                      )}>
+                        {msg.role === "assistant" ? <Bot className="h-4 w-4" /> : <User className="h-4 w-4" />}
+                      </div>
+                      <div className={cn(
+                        "max-w-[80%] rounded-2xl px-3.5 py-2 text-sm leading-relaxed shadow-sm",
+                        msg.role === "assistant" 
+                          ? "rounded-tl-sm bg-muted text-foreground" 
+                          : "rounded-tr-sm bg-primary text-primary-foreground"
+                      )}>
+                        {msg.content}
+                      </div>
+                    </div>
+                  ))}
+                  {isTyping && (
+                    <div className="flex items-start gap-2.5">
+                      <div className="bg-primary text-primary-foreground flex h-8 w-8 shrink-0 items-center justify-center rounded-full">
+                        <Bot className="h-4 w-4" />
+                      </div>
+                      <div className="bg-muted flex items-center gap-1 rounded-2xl rounded-tl-sm px-3.5 py-2">
+                        <span className="h-1 w-1 animate-bounce rounded-full bg-muted-foreground" style={{ animationDelay: '0ms' }} />
+                        <span className="h-1 w-1 animate-bounce rounded-full bg-muted-foreground" style={{ animationDelay: '150ms' }} />
+                        <span className="h-1 w-1 animate-bounce rounded-full bg-muted-foreground" style={{ animationDelay: '300ms' }} />
+                      </div>
+                    </div>
                   )}
-                >
-                  <div className={cn(
-                    "flex h-8 w-8 shrink-0 select-none items-center justify-center rounded-full text-[10px] font-bold",
-                    msg.role === "assistant" ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground border"
-                  )}>
-                    {msg.role === "assistant" ? <Bot className="h-4 w-4" /> : <User className="h-4 w-4" />}
-                  </div>
-                  <div className={cn(
-                    "max-w-[80%] rounded-2xl px-3.5 py-2 text-sm leading-relaxed shadow-sm",
-                    msg.role === "assistant" 
-                      ? "rounded-tl-sm bg-muted text-foreground" 
-                      : "rounded-tr-sm bg-primary text-primary-foreground"
-                  )}>
-                    {msg.content}
-                  </div>
-                </div>
-              ))}
-              {isTyping && (
-                <div className="flex items-start gap-2.5">
-                  <div className="bg-primary text-primary-foreground flex h-8 w-8 shrink-0 items-center justify-center rounded-full">
-                    <Bot className="h-4 w-4" />
-                  </div>
-                  <div className="bg-muted flex items-center gap-1 rounded-2xl rounded-tl-sm px-3.5 py-2">
-                    <span className="h-1 w-1 animate-bounce rounded-full bg-muted-foreground" style={{ animationDelay: '0ms' }} />
-                    <span className="h-1 w-1 animate-bounce rounded-full bg-muted-foreground" style={{ animationDelay: '150ms' }} />
-                    <span className="h-1 w-1 animate-bounce rounded-full bg-muted-foreground" style={{ animationDelay: '300ms' }} />
-                  </div>
-                </div>
+                </>
               )}
             </div>
           </CardContent>
