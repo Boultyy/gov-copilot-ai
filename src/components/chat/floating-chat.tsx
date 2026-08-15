@@ -10,9 +10,6 @@ import {
   Trash2,
   ExternalLink,
   FileText,
-  BookOpen,
-  ChevronRight,
-  ChevronDown as ChevronDownIcon,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
@@ -134,7 +131,6 @@ export function FloatingChat() {
   const [isOpen, setIsOpen] = useState(false);
   const [input, setInput] = useState("");
   const [isTyping, setIsTyping] = useState(false);
-  const [showSources, setShowSources] = useState(false);
   const [session, setSession] = useState<any>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
   const queryClient = useQueryClient();
@@ -258,8 +254,8 @@ export function FloatingChat() {
   return (
     <div className="fixed bottom-6 right-6 z-50 flex flex-col items-end gap-4">
       {isOpen && (
-        <Card className="animate-in fade-in slide-in-from-bottom-4 flex h-[600px] w-[380px] flex-col overflow-hidden shadow-2xl transition-all duration-300 sm:w-[420px]">
-          <CardHeader className="gradient-primary relative z-10 flex flex-row items-center justify-between rounded-t-xl py-4 text-primary-foreground">
+        <Card className="animate-in fade-in slide-in-from-bottom-4 flex h-[500px] w-[380px] flex-col shadow-2xl transition-all duration-300 sm:w-[420px]">
+          <CardHeader className="gradient-primary flex flex-row items-center justify-between rounded-t-xl py-4 text-primary-foreground">
             <div className="flex items-center gap-2">
               <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-white/20 backdrop-blur-sm">
                 <Bot className="h-5 w-5" />
@@ -273,18 +269,6 @@ export function FloatingChat() {
               </div>
             </div>
             <div className="flex items-center gap-1">
-              <Button
-                variant="ghost"
-                size="icon"
-                title="View Sources"
-                className={cn(
-                  "h-8 w-8 text-primary-foreground transition-colors hover:bg-white/10",
-                  showSources && "bg-white/20"
-                )}
-                onClick={() => setShowSources(!showSources)}
-              >
-                <BookOpen className="h-4 w-4" />
-              </Button>
               {session && !!history?.length && (
                 <Button
                   variant="ghost"
@@ -313,48 +297,7 @@ export function FloatingChat() {
           </CardHeader>
 
           <CardContent className="flex-1 p-0 overflow-hidden flex flex-col">
-            <div className="relative flex-1 overflow-hidden flex flex-col">
-              {showSources && (
-                <div className="absolute inset-0 z-20 flex flex-col bg-background/95 backdrop-blur-md animate-in slide-in-from-right-full duration-300">
-                  <div className="flex items-center justify-between border-b px-4 py-3">
-                    <h3 className="text-xs font-bold uppercase tracking-wider text-muted-foreground flex items-center gap-2">
-                      <BookOpen className="h-3.5 w-3.5" /> Source Directory
-                    </h3>
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      className="h-7 w-7"
-                      onClick={() => setShowSources(false)}
-                    >
-                      <X className="h-4 w-4" />
-                    </Button>
-                  </div>
-                  <div className="flex-1 overflow-y-auto p-4 space-y-4">
-                    {messages.some(m => m.sources && m.sources.length > 0) ? (
-                      messages.filter(m => m.sources && m.sources.length > 0).map((msg, mi) => (
-                        <div key={mi} className="space-y-3">
-                          <div className="flex items-center gap-2 text-[10px] font-medium text-primary/70">
-                            <Bot className="h-3 w-3" />
-                            <span>Response #{mi + 1} Citations</span>
-                          </div>
-                          <div className="space-y-2">
-                            {msg.sources?.map((s, si) => (
-                              <SourceAccordion key={si} source={s} index={si} />
-                            ))}
-                          </div>
-                        </div>
-                      ))
-                    ) : (
-                      <div className="flex h-full flex-col items-center justify-center gap-3 text-center text-muted-foreground">
-                        <FileText className="h-10 w-10 opacity-20" />
-                        <p className="text-sm">No citations found in current session.</p>
-                      </div>
-                    )}
-                  </div>
-                </div>
-              )}
-              
-              <div className="flex-1 overflow-y-auto p-4 space-y-4" ref={scrollRef}>
+            <div className="flex-1 overflow-y-auto p-4 space-y-4" ref={scrollRef}>
               {isLoading ? (
                 <div className="flex h-full items-center justify-center">
                   <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
@@ -433,7 +376,6 @@ export function FloatingChat() {
                   )}
                 </>
               )}
-              </div>
             </div>
           </CardContent>
 
@@ -494,58 +436,3 @@ export function FloatingChat() {
       </Button>
     </div>
   );
-}
-
-function SourceAccordion({ source, index }: { source: Source; index: number }) {
-  const [isExpanded, setIsExpanded] = useState(false);
-
-  return (
-    <div className="overflow-hidden rounded-xl border border-border/60 bg-muted/30 transition-all hover:border-primary/30">
-      <button
-        onClick={() => setIsExpanded(!isExpanded)}
-        className="flex w-full items-center justify-between px-3 py-2.5 text-left"
-      >
-        <div className="flex items-start gap-2.5">
-          <span className="mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-md bg-primary/10 text-[10px] font-bold text-primary">
-            {index + 1}
-          </span>
-          <div>
-            <span className="block text-[11px] font-semibold leading-tight text-foreground">
-              {source.title}
-            </span>
-            <span className="mt-0.5 block text-[10px] text-muted-foreground line-clamp-1">
-              {source.ref}
-            </span>
-          </div>
-        </div>
-        {isExpanded ? (
-          <ChevronDownIcon className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
-        ) : (
-          <ChevronRight className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
-        )}
-      </button>
-      
-      {isExpanded && (
-        <div className="border-t border-border/40 bg-background/50 p-3 animate-in fade-in slide-in-from-top-1 duration-200">
-          <div className="space-y-3">
-            <div>
-              <p className="text-[10px] font-bold uppercase text-muted-foreground mb-1">Full Reference</p>
-              <p className="text-[11px] leading-relaxed text-foreground/80">
-                {source.ref}
-              </p>
-            </div>
-            <a
-              href={source.url}
-              target="_blank"
-              rel="noreferrer"
-              className="flex items-center justify-center gap-2 rounded-lg bg-primary px-3 py-1.5 text-[11px] font-medium text-primary-foreground transition-all hover:bg-primary/90"
-            >
-              Access Official Portal
-              <ExternalLink className="h-3 w-3" />
-            </a>
-          </div>
-        </div>
-      )}
-    </div>
-  );
-}
