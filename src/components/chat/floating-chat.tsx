@@ -5,11 +5,16 @@ import {
   SendHorizonal, 
   Bot, 
   User, 
-  ChevronDown
+  ChevronDown,
+  Loader2
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
+import { supabase } from "@/integrations/supabase/client";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { getSchemeChatHistory, saveSchemeChatMessage } from "@/lib/chat.functions";
+import { toast } from "sonner";
 
 type Message = {
   role: "user" | "assistant";
