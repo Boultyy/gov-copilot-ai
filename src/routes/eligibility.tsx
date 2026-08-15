@@ -17,6 +17,7 @@ import { Progress } from "@/components/ui/progress";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
+import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/eligibility")({
   head: () => ({
@@ -201,6 +202,3 @@ function Eligibility() {
   );
 }
 
-function Separator({ className }: { className?: string }) {
-  return <div className={cn("h-px w-full bg-border", className)} />;
-}
