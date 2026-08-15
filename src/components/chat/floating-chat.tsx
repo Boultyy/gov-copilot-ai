@@ -32,12 +32,44 @@ const MOCK_ANSWERS: Record<string, string> = {
 
 export function FloatingChat() {
   const [isOpen, setIsOpen] = useState(false);
-  const [messages, setMessages] = useState<Message[]>([
-    { role: "assistant", content: "Hello! I am GovCopilot's Scheme Assistant. Ask me anything about recent government schemes like PM Surya Ghar, Lakhpati Didi, or PMAY." }
-  ]);
   const [input, setInput] = useState("");
   const [isTyping, setIsTyping] = useState(false);
+  const [session, setSession] = useState<any>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
+  const queryClient = useQueryClient();
+
+  useEffect(() => {
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setSession(session);
+    });
+
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      setSession(session);
+    });
+
+    return () => subscription.unsubscribe();
+  }, []);
+
+  const { data: history, isLoading } = useQuery({
+    queryKey: ["scheme-chat-history", session?.user?.id],
+    queryFn: () => getSchemeChatHistory(),
+    enabled: !!session,
+  });
+
+  const saveMessageMutation = useMutation({
+    mutationFn: (msg: { role: "user" | "assistant"; content: string }) => 
+      saveSchemeChatMessage({ data: msg }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["scheme-chat-history", session?.user?.id] });
+    },
+  });
+
+  const messages: Message[] = history?.map(m => ({
+    role: m.role as "user" | "assistant",
+    content: m.content
+  })) || [
+    { role: "assistant", content: "Hello! I am GovCopilot's Scheme Assistant. Ask me anything about recent government schemes like PM Surya Ghar, Lakhpati Didi, or PMAY." }
+  ];
 
   useEffect(() => {
     if (scrollRef.current) {
@@ -45,15 +77,24 @@ export function FloatingChat() {
     }
   }, [messages, isTyping]);
 
-  const handleSend = () => {
+  const handleSend = async () => {
     if (!input.trim() || isTyping) return;
 
     const userMsg = input.trim();
-    setMessages(prev => [...prev, { role: "user", content: userMsg }]);
     setInput("");
+
+    if (session) {
+      try {
+        await saveMessageMutation.mutateAsync({ role: "user", content: userMsg });
+      } catch (err) {
+        toast.error("Failed to save message");
+        return;
+      }
+    }
+
     setIsTyping(true);
 
-    setTimeout(() => {
+    setTimeout(async () => {
       let response = MOCK_ANSWERS.default;
       const lowerInput = userMsg.toLowerCase();
       
@@ -69,7 +110,16 @@ export function FloatingChat() {
         response = MOCK_ANSWERS.women;
       }
 
-      setMessages(prev => [...prev, { role: "assistant", content: response }]);
+      if (session) {
+        try {
+          await saveMessageMutation.mutateAsync({ role: "assistant", content: response });
+        } catch (err) {
+          console.error("Failed to save AI response", err);
+        }
+      } else {
+        // Fallback for non-logged in users if we wanted to allow it (but the request said "each user's", implying auth)
+      }
+      
       setIsTyping(false);
     }, 1000);
   };
