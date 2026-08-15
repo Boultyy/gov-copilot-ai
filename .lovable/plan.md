@@ -1,59 +1,59 @@
----
-title: Save Scheme Copilot Chat History
-description: Implement persistent chat history for the Scheme Copilot using Supabase tables, RLS, and server functions.
----
+# UI/UX Redesign Plan
 
-## Goals
-- Create a database schema to store chat sessions and messages for the Scheme Copilot.
-- Ensure chat history is private to the authenticated user.
-- Load existing chat history when the user opens the application.
-- Save new messages in real-time to the database.
+Redesign GovCopilot AI to feel like a premium, trustworthy Indian government digital platform (Modern SaaS + Digital India aesthetic).
 
-## Technical Details
+## Design System Update
 
-### Database Schema
-We will add two new tables to the `public` schema:
-- `scheme_chat_sessions`: To track unique chat threads (optional, but good for organization).
-- `scheme_chat_messages`: To store individual messages.
+### Colors & Spacing
+- Refine `oklch` values in `src/styles.css` for a more professional "Government Blue" palette.
+- Implement a strict 8px spacing system via Tailwind classes.
+- Soften shadows (`shadow-sm`, `shadow-md`) and increase border-radius for a friendlier feel.
 
-```sql
-CREATE TABLE public.scheme_chat_messages (
-    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    user_id UUID REFERENCES auth.users(id) ON DELETE CASCADE NOT NULL,
-    role TEXT NOT NULL CHECK (role IN ('user', 'assistant')),
-    content TEXT NOT NULL,
-    created_at TIMESTAMPTZ DEFAULT now() NOT NULL
-);
+### Typography
+- Primary: **Plus Jakarta Sans** (Headings) - already in project but needs better hierarchy.
+- Secondary: **Inter** (Body) - already in project.
 
-GRANT SELECT, INSERT ON public.scheme_chat_messages TO authenticated;
-GRANT ALL ON public.scheme_chat_messages TO service_role;
+## Layout & Navigation
 
-ALTER TABLE public.scheme_chat_messages ENABLE ROW LEVEL SECURITY;
+### Global Layout (`src/routes/__root.tsx`)
+- Redesign the `Sidebar` to be cleaner, using subtle borders and a refined logo area.
+- Add a "Trust Bar" or footer indicators for "Official Government Information".
+- Improve `Topbar` with a more integrated search and clearer user actions.
 
-CREATE POLICY "Users can view their own chat messages"
-ON public.scheme_chat_messages FOR SELECT
-TO authenticated
-USING (auth.uid() = user_id);
+### Main Dashboard (`src/routes/index.tsx`)
+- Replace the current analytical dashboard with a high-impact **Landing Dashboard**.
+- **Hero Section**: Large, clear title "Your AI Copilot for Government Services".
+- **Feature Cards**: Modern cards for "Discover Schemes", "Eligibility", "Document Assistant", etc.
+- **Popular Services**: A horizontal grid of attractive service cards.
+- **How it Works**: Simple 3-step visual guide.
 
-CREATE POLICY "Users can insert their own chat messages"
-ON public.scheme_chat_messages FOR INSERT
-TO authenticated
-WITH CHECK (auth.uid() = user_id);
-```
+## Module Redesigns
 
-### Server Functions
-We will create `src/lib/chat.functions.ts` to handle:
-- `getChatHistory`: Fetch all messages for the current user.
-- `saveChatMessage`: Save a new message to the database.
+### Main Copilot Experience (`src/routes/copilot.tsx`)
+- Redesign the chat interface into a premium full-page AI workspace.
+- Left sidebar for history and saved items.
+- Rich AI responses: Custom cards for schemes, eligibility results, and checklists.
+- Quick action buttons (Primary CTA: "Start Application").
 
-### Frontend Integration
-Update `src/components/chat/floating-chat.tsx`:
-- Use `useQuery` to fetch history on mount.
-- Use `useMutation` or direct `useServerFn` calls to save messages.
-- Add a loading state for when history is being fetched.
-- Ensure it only attempts to save/load if a user is authenticated.
+### Scheme Discovery (`src/routes/schemes.tsx`)
+- Advanced filtering sidebar (Category, State, Age, Income).
+- Results grid with clear eligibility badges (Eligible, May be Eligible, Not Eligible).
 
-## Implementation Plan
-1. **Migration**: Create the `scheme_chat_messages` table with RLS.
-2. **Server Functions**: Implement `getChatHistory` and `saveChatMessage` using `createServerFn`.
-3. **Frontend**: Wire up the server functions to the `FloatingChat` component.
+### Eligibility Checker (`src/routes/eligibility.tsx`)
+- Multi-step wizard with a progress bar.
+- Final "Result Card" summarizing benefits and next steps.
+
+### Document Assistant & Application Tracker
+- Redesign `src/routes/documents.tsx` and `src/routes/applications.tsx` to follow the new "Workspace" aesthetic.
+- Use timeline views for tracking and status badges for document verification.
+
+## Technical Implementation
+- Use Radix UI primitives and Shadcn components.
+- Implement Framer Motion for subtle transitions (Hero entrance, card hover).
+- Maintain existing `createServerFn` and Supabase logic.
+
+## Phased Rollout
+1. **Phase 1**: Styles & Global Layout (CSS variables, Sidebar, Topbar).
+2. **Phase 2**: Home Dashboard (New Landing experience).
+3. **Phase 3**: Copilot & Module Screens.
+4. **Phase 4**: Micro-interactions & Polishing.
