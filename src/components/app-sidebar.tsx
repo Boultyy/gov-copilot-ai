@@ -6,6 +6,10 @@ import {
   PenLine,
   Route as RouteIcon,
   ShieldCheck,
+  Landmark,
+  Sparkle,
+  Settings,
+  User,
 } from "lucide-react";
 
 import {
@@ -22,12 +26,18 @@ import {
   useSidebar,
 } from "@/components/ui/sidebar";
 
-const modules = [
-  { title: "Decision Intelligence", url: "/", icon: BarChart3, hint: "KPIs & insights" },
-  { title: "Document Intelligence", url: "/documents", icon: FileSearch, hint: "Ask your files" },
-  { title: "Workflow Copilot", url: "/workflow", icon: RouteIcon, hint: "Service procedures" },
-  { title: "Policy Conflict Checker", url: "/policy", icon: GitCompareArrows, hint: "Compare policies" },
-  { title: "AI Draft Generator", url: "/drafts", icon: PenLine, hint: "Letters & orders" },
+const primaryNav = [
+  { title: "Dashboard", url: "/", icon: BarChart3 },
+  { title: "Copilot", url: "/copilot", icon: Sparkle },
+  { title: "Schemes", url: "/schemes", icon: Landmark },
+  { title: "Eligibility", url: "/eligibility", icon: ShieldCheck },
+  { title: "Documents", url: "/documents", icon: FileSearch },
+  { title: "Applications", url: "/applications", icon: RouteIcon },
+];
+
+const advancedModules = [
+  { title: "Policy Checker", url: "/policy", icon: GitCompareArrows },
+  { title: "Draft Generator", url: "/drafts", icon: PenLine },
 ];
 
 export function AppSidebar() {
