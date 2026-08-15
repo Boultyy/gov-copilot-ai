@@ -54,7 +54,7 @@ function Policy() {
         eyebrow="Module 03"
         title="Policy Conflict Checker"
         description="Compare two policy documents for conflicts, gaps and compliance risk."
-        icon={<GitCompareArrows className="h-5 w-5" />}
+        icon={<GitCompareArrows className="h-6 w-6" />}
         actions={
           <Button className="shrink-0 rounded-full" onClick={run} disabled={state === "scanning"}>
             <ScanSearch className="mr-2 h-4 w-4" />
@@ -99,7 +99,7 @@ function Policy() {
               { label: "Missing clauses", value: missingClauses.length, tone: "text-warning-foreground" },
               { label: "Compliance checks passed", value: "3 / 5", tone: "text-success" },
             ].map((s) => (
-              <Card key={s.label} className="animate-rise gradient-surface">
+              <Card key={s.label} className="animate-rise border-border/50 bg-muted/30 shadow-sm transition-shadow hover:shadow-md">
                 <CardContent className="p-5">
                   <p className="text-xs text-muted-foreground">{s.label}</p>
                   <p className={`mt-1 font-display text-2xl font-extrabold ${s.tone}`}>{s.value}</p>
@@ -114,7 +114,7 @@ function Policy() {
             </CardHeader>
             <CardContent className="space-y-3">
               {conflicts.map((c) => (
-                <div key={c.clause} className="rounded-xl border border-border p-4">
+                <div key={c.clause} className="rounded-xl border border-border bg-card p-4 shadow-sm transition-all hover:shadow-md">
                   <div className="grid grid-cols-[minmax(0,1fr)_auto] items-start gap-3">
                     <p className="min-w-0 font-semibold text-foreground">{c.clause}</p>
                     <Badge

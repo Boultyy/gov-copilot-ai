@@ -157,7 +157,7 @@ function Documents() {
                 }}
                 rows={2}
                 placeholder="Ask about eligibility, penalties, budget heads…"
-                className="min-h-[52px] resize-none rounded-xl"
+                className="min-h-[52px] resize-none rounded-2xl border-border bg-muted/30 focus-visible:ring-primary/20"
               />
               <Button
                 size="icon"
