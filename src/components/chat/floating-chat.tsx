@@ -495,3 +495,57 @@ export function FloatingChat() {
     </div>
   );
 }
+
+function SourceAccordion({ source, index }: { source: Source; index: number }) {
+  const [isExpanded, setIsExpanded] = useState(false);
+
+  return (
+    <div className="overflow-hidden rounded-xl border border-border/60 bg-muted/30 transition-all hover:border-primary/30">
+      <button
+        onClick={() => setIsExpanded(!isExpanded)}
+        className="flex w-full items-center justify-between px-3 py-2.5 text-left"
+      >
+        <div className="flex items-start gap-2.5">
+          <span className="mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-md bg-primary/10 text-[10px] font-bold text-primary">
+            {index + 1}
+          </span>
+          <div>
+            <span className="block text-[11px] font-semibold leading-tight text-foreground">
+              {source.title}
+            </span>
+            <span className="mt-0.5 block text-[10px] text-muted-foreground line-clamp-1">
+              {source.ref}
+            </span>
+          </div>
+        </div>
+        {isExpanded ? (
+          <ChevronDownIcon className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
+        ) : (
+          <ChevronRight className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
+        )}
+      </button>
+      
+      {isExpanded && (
+        <div className="border-t border-border/40 bg-background/50 p-3 animate-in fade-in slide-in-from-top-1 duration-200">
+          <div className="space-y-3">
+            <div>
+              <p className="text-[10px] font-bold uppercase text-muted-foreground mb-1">Full Reference</p>
+              <p className="text-[11px] leading-relaxed text-foreground/80">
+                {source.ref}
+              </p>
+            </div>
+            <a
+              href={source.url}
+              target="_blank"
+              rel="noreferrer"
+              className="flex items-center justify-center gap-2 rounded-lg bg-primary px-3 py-1.5 text-[11px] font-medium text-primary-foreground transition-all hover:bg-primary/90"
+            >
+              Access Official Portal
+              <ExternalLink className="h-3 w-3" />
+            </a>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
