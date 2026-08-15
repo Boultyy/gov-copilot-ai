@@ -11,7 +11,6 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
-import { ScrollArea } from "@/components/ui/scroll-area";
 import { cn } from "@/lib/utils";
 import { suggestedDocQuestions } from "@/lib/demo-data";
 
@@ -134,9 +133,8 @@ export function FloatingChat() {
             </Button>
           </CardHeader>
           
-          <CardContent className="flex-1 p-0 overflow-hidden">
-            <ScrollArea className="h-[360px] p-4" viewportRef={scrollRef}>
-              <div className="space-y-4 pb-4">
+          <CardContent className="flex-1 p-0 overflow-hidden flex flex-col">
+            <div className="flex-1 overflow-y-auto p-4 space-y-4" ref={scrollRef}>
                 {messages.map((msg, i) => (
                   <div 
                     key={i} 
@@ -174,7 +172,7 @@ export function FloatingChat() {
                   </div>
                 )}
               </div>
-            </ScrollArea>
+            </div>
           </CardContent>
 
           <CardFooter className="flex flex-col gap-3 border-t bg-muted/30 p-4">
