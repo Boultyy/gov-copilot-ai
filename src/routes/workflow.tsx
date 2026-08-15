@@ -170,7 +170,7 @@ function Workflow() {
               <CardContent className="space-y-3">
                 <div className="h-1.5 w-full overflow-hidden rounded-full bg-muted">
                   <div
-                    className="gradient-primary h-full rounded-full transition-all duration-500"
+                    className="h-full rounded-full bg-primary shadow-[0_0_8px_oklch(0.48_0.18_260/0.4)] transition-all duration-700"
                     style={{ width: `${progress}%` }}
                   />
                 </div>
