@@ -17,8 +17,8 @@ export function PageHeader({
     <div className="animate-rise grid grid-cols-[minmax(0,1fr)_auto] items-start gap-6 pb-2 sm:flex sm:items-end sm:justify-between">
       <div className="flex min-w-0 items-start gap-4">
         <div className="relative">
-          <div className="absolute inset-0 bg-primary/20 blur-xl rounded-full" />
-          <span className="relative gradient-primary grid h-14 w-14 shrink-0 place-items-center rounded-2xl text-primary-foreground shadow-lg shadow-primary/20">
+          <div className="absolute -inset-1 rounded-full bg-primary/20 blur-xl opacity-0 transition-opacity duration-500 group-hover:opacity-100" />
+          <span className="relative flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-primary text-primary-foreground shadow-xl shadow-primary/20 ring-1 ring-white/10">
             {icon}
           </span>
         </div>
