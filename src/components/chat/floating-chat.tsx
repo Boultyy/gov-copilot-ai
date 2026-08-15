@@ -5,55 +5,24 @@ import {
   SendHorizonal, 
   Bot, 
   User, 
-  Sparkles,
-  Loader2,
   ChevronDown
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
-import { suggestedDocQuestions } from "@/lib/demo-data";
 
 type Message = {
   role: "user" | "assistant";
   content: string;
 };
 
-const SCHEME_DATA = [
-  {
-    name: "PM Surya Ghar: Muft Bijli Yojana",
-    description: "Provides free electricity to 1 crore households by installing rooftop solar panels. Beneficiaries get up to 300 units of free power monthly.",
-    eligibility: "Indian citizens with a suitable roof for solar panels, who have not availed other solar subsidies."
-  },
-  {
-    name: "Pradhan Mantri Awas Yojana (PMAY)",
-    description: "Aims to provide affordable housing to the urban and rural poor with a target of building 2 crore houses.",
-    eligibility: "Economically Weaker Section (EWS), Low Income Group (LIG), and Middle Income Group (MIG)."
-  },
-  {
-    name: "Ayushman Bharat PM-JAY",
-    description: "The world's largest health insurance scheme providing a cover of Rs. 5 lakh per family per year for secondary and tertiary care hospitalization.",
-    eligibility: "Based on Socio-Economic Caste Census (SECC) data, covering over 12 crore poor and vulnerable families."
-  },
-  {
-    name: "PM-Kisan Samman Nidhi",
-    description: "Direct income support of Rs. 6,000 per year to all landholding farmer families across the country.",
-    eligibility: "All landholding farmer families (with certain exclusions like institutional landholders)."
-  },
-  {
-    name: "Lakhpati Didi Scheme",
-    description: "Aims to empower 3 crore women in Self Help Groups (SHGs) to earn an annual income of at least Rs. 1 lakh.",
-    eligibility: "Women members of Self Help Groups (SHGs) across India."
-  }
-];
-
 const MOCK_ANSWERS: Record<string, string> = {
   "default": "I can help you with information regarding various government schemes like PM Surya Ghar, PMAY, Ayushman Bharat, PM-Kisan, and Lakhpati Didi. Which one would you like to know more about?",
   "solar": "The PM Surya Ghar: Muft Bijli Yojana provides up to 300 units of free electricity monthly through rooftop solar. The government provides significant subsidies: Rs. 30,000 for 1kW, Rs. 60,000 for 2kW, and Rs. 78,000 for 3kW or higher systems.",
   "housing": "Pradhan Mantri Awas Yojana (PMAY) provides financial assistance for building pucca houses. For PMAY-U (Urban), the interest subsidy is available for loans up to Rs. 12 lakh based on income categories.",
-  "health": "Ayushman Bharat (PM-JAY) provides Rs. 5 lakh health cover per family. It covers over 1,900 procedures including oncology, cardiology, and neurosurgery. No pre-registration is required if you are in the SECC list; just carry your Golden Card.",
+  "health": "Ayushman Bharat (PM-JAY) provides Rs. 5 lakh health cover per family. It covers over 1,900 procedures including oncology, cardiology, and neurosurgery.",
   "farmer": "PM-Kisan provides Rs. 6,000 annually in three equal installments directly to bank accounts. You can check your status on the PM-Kisan portal using your Aadhaar or mobile number.",
-  "women": "The Lakhpati Didi scheme focuses on skill development for women in SHGs, covering areas like plumbing, LED bulb making, and drone operation (Drone Didis) to ensure a minimum annual income of Rs. 1 lakh."
+  "women": "The Lakhpati Didi scheme focuses on skill development for women in SHGs, covering areas like plumbing and drone operation to ensure a minimum annual income of Rs. 1 lakh."
 };
 
 export function FloatingChat() {
@@ -79,7 +48,6 @@ export function FloatingChat() {
     setInput("");
     setIsTyping(true);
 
-    // Simulate AI response
     setTimeout(() => {
       let response = MOCK_ANSWERS.default;
       const lowerInput = userMsg.toLowerCase();
@@ -103,7 +71,6 @@ export function FloatingChat() {
 
   const handleQuickQuestion = (q: string) => {
     setInput(q);
-    // Auto-send would be nice but maybe user wants to edit
   };
 
   return (
@@ -135,43 +102,43 @@ export function FloatingChat() {
           
           <CardContent className="flex-1 p-0 overflow-hidden flex flex-col">
             <div className="flex-1 overflow-y-auto p-4 space-y-4" ref={scrollRef}>
-                {messages.map((msg, i) => (
-                  <div 
-                    key={i} 
-                    className={cn(
-                      "flex items-start gap-2.5 animate-in fade-in slide-in-from-bottom-2",
-                      msg.role === "user" ? "flex-row-reverse" : "flex-row"
-                    )}
-                  >
-                    <div className={cn(
-                      "flex h-8 w-8 shrink-0 select-none items-center justify-center rounded-full text-[10px] font-bold",
-                      msg.role === "assistant" ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground border"
-                    )}>
-                      {msg.role === "assistant" ? <Bot className="h-4 w-4" /> : <User className="h-4 w-4" />}
-                    </div>
-                    <div className={cn(
-                      "max-w-[80%] rounded-2xl px-3.5 py-2 text-sm leading-relaxed shadow-sm",
-                      msg.role === "assistant" 
-                        ? "rounded-tl-sm bg-muted text-foreground" 
-                        : "rounded-tr-sm bg-primary text-primary-foreground"
-                    )}>
-                      {msg.content}
-                    </div>
+              {messages.map((msg, i) => (
+                <div 
+                  key={i} 
+                  className={cn(
+                    "flex items-start gap-2.5 animate-in fade-in slide-in-from-bottom-2",
+                    msg.role === "user" ? "flex-row-reverse" : "flex-row"
+                  )}
+                >
+                  <div className={cn(
+                    "flex h-8 w-8 shrink-0 select-none items-center justify-center rounded-full text-[10px] font-bold",
+                    msg.role === "assistant" ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground border"
+                  )}>
+                    {msg.role === "assistant" ? <Bot className="h-4 w-4" /> : <User className="h-4 w-4" />}
                   </div>
-                ))}
-                {isTyping && (
-                  <div className="flex items-start gap-2.5">
-                    <div className="bg-primary text-primary-foreground flex h-8 w-8 shrink-0 items-center justify-center rounded-full">
-                      <Bot className="h-4 w-4" />
-                    </div>
-                    <div className="bg-muted flex items-center gap-1 rounded-2xl rounded-tl-sm px-3.5 py-2">
-                      <span className="h-1 w-1 animate-bounce rounded-full bg-muted-foreground" style={{ animationDelay: '0ms' }} />
-                      <span className="h-1 w-1 animate-bounce rounded-full bg-muted-foreground" style={{ animationDelay: '150ms' }} />
-                      <span className="h-1 w-1 animate-bounce rounded-full bg-muted-foreground" style={{ animationDelay: '300ms' }} />
-                    </div>
+                  <div className={cn(
+                    "max-w-[80%] rounded-2xl px-3.5 py-2 text-sm leading-relaxed shadow-sm",
+                    msg.role === "assistant" 
+                      ? "rounded-tl-sm bg-muted text-foreground" 
+                      : "rounded-tr-sm bg-primary text-primary-foreground"
+                  )}>
+                    {msg.content}
                   </div>
-                )}
-              </div>
+                </div>
+              ))}
+              {isTyping && (
+                <div className="flex items-start gap-2.5">
+                  <div className="bg-primary text-primary-foreground flex h-8 w-8 shrink-0 items-center justify-center rounded-full">
+                    <Bot className="h-4 w-4" />
+                  </div>
+                  <div className="bg-muted flex items-center gap-1 rounded-2xl rounded-tl-sm px-3.5 py-2">
+                    <span className="h-1 w-1 animate-bounce rounded-full bg-muted-foreground" style={{ animationDelay: '0ms' }} />
+                    <span className="h-1 w-1 animate-bounce rounded-full bg-muted-foreground" style={{ animationDelay: '150ms' }} />
+                    <span className="h-1 w-1 animate-bounce rounded-full bg-muted-foreground" style={{ animationDelay: '300ms' }} />
+                  </div>
+                </div>
+              )}
+            </div>
           </CardContent>
 
           <CardFooter className="flex flex-col gap-3 border-t bg-muted/30 p-4">
