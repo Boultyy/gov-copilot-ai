@@ -320,10 +320,10 @@ export function FloatingChat() {
                         {msg.role === "assistant" ? <Bot className="h-4 w-4" /> : <User className="h-4 w-4" />}
                       </div>
                       <div className={cn(
-                        "max-w-[80%] space-y-2 rounded-2xl px-3.5 py-2 text-sm leading-relaxed shadow-sm",
+                        "max-w-[85%] space-y-2 rounded-2xl px-4 py-2.5 text-sm leading-relaxed",
                         msg.role === "assistant"
-                          ? "rounded-tl-sm bg-muted text-foreground"
-                          : "rounded-tr-sm bg-primary text-primary-foreground"
+                          ? "rounded-tl-sm bg-muted/50 text-foreground border border-border/50"
+                          : "rounded-tr-sm bg-primary text-primary-foreground shadow-md shadow-primary/10"
                       )}>
                         <p>{msg.content}</p>
                         {msg.role === "assistant" && msg.sources && msg.sources.length > 0 && (
@@ -380,23 +380,24 @@ export function FloatingChat() {
             </div>
           </CardContent>
 
-          <CardFooter className="flex flex-col gap-3 border-t bg-muted/30 p-4">
-            <div className="flex w-full gap-2">
+          <CardFooter className="flex flex-col gap-3 border-t bg-background/50 backdrop-blur-sm p-4">
+            <div className="flex w-full items-center gap-2 rounded-2xl border border-border bg-muted/30 px-3 py-1 focus-within:border-primary/50 focus-within:ring-1 focus-within:ring-primary/20">
               <input
                 type="text"
                 placeholder="Ask about PMAY, Solar, PM-Kisan..."
-                className="flex-1 bg-transparent text-sm outline-none focus:ring-0"
+                className="flex-1 bg-transparent py-2 text-sm outline-none placeholder:text-muted-foreground/60"
                 value={input}
                 onChange={(e) => setInput(e.target.value)}
                 onKeyDown={(e) => e.key === "Enter" && handleSend()}
               />
               <Button
                 size="icon"
-                className="h-8 w-8 shrink-0 rounded-lg"
+                variant="ghost"
+                className="h-8 w-8 shrink-0 rounded-xl text-primary hover:bg-primary/10"
                 onClick={handleSend}
                 disabled={!input.trim() || isTyping}
               >
-                <SendHorizonal className="h-4 w-4" />
+                <SendHorizonal className="h-4.5 w-4.5" />
               </Button>
             </div>
 
@@ -405,7 +406,7 @@ export function FloatingChat() {
                 <button
                   key={q}
                   onClick={() => handleQuickQuestion(`Tell me about ${q}`)}
-                  className="rounded-full border border-border bg-background px-2 py-0.5 text-[10px] text-muted-foreground transition-colors hover:bg-accent hover:text-accent-foreground"
+                  className="rounded-full border border-border bg-card px-3 py-1 text-[10px] font-medium text-muted-foreground transition-all hover:border-primary/30 hover:bg-primary/5 hover:text-primary"
                 >
                   {q}
                 </button>
