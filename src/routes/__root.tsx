@@ -15,6 +15,7 @@ import { AppSidebar } from "@/components/app-sidebar";
 import { Topbar } from "@/components/topbar";
 import { SidebarProvider } from "@/components/ui/sidebar";
 import { Toaster } from "@/components/ui/sonner";
+import { FloatingChat } from "@/components/chat/floating-chat";
 
 
 function NotFoundComponent() {
@@ -152,6 +153,7 @@ function RootComponent() {
             </main>
           </div>
         </div>
+        <FloatingChat />
         <Toaster position="top-right" richColors />
       </SidebarProvider>
     </QueryClientProvider>
