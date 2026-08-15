@@ -10,6 +10,7 @@ import {
   Trash2,
   ExternalLink,
   FileText,
+  Sparkles,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
@@ -254,17 +255,17 @@ export function FloatingChat() {
   return (
     <div className="fixed bottom-6 right-6 z-50 flex flex-col items-end gap-4">
       {isOpen && (
-        <Card className="animate-in fade-in slide-in-from-bottom-4 flex h-[500px] w-[380px] flex-col shadow-2xl transition-all duration-300 sm:w-[420px]">
-          <CardHeader className="gradient-primary flex flex-row items-center justify-between rounded-t-xl py-4 text-primary-foreground">
-            <div className="flex items-center gap-2">
-              <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-white/20 backdrop-blur-sm">
-                <Bot className="h-5 w-5" />
+        <Card className="animate-in fade-in slide-in-from-bottom-4 flex h-[600px] w-[380px] flex-col border-none shadow-2xl ring-1 ring-black/5 transition-all duration-300 sm:w-[420px]">
+          <CardHeader className="bg-foreground flex flex-row items-center justify-between rounded-t-xl py-4 text-white">
+            <div className="flex items-center gap-3">
+              <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-primary shadow-lg shadow-primary/20">
+                <Sparkles className="h-5 w-5 text-white" />
               </div>
               <div>
-                <CardTitle className="text-sm font-bold">Scheme Copilot</CardTitle>
+                <CardTitle className="font-display text-sm font-bold">Scheme Copilot</CardTitle>
                 <div className="flex items-center gap-1.5">
-                  <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-green-400" />
-                  <span className="text-[10px] opacity-90">Online Assistant</span>
+                  <span className="h-1.5 w-1.5 rounded-full bg-green-500 shadow-[0_0_8px_oklch(0.6_0.15_150)]" />
+                  <span className="text-[10px] font-medium text-slate-400">Trusted AI Assistant</span>
                 </div>
               </div>
             </div>
