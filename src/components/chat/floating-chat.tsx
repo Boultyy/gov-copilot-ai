@@ -419,8 +419,8 @@ export function FloatingChat() {
       <Button
         size="lg"
         className={cn(
-          "h-14 w-14 rounded-full shadow-2xl transition-all duration-300 hover:scale-105",
-          isOpen ? "bg-muted text-muted-foreground hover:bg-muted/80" : "gradient-primary text-primary-foreground"
+          "h-14 w-14 rounded-2xl shadow-xl transition-all duration-500 hover:scale-110 active:scale-95",
+          isOpen ? "bg-foreground text-white hover:bg-foreground/90" : "bg-primary text-primary-foreground shadow-primary/20"
         )}
         onClick={() => setIsOpen(!isOpen)}
       >
@@ -428,10 +428,10 @@ export function FloatingChat() {
           <ChevronDown className="h-6 w-6" />
         ) : (
           <div className="relative">
-            <MessageSquare className="h-6 w-6" />
-            <span className="absolute -right-1 -top-1 flex h-3 w-3">
+            <Sparkles className="h-6 w-6 animate-pulse" />
+            <span className="absolute -right-2 -top-2 flex h-4 w-4">
               <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-white opacity-75"></span>
-              <span className="relative inline-flex h-3 w-3 rounded-full bg-white"></span>
+              <span className="relative inline-flex h-4 w-4 rounded-full bg-white shadow-sm"></span>
             </span>
           </div>
         )}
