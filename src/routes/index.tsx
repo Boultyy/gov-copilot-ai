@@ -1,277 +1,210 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
 import {
-  Activity,
-  ArrowDownRight,
-  ArrowUpRight,
-  BarChart3,
-  Lightbulb,
-  Download,
+  Sparkles,
+  Search,
+  ArrowRight,
+  ShieldCheck,
+  Landmark,
+  FileSearch,
+  PenLine,
+  ChevronRight,
+  Star,
 } from "lucide-react";
-import {
-  Area,
-  AreaChart,
-  Bar,
-  BarChart,
-  CartesianGrid,
-  Cell,
-  Pie,
-  PieChart,
-  ResponsiveContainer,
-  Tooltip,
-  XAxis,
-  YAxis,
-} from "recharts";
-
-import { PageHeader } from "@/components/page-header";
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Separator } from "@/components/ui/separator";
-import {
-  aiInsights,
-  casesByMonth,
-  grievanceByDept,
-  grievanceStatus,
-  kpis,
-  recentActivity,
-} from "@/lib/demo-data";
+import { Card, CardContent } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Input } from "@/components/ui/input";
 
 export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
-      { title: "Decision Intelligence Dashboard | GovCopilot" },
+      { title: "GovCopilot | Your AI Copilot for Government Services" },
       {
         name: "description",
-        content:
-          "Live KPIs, pending cases, citizen grievance analytics and AI insights for district administration in one government dashboard.",
-      },
-      { property: "og:title", content: "Decision Intelligence Dashboard | GovCopilot" },
-      {
-        property: "og:description",
-        content: "Live KPIs, pending cases, citizen grievance analytics and AI insights for district administration in one government dashboard.",
+        content: "Discover government schemes, check eligibility, prepare documents and track applications with AI-powered assistance.",
       },
     ],
   }),
-  component: Dashboard,
+  component: LandingDashboard,
 });
 
-const pieColors = [
-  "var(--color-chart-1)",
-  "var(--color-chart-2)",
-  "var(--color-chart-4)",
-  "var(--color-chart-5)",
+const featuredServices = [
+  {
+    title: "Income Certificate",
+    dept: "Revenue Department",
+    tag: "Popular",
+    icon: FileSearch,
+  },
+  {
+    title: "PMAY Housing",
+    dept: "Ministry of Housing",
+    tag: "New",
+    icon: Landmark,
+  },
+  {
+    title: "Trade License",
+    dept: "Urban Development",
+    tag: "Business",
+    icon: PenLine,
+  },
+  {
+    title: "Pension Scheme",
+    dept: "Social Welfare",
+    tag: "Social",
+    icon: ShieldCheck,
+  },
 ];
 
-function Dashboard() {
+function LandingDashboard() {
   return (
-    <div className="mx-auto max-w-7xl space-y-6">
-      <PageHeader
-        eyebrow="Module 04"
-        title="Decision Intelligence Dashboard"
-        description="District-level performance, grievances and AI-generated recommendations."
-        icon={<BarChart3 className="h-5 w-5" />}
-        actions={
-          <Button variant="outline" className="shrink-0 rounded-full">
-            <Download className="mr-2 h-4 w-4" /> Export report
-          </Button>
-        }
-      />
+    <div className="flex flex-col gap-12 pb-12">
+      {/* Hero Section */}
+      <section className="relative overflow-hidden rounded-[2.5rem] bg-foreground px-6 py-20 text-center sm:px-12 lg:py-32">
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_right,oklch(0.6_0.2_260/0.15),transparent_50%)]" />
+        <div className="relative mx-auto max-w-3xl space-y-8">
+          <Badge className="bg-primary/20 text-primary-foreground border-primary/30 py-1.5 px-4 rounded-full">
+            <Sparkles className="mr-2 h-3.5 w-3.5" />
+            Empowering Citizens with Digital India
+          </Badge>
+          <h1 className="font-display text-4xl font-extrabold tracking-tight text-white sm:text-6xl">
+            Your AI Copilot for <span className="text-primary-glow">Government Services</span>
+          </h1>
+          <p className="mx-auto max-w-xl text-lg text-slate-400">
+            Discover schemes, understand eligibility, prepare documents, and track your applications in one unified workspace.
+          </p>
+          <div className="flex flex-col items-center justify-center gap-4 sm:flex-row">
+            <Button size="lg" className="h-12 rounded-full px-8 text-base shadow-lg shadow-primary/20" asChild>
+              <Link to="/schemes">Find Government Schemes</Link>
+            </Button>
+            <Button size="lg" variant="outline" className="h-12 rounded-full border-slate-700 bg-transparent px-8 text-base text-white hover:bg-slate-800" asChild>
+              <Link to="/copilot">Ask Copilot</Link>
+            </Button>
+          </div>
+        </div>
+      </section>
 
-      <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-        {kpis.map((k, i) => (
-          <Card
-            key={k.label}
-            className="animate-rise gradient-surface border-border shadow-[var(--shadow-card)] transition-transform duration-300 hover:-translate-y-1"
-            style={{ animationDelay: `${i * 60}ms` }}
-          >
-            <CardContent className="p-5">
-              <p className="text-xs font-medium text-muted-foreground">{k.label}</p>
-              <p className="mt-2 font-display text-2xl font-extrabold text-foreground">{k.value}</p>
-              <div className="mt-2 flex items-center gap-2 text-xs">
-                <span
-                  className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 font-semibold ${
-                    k.trend === "up"
-                      ? "bg-success/15 text-success"
-                      : "bg-primary/12 text-primary"
-                  }`}
-                >
-                  {k.trend === "up" ? (
-                    <ArrowUpRight className="h-3 w-3" />
-                  ) : (
-                    <ArrowDownRight className="h-3 w-3" />
-                  )}
-                  {k.delta}
-                </span>
-                <span className="text-muted-foreground">{k.hint}</span>
-              </div>
-            </CardContent>
-          </Card>
-        ))}
-      </div>
-
-      <div className="grid gap-4 lg:grid-cols-3">
-        <Card className="animate-rise lg:col-span-2">
-          <CardHeader className="pb-2">
-            <CardTitle className="text-base">Cases filed vs disposed</CardTitle>
-          </CardHeader>
-          <CardContent className="h-[280px] pl-0">
-            <ResponsiveContainer width="100%" height="100%">
-              <AreaChart data={casesByMonth} margin={{ left: 8, right: 12, top: 8 }}>
-                <defs>
-                  <linearGradient id="filed" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="0%" stopColor="var(--color-chart-1)" stopOpacity={0.5} />
-                    <stop offset="100%" stopColor="var(--color-chart-1)" stopOpacity={0.02} />
-                  </linearGradient>
-                  <linearGradient id="disposed" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="0%" stopColor="var(--color-chart-3)" stopOpacity={0.5} />
-                    <stop offset="100%" stopColor="var(--color-chart-3)" stopOpacity={0.02} />
-                  </linearGradient>
-                </defs>
-                <CartesianGrid strokeDasharray="3 3" stroke="var(--color-border)" vertical={false} />
-                <XAxis dataKey="month" tickLine={false} axisLine={false} fontSize={12} />
-                <YAxis tickLine={false} axisLine={false} fontSize={12} width={46} />
-                <Tooltip
-                  contentStyle={{
-                    background: "var(--color-popover)",
-                    border: "1px solid var(--color-border)",
-                    borderRadius: 12,
-                    color: "var(--color-popover-foreground)",
-                  }}
-                />
-                <Area
-                  type="monotone"
-                  dataKey="filed"
-                  stroke="var(--color-chart-1)"
-                  fill="url(#filed)"
-                  strokeWidth={2}
-                />
-                <Area
-                  type="monotone"
-                  dataKey="disposed"
-                  stroke="var(--color-chart-3)"
-                  fill="url(#disposed)"
-                  strokeWidth={2}
-                />
-              </AreaChart>
-            </ResponsiveContainer>
-          </CardContent>
-        </Card>
-
-        <Card className="animate-rise">
-          <CardHeader className="pb-2">
-            <CardTitle className="text-base">Grievance status</CardTitle>
-          </CardHeader>
-          <CardContent className="h-[280px]">
-            <ResponsiveContainer width="100%" height="100%">
-              <PieChart>
-                <Pie
-                  data={grievanceStatus}
-                  dataKey="value"
-                  nameKey="name"
-                  innerRadius={58}
-                  outerRadius={88}
-                  paddingAngle={3}
-                  stroke="none"
-                >
-                  {grievanceStatus.map((_, i) => (
-                    <Cell key={i} fill={pieColors[i % pieColors.length]} />
-                  ))}
-                </Pie>
-                <Tooltip
-                  contentStyle={{
-                    background: "var(--color-popover)",
-                    border: "1px solid var(--color-border)",
-                    borderRadius: 12,
-                    color: "var(--color-popover-foreground)",
-                  }}
-                />
-              </PieChart>
-            </ResponsiveContainer>
-            <div className="-mt-4 flex flex-wrap justify-center gap-3">
-              {grievanceStatus.map((g, i) => (
-                <span key={g.name} className="flex items-center gap-1.5 text-xs text-muted-foreground">
-                  <span
-                    className="h-2 w-2 rounded-full"
-                    style={{ background: pieColors[i % pieColors.length] }}
-                  />
-                  {g.name} {g.value}%
-                </span>
-              ))}
-            </div>
-          </CardContent>
-        </Card>
-      </div>
-
-      <div className="grid gap-4 lg:grid-cols-3">
-        <Card className="animate-rise">
-          <CardHeader className="pb-2">
-            <CardTitle className="text-base">Grievances by department</CardTitle>
-          </CardHeader>
-          <CardContent className="h-[260px] pl-0">
-            <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={grievanceByDept} margin={{ left: 8, right: 12, top: 8 }}>
-                <CartesianGrid strokeDasharray="3 3" stroke="var(--color-border)" vertical={false} />
-                <XAxis dataKey="dept" tickLine={false} axisLine={false} fontSize={11} />
-                <YAxis tickLine={false} axisLine={false} fontSize={11} width={46} />
-                <Tooltip
-                  cursor={{ fill: "var(--color-muted)" }}
-                  contentStyle={{
-                    background: "var(--color-popover)",
-                    border: "1px solid var(--color-border)",
-                    borderRadius: 12,
-                    color: "var(--color-popover-foreground)",
-                  }}
-                />
-                <Bar dataKey="count" fill="var(--color-chart-2)" radius={[8, 8, 0, 0]} />
-              </BarChart>
-            </ResponsiveContainer>
-          </CardContent>
-        </Card>
-
-        <Card className="animate-rise lg:col-span-2">
-          <CardHeader className="flex-row items-center gap-2 pb-2">
-            <Lightbulb className="h-4 w-4 text-primary" />
-            <CardTitle className="text-base">AI insights</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-3">
-            {aiInsights.map((ins) => (
-              <div
-                key={ins.title}
-                className="rounded-xl border border-border bg-muted/40 p-4 transition-colors hover:bg-accent/50"
-              >
-                <div className="grid grid-cols-[minmax(0,1fr)_auto] items-start gap-3">
-                  <p className="min-w-0 font-semibold text-foreground">{ins.title}</p>
-                  <Badge variant="secondary" className="shrink-0">
-                    {ins.tag}
-                  </Badge>
+      {/* Feature Grid */}
+      <section className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
+        {[
+          {
+            title: "Discover Schemes",
+            desc: "Browse 500+ Central and State government schemes.",
+            icon: Landmark,
+            link: "/schemes",
+            color: "text-blue-500",
+            bg: "bg-blue-50",
+          },
+          {
+            title: "Check Eligibility",
+            desc: "Instantly find out if you qualify for specific benefits.",
+            icon: ShieldCheck,
+            link: "/eligibility",
+            color: "text-emerald-500",
+            bg: "bg-emerald-50",
+          },
+          {
+            title: "Document Assistant",
+            desc: "AI-powered help with document prep and verification.",
+            icon: FileSearch,
+            link: "/documents",
+            color: "text-amber-500",
+            bg: "bg-amber-50",
+          },
+          {
+            title: "Application Tracker",
+            desc: "Real-time updates on your pending applications.",
+            icon: RouteIcon,
+            link: "/applications",
+            color: "text-purple-500",
+            bg: "bg-purple-50",
+          },
+        ].map((feature) => (
+          <Link key={feature.title} to={feature.link}>
+            <Card className="group h-full transition-all duration-300 hover:-translate-y-1 hover:shadow-lg">
+              <CardContent className="flex flex-col items-start gap-4 p-6">
+                <div className={`rounded-2xl ${feature.bg} p-3 transition-colors group-hover:bg-primary/10`}>
+                  <feature.icon className={`h-6 w-6 ${feature.color} group-hover:text-primary`} />
                 </div>
-                <p className="mt-1 text-sm text-muted-foreground">{ins.body}</p>
+                <div>
+                  <h3 className="font-display font-bold text-foreground">{feature.title}</h3>
+                  <p className="mt-1 text-sm text-muted-foreground">{feature.desc}</p>
+                </div>
+                <div className="mt-auto flex items-center text-xs font-semibold text-primary opacity-0 transition-opacity group-hover:opacity-100">
+                  Explore <ChevronRight className="ml-1 h-3 w-3" />
+                </div>
+              </CardContent>
+            </Card>
+          </Link>
+        ))}
+      </section>
+
+      {/* Popular Services Section */}
+      <section className="space-y-6">
+        <div className="flex items-end justify-between">
+          <div>
+            <h2 className="font-display text-2xl font-extrabold text-foreground">Popular Services</h2>
+            <p className="text-sm text-muted-foreground">Most accessed citizen services this week</p>
+          </div>
+          <Button variant="link" className="text-primary" asChild>
+            <Link to="/schemes">View all <ArrowRight className="ml-2 h-4 w-4" /></Link>
+          </Button>
+        </div>
+        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+          {featuredServices.map((service) => (
+            <Card key={service.title} className="group cursor-pointer border-transparent bg-muted/40 transition-colors hover:border-primary/20 hover:bg-card">
+              <CardContent className="flex items-center gap-4 p-4">
+                <div className="rounded-xl bg-background p-2.5 shadow-sm group-hover:text-primary">
+                  <service.icon className="h-5 w-5" />
+                </div>
+                <div className="min-w-0 flex-1">
+                  <h4 className="truncate text-sm font-bold text-foreground">{service.title}</h4>
+                  <p className="truncate text-[11px] text-muted-foreground">{service.dept}</p>
+                </div>
+                <Badge variant="secondary" className="bg-background text-[10px] font-bold uppercase tracking-tight">
+                  {service.tag}
+                </Badge>
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+      </section>
+
+      {/* How it Works */}
+      <section className="rounded-[2.5rem] bg-muted/30 px-6 py-16 sm:px-12">
+        <div className="mx-auto max-w-4xl text-center">
+          <h2 className="font-display text-3xl font-extrabold text-foreground">How GovCopilot Works</h2>
+          <p className="mt-4 text-muted-foreground">Three simple steps to access your government benefits</p>
+          <div className="mt-16 grid gap-12 sm:grid-cols-3">
+            {[
+              { step: "01", title: "Tell us what you need", desc: "Use the AI search to describe your requirement in plain language." },
+              { step: "02", title: "Copilot finds services", desc: "Our AI maps your needs to the most relevant government schemes." },
+              { step: "03", title: "Apply with confidence", desc: "Follow step-by-step guides to complete your application correctly." },
+            ].map((s) => (
+              <div key={s.step} className="relative text-center">
+                <span className="font-display text-6xl font-black text-primary/5">{s.step}</span>
+                <div className="relative -mt-8 space-y-2">
+                  <h4 className="font-bold text-foreground">{s.title}</h4>
+                  <p className="text-sm text-muted-foreground">{s.desc}</p>
+                </div>
               </div>
             ))}
-          </CardContent>
-        </Card>
-      </div>
+          </div>
+        </div>
+      </section>
 
-      <Card className="animate-rise">
-        <CardHeader className="flex-row items-center gap-2 pb-2">
-          <Activity className="h-4 w-4 text-primary" />
-          <CardTitle className="text-base">Recent activity</CardTitle>
-        </CardHeader>
-        <CardContent className="p-0">
-          {recentActivity.map((a, i) => (
-            <div key={a.what}>
-              {i > 0 && <Separator />}
-              <div className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-3 px-6 py-3">
-                <div className="min-w-0">
-                  <p className="truncate text-sm font-medium text-foreground">{a.what}</p>
-                  <p className="text-xs text-muted-foreground">{a.who}</p>
-                </div>
-                <span className="shrink-0 text-xs text-muted-foreground">{a.when}</span>
-              </div>
-            </div>
-          ))}
-        </CardContent>
-      </Card>
+      {/* Trust Indicator Footer */}
+      <footer className="mt-8 flex flex-col items-center justify-between gap-4 border-t border-border pt-8 text-center sm:flex-row sm:text-left">
+        <div className="flex items-center gap-2 text-xs text-muted-foreground">
+          <ShieldCheck className="h-4 w-4 text-success" />
+          <span>Official government information assistant powered by AI</span>
+        </div>
+        <p className="text-[11px] text-muted-foreground">
+          Data sourced from National Portal of India. Last updated: March 2025
+        </p>
+      </footer>
     </div>
   );
 }
+
+// Simple internal icon mapper if needed, but imported lucide icons are better
+const RouteIcon = (props: any) => <Landmark {...props} />;
