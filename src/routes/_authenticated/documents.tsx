@@ -1,6 +1,9 @@
-import { useRef, useState } from "react";
+import { useRef, useState, useEffect } from "react";
 import { createFileRoute } from "@tanstack/react-router";
-import { FileSearch, Quote, SendHorizonal, Sparkle } from "lucide-react";
+import { FileSearch, Quote, SendHorizonal, Sparkle, Loader2 } from "lucide-react";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useServerFn } from "@tanstack/react-start";
+import { toast } from "sonner";
 
 import { PageHeader } from "@/components/page-header";
 import { Dropzone, type DroppedFile } from "@/components/dropzone";
@@ -8,7 +11,15 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Textarea } from "@/components/ui/textarea";
-import { demoDocuments, documentQA, suggestedDocQuestions, type ChatTurn } from "@/lib/demo-data";
+import { suggestedDocQuestions } from "@/lib/demo-data";
+import { 
+  getDocuments, 
+  uploadDocumentMetadata, 
+  processDocument, 
+  deleteDocument,
+  searchUserDocuments 
+} from "@/lib/documents.functions";
+import { supabase } from "@/integrations/supabase/client";
 
 export const Route = createFileRoute("/_authenticated/documents")({
   head: () => ({
@@ -29,29 +40,133 @@ export const Route = createFileRoute("/_authenticated/documents")({
   component: Documents,
 });
 
+type ChatTurn = {
+  role: "user" | "assistant";
+  text: string;
+  citations?: { doc: string; page: number; snippet: string }[];
+};
+
 function Documents() {
-  const [files, setFiles] = useState<DroppedFile[]>(demoDocuments as DroppedFile[]);
+  const queryClient = useQueryClient();
+  const getDocsFn = useServerFn(getDocuments);
+  const uploadMetaFn = useServerFn(uploadDocumentMetadata);
+  const processDocFn = useServerFn(processDocument);
+  const deleteDocFn = useServerFn(deleteDocument);
+  const searchDocsFn = useServerFn(searchUserDocuments);
+
   const [input, setInput] = useState("");
   const [thinking, setThinking] = useState(false);
   const [turns, setTurns] = useState<ChatTurn[]>([
     {
       role: "assistant",
-      text: "I have indexed 3 documents (156 pages). Ask me anything — I will answer with clause-level citations.",
+      text: "Upload your government documents and I will help you analyze them with citations.",
     },
   ]);
   const endRef = useRef<HTMLDivElement>(null);
 
-  const ask = (question: string) => {
+  const { data: documents = [], isLoading } = useQuery({
+    queryKey: ["documents"],
+    queryFn: () => getDocsFn(),
+  });
+
+  useEffect(() => {
+    endRef.current?.scrollIntoView({ behavior: "smooth" });
+  }, [turns, thinking]);
+
+  const handleUpload = async (files: File[]) => {
+    for (const file of files) {
+      try {
+        const filePath = `${Math.random().toString(36).substring(2)}-${file.name}`;
+        
+        const { error: uploadError } = await supabase.storage
+          .from("documents")
+          .upload(filePath, file);
+
+        if (uploadError) throw uploadError;
+
+        const doc = await uploadMetaFn({ 
+          data: {
+            name: file.name,
+            file_path: filePath,
+            file_size: file.size,
+            content_type: file.type
+          }
+        });
+
+        toast.success(`Uploaded ${file.name}. Starting AI indexing...`);
+        queryClient.invalidateQueries({ queryKey: ["documents"] });
+
+        processDocFn({ data: { documentId: doc.id } })
+          .then(() => {
+            toast.success(`Successfully indexed ${file.name}`);
+            queryClient.invalidateQueries({ queryKey: ["documents"] });
+          })
+          .catch((err) => {
+            console.error("Processing error:", err);
+            toast.error(`Failed to index ${file.name}`);
+            queryClient.invalidateQueries({ queryKey: ["documents"] });
+          });
+
+      } catch (error: any) {
+        toast.error(`Upload failed: ${error.message}`);
+      }
+    }
+  };
+
+  const handleDelete = async (file: DroppedFile) => {
+    if (!file.id) return;
+    try {
+      await deleteDocFn({ data: { documentId: file.id } });
+      toast.success("Document deleted");
+      queryClient.invalidateQueries({ queryKey: ["documents"] });
+    } catch (error: any) {
+      toast.error("Delete failed");
+    }
+  };
+
+  const ask = async (question: string) => {
     if (!question.trim() || thinking) return;
+    
     setTurns((t) => [...t, { role: "user", text: question }]);
     setInput("");
     setThinking(true);
-    setTimeout(() => {
-      setTurns((t) => [...t, documentQA.default]);
+
+    try {
+      const results = await searchDocsFn({ data: { query: question, limit: 3 } });
+      
+      if (results.length === 0) {
+        setTurns((t) => [...t, { 
+          role: "assistant", 
+          text: "I couldn't find any relevant information in your uploaded documents. Please try another question or upload more sources." 
+        }]);
+      } else {
+        const citations = results.map(r => ({
+          doc: r.document_name,
+          page: 1, // Mock page for now as extraction doesn't provide real pages
+          snippet: r.content
+        }));
+
+        setTurns((t) => [...t, { 
+          role: "assistant", 
+          text: `Based on your documents, here is what I found:\n\n${results[0].content}`,
+          citations
+        }]);
+      }
+    } catch (error) {
+      toast.error("Search failed");
+      setTurns((t) => [...t, { role: "assistant", text: "I encountered an error while searching your documents." }]);
+    } finally {
       setThinking(false);
-      endRef.current?.scrollIntoView({ behavior: "smooth" });
-    }, 1100);
+    }
   };
+
+  const mappedFiles: DroppedFile[] = documents.map(d => ({
+    id: d.id,
+    name: d.name,
+    size: `${(d.file_size / 1024 / 1024).toFixed(1)} MB`,
+    status: d.status,
+    error: d.error_message
+  }));
 
   return (
     <div className="mx-auto max-w-7xl space-y-6">
@@ -68,18 +183,17 @@ function Documents() {
             <CardTitle className="text-base">Knowledge base</CardTitle>
           </CardHeader>
           <CardContent>
-            <Dropzone
-              files={files}
-              onAdd={(newFiles) => {
-                const mapped = newFiles.map(f => ({
-                  name: f.name,
-                  size: `${(f.size / 1024 / 1024).toFixed(1)} MB`,
-                  status: 'uploaded'
-                }));
-                setFiles((prev) => [...prev, ...mapped]);
-              }}
-              onRemove={(file) => setFiles((prev) => prev.filter((f) => f.name !== file.name))}
-            />
+            {isLoading ? (
+              <div className="flex h-32 items-center justify-center">
+                <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+              </div>
+            ) : (
+              <Dropzone
+                files={mappedFiles}
+                onAdd={handleUpload}
+                onRemove={handleDelete}
+              />
+            )}
           </CardContent>
         </Card>
 
@@ -88,7 +202,7 @@ function Documents() {
             <Sparkle className="h-4 w-4 text-primary" />
             <CardTitle className="text-base">Document chat</CardTitle>
             <Badge variant="secondary" className="ml-auto">
-              {files.length} sources
+              {documents.filter(d => d.status === 'ready').length} indexed
             </Badge>
           </CardHeader>
 
@@ -102,7 +216,7 @@ function Documents() {
                 </div>
               ) : (
                 <div key={i} className="animate-rise max-w-[92%] space-y-3">
-                  <p className="text-sm leading-relaxed text-foreground">{t.text}</p>
+                  <div className="text-sm leading-relaxed text-foreground whitespace-pre-wrap">{t.text}</div>
                   {t.citations && (
                     <div className="space-y-2">
                       <p className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
@@ -133,9 +247,10 @@ function Documents() {
               ),
             )}
             {thinking && (
-              <p className="animate-pulse text-sm text-muted-foreground">
-                Searching 156 pages across {files.length} documents…
-              </p>
+              <div className="flex items-center gap-2 text-sm text-muted-foreground animate-pulse">
+                <Loader2 className="h-4 w-4 animate-spin" />
+                <span>Searching documents…</span>
+              </div>
             )}
             <div ref={endRef} />
           </CardContent>
