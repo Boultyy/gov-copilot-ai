@@ -270,6 +270,104 @@ export type Database = {
         }
         Relationships: []
       }
+      ingestion_logs: {
+        Row: {
+          created_at: string | null
+          error_log: Json | null
+          id: string
+          records_inserted: number | null
+          records_processed: number | null
+          records_updated: number | null
+          source_id: string | null
+          status: Database["public"]["Enums"]["ingestion_sync_status"] | null
+        }
+        Insert: {
+          created_at?: string | null
+          error_log?: Json | null
+          id?: string
+          records_inserted?: number | null
+          records_processed?: number | null
+          records_updated?: number | null
+          source_id?: string | null
+          status?: Database["public"]["Enums"]["ingestion_sync_status"] | null
+        }
+        Update: {
+          created_at?: string | null
+          error_log?: Json | null
+          id?: string
+          records_inserted?: number | null
+          records_processed?: number | null
+          records_updated?: number | null
+          source_id?: string | null
+          status?: Database["public"]["Enums"]["ingestion_sync_status"] | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ingestion_logs_source_id_fkey"
+            columns: ["source_id"]
+            isOneToOne: false
+            referencedRelation: "ingestion_sources"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      ingestion_sources: {
+        Row: {
+          api_endpoint: string | null
+          auth_config: Json | null
+          base_url: string | null
+          created_at: string | null
+          dataset_identifier: string | null
+          enabled: boolean | null
+          id: string
+          last_sync_at: string | null
+          last_sync_error: string | null
+          last_sync_status:
+            | Database["public"]["Enums"]["ingestion_sync_status"]
+            | null
+          name: string
+          refresh_frequency_seconds: number | null
+          source_type: Database["public"]["Enums"]["ingestion_source_type"]
+          updated_at: string | null
+        }
+        Insert: {
+          api_endpoint?: string | null
+          auth_config?: Json | null
+          base_url?: string | null
+          created_at?: string | null
+          dataset_identifier?: string | null
+          enabled?: boolean | null
+          id?: string
+          last_sync_at?: string | null
+          last_sync_error?: string | null
+          last_sync_status?:
+            | Database["public"]["Enums"]["ingestion_sync_status"]
+            | null
+          name: string
+          refresh_frequency_seconds?: number | null
+          source_type: Database["public"]["Enums"]["ingestion_source_type"]
+          updated_at?: string | null
+        }
+        Update: {
+          api_endpoint?: string | null
+          auth_config?: Json | null
+          base_url?: string | null
+          created_at?: string | null
+          dataset_identifier?: string | null
+          enabled?: boolean | null
+          id?: string
+          last_sync_at?: string | null
+          last_sync_error?: string | null
+          last_sync_status?:
+            | Database["public"]["Enums"]["ingestion_sync_status"]
+            | null
+          name?: string
+          refresh_frequency_seconds?: number | null
+          source_type?: Database["public"]["Enums"]["ingestion_source_type"]
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
       messages: {
         Row: {
           content: string
@@ -502,6 +600,51 @@ export type Database = {
             columns: ["scheme_id"]
             isOneToOne: false
             referencedRelation: "schemes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      scheme_source_mapping: {
+        Row: {
+          external_record_id: string | null
+          id: string
+          last_observed_at: string | null
+          raw_data: Json | null
+          scheme_id: string | null
+          source_id: string | null
+          source_url: string | null
+        }
+        Insert: {
+          external_record_id?: string | null
+          id?: string
+          last_observed_at?: string | null
+          raw_data?: Json | null
+          scheme_id?: string | null
+          source_id?: string | null
+          source_url?: string | null
+        }
+        Update: {
+          external_record_id?: string | null
+          id?: string
+          last_observed_at?: string | null
+          raw_data?: Json | null
+          scheme_id?: string | null
+          source_id?: string | null
+          source_url?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "scheme_source_mapping_scheme_id_fkey"
+            columns: ["scheme_id"]
+            isOneToOne: false
+            referencedRelation: "schemes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "scheme_source_mapping_source_id_fkey"
+            columns: ["source_id"]
+            isOneToOne: false
+            referencedRelation: "ingestion_sources"
             referencedColumns: ["id"]
           },
         ]
@@ -762,6 +905,14 @@ export type Database = {
     }
     Enums: {
       app_role: "admin" | "moderator" | "user"
+      ingestion_source_type:
+        | "official_api"
+        | "official_dataset"
+        | "official_csv"
+        | "official_json"
+        | "authorized_partner_feed"
+        | "manual_verified_import"
+      ingestion_sync_status: "success" | "failed" | "pending" | "processing"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -890,6 +1041,15 @@ export const Constants = {
   public: {
     Enums: {
       app_role: ["admin", "moderator", "user"],
+      ingestion_source_type: [
+        "official_api",
+        "official_dataset",
+        "official_csv",
+        "official_json",
+        "authorized_partner_feed",
+        "manual_verified_import",
+      ],
+      ingestion_sync_status: ["success", "failed", "pending", "processing"],
     },
   },
 } as const
