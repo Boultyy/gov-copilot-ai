@@ -17,7 +17,7 @@ function AuthPage() {
 
   useEffect(() => {
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
-      if (event === 'SIGNED_IN' && session) {
+      if ((event === 'SIGNED_IN' || event === 'INITIAL_SESSION') && session) {
         navigate({ to: search.redirect || '/' })
       }
     })
@@ -55,7 +55,17 @@ function AuthPage() {
             }}
             providers={['google', 'apple']}
             redirectTo={`${window.location.origin}/auth`}
+            localization={{
+              variables: {
+                sign_in: {
+                  social_provider_text: 'Sign in with {{provider}} (Dev Mode)',
+                },
+              },
+            }}
           />
+          <p className="text-[10px] text-muted-foreground mt-4 text-center px-4">
+            Note: Google and Apple sign-in require manual configuration. If you see a configuration error, please use Email and Password to test the application.
+          </p>
         </CardContent>
       </Card>
     </div>
