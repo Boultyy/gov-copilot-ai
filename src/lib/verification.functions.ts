@@ -10,7 +10,12 @@ export const getPendingSchemes = createServerFn({ method: "GET" })
     const { data: hasAdmin, error: roleError } = await context.supabase
       .rpc('has_role', { _user_id: context.userId, _role: 'admin' });
     
-    if (roleError || !hasAdmin) {
+    if (roleError) {
+      console.error("Verification Role Error:", roleError);
+      throw new Error(`Auth Error: ${roleError.message}`);
+    }
+
+    if (!hasAdmin) {
       throw new Error("Unauthorized: Admin role required");
     }
 
