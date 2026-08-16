@@ -31,7 +31,7 @@ const eligibilitySearchSchema = z.object({
 });
 
 export const Route = createFileRoute("/_authenticated/eligibility/")({
-  validateSearch: (search) => eligibilitySearchSchema.parse(search),
+  validateSearch: (search: Record<string, unknown>) => eligibilitySearchSchema.parse(search),
   head: () => ({
     meta: [
       { title: "Eligibility Assessment | GovCopilot" },
