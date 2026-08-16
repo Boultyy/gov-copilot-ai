@@ -40,7 +40,7 @@ export const uploadDocumentMetadata = createServerFn({ method: "POST" })
     // Trigger processing (async)
     // In a real production environment, this would be a background job.
     // For this implementation, we trigger it immediately.
-    processDocument({ documentId: doc.id }).catch(console.error);
+    processDocument({ data: { documentId: doc.id } }).catch(console.error);
 
     return doc;
   });
