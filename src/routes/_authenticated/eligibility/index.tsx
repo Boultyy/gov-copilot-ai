@@ -45,7 +45,7 @@ export const Route = createFileRoute("/_authenticated/eligibility/")({
 });
 
 function EligibilityPage() {
-  const search = useSearch({ from: "/_authenticated/eligibility" });
+  const search = useSearch({ from: Route.fullPath }) as any;
   const schemeId = search.schemeId;
   const [step, setStep] = useState(schemeId ? "form" : "select");
   
