@@ -378,26 +378,32 @@ function Workflow() {
                     <h4 className="text-sm font-semibold">Application History</h4>
                   </div>
                   
-                  {applications.find(a => a.service_id === active.id) ? (
-                    <div className="space-y-6">
-                      {applications.find(a => a.service_id === active.id).events?.sort((a: any, b: any) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime()).map((event: any, i: number) => (
-                        <div key={i} className="relative pl-4">
-                          <div className={`absolute left-0 top-1.5 h-2 w-2 rounded-full ${i === 0 ? 'bg-primary ring-4 ring-primary/10' : 'bg-muted-foreground/30'}`} />
-                          {i !== (applications.find(a => a.service_id === active.id).events.length - 1) && (
-                            <div className="absolute left-[3px] top-4 h-full w-[2px] bg-border/50" />
-                          )}
-                          <p className="text-xs font-semibold capitalize">{event.stage.replace('_', ' ')}</p>
-                          <p className="mt-0.5 text-[10px] text-muted-foreground">{new Date(event.created_at).toLocaleString()}</p>
-                          {event.notes && <p className="mt-1 text-[10px] italic text-muted-foreground">"{event.notes}"</p>}
+                  {(() => {
+                    const activeApp = applications.find(a => a.service_id === active.id);
+                    if (activeApp) {
+                      return (
+                        <div className="space-y-6">
+                          {activeApp.events?.sort((a: any, b: any) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime()).map((event: any, i: number) => (
+                            <div key={i} className="relative pl-4">
+                              <div className={`absolute left-0 top-1.5 h-2 w-2 rounded-full ${i === 0 ? 'bg-primary ring-4 ring-primary/10' : 'bg-muted-foreground/30'}`} />
+                              {i !== (activeApp.events.length - 1) && (
+                                <div className="absolute left-[3px] top-4 h-full w-[2px] bg-border/50" />
+                              )}
+                              <p className="text-xs font-semibold capitalize">{event.stage.replace('_', ' ')}</p>
+                              <p className="mt-0.5 text-[10px] text-muted-foreground">{new Date(event.created_at).toLocaleString()}</p>
+                              {event.notes && <p className="mt-1 text-[10px] italic text-muted-foreground">"{event.notes}"</p>}
+                            </div>
+                          ))}
                         </div>
-                      ))}
-                    </div>
-                  ) : (
-                    <div className="flex h-48 flex-col items-center justify-center text-center">
-                      <CalendarClock className="h-8 w-8 text-muted-foreground/30" />
-                      <p className="mt-2 text-xs text-muted-foreground">Select or start a tracker to see history.</p>
-                    </div>
-                  )}
+                      );
+                    }
+                    return (
+                      <div className="flex h-48 flex-col items-center justify-center text-center">
+                        <CalendarClock className="h-8 w-8 text-muted-foreground/30" />
+                        <p className="mt-2 text-xs text-muted-foreground">Select or start a tracker to see history.</p>
+                      </div>
+                    );
+                  })()}
                 </div>
               </div>
             </CardContent>
