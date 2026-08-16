@@ -68,9 +68,40 @@ export const triggerSourceSync = createServerFn({ method: "POST" })
           scheme_name: "PM Vishwakarma",
           ministry_name: "Ministry of MSME",
           level: "Central",
-          cat: "Livelihood",
-          desc: "Updated description to test change detection.",
+          cat: "Business/Self-employed",
+          desc: "Support for traditional artisans and craftspeople.",
           url: "https://pmvishwakarma.gov.in/",
+          updated_at: new Date().toISOString()
+        },
+        {
+          external_id: "GOI-SCH-HEALTH-202",
+          scheme_name: "Ayushman Bharat PM-JAY",
+          ministry_name: "Ministry of Health and Family Welfare",
+          level: "Central",
+          cat: "Health",
+          desc: "World's largest health insurance/assurance scheme fully financed by the government.",
+          url: "https://pmjay.gov.in/",
+          updated_at: new Date().toISOString()
+        },
+        {
+          external_id: "KA-SCH-EDU-303",
+          scheme_name: "Kanya Shiksha Protsahan Yojana",
+          ministry_name: "Department of Education (State)",
+          level: "State",
+          state: "Karnataka",
+          cat: "Education",
+          desc: "Financial assistance to girls for pursuing higher education.",
+          url: "https://karnataka.gov.in/education",
+          updated_at: new Date().toISOString()
+        },
+        {
+          external_id: "GOI-SCH-FARM-404",
+          scheme_name: "PM-KISAN",
+          ministry_name: "Ministry of Agriculture & Farmers Welfare",
+          level: "Central",
+          cat: "Farming/Agriculture",
+          desc: "Income support to all landholding farmers' families in the country.",
+          url: "https://pmkisan.gov.in/",
           updated_at: new Date().toISOString()
         }
       ];
