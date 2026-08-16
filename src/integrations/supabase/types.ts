@@ -309,6 +309,42 @@ export type Database = {
         }
         Relationships: []
       }
+      drafts: {
+        Row: {
+          content: string
+          created_at: string
+          id: string
+          metadata: Json | null
+          status: string
+          title: string
+          type: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          content: string
+          created_at?: string
+          id?: string
+          metadata?: Json | null
+          status?: string
+          title: string
+          type: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          content?: string
+          created_at?: string
+          id?: string
+          metadata?: Json | null
+          status?: string
+          title?: string
+          type?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       ingestion_logs: {
         Row: {
           created_at: string | null
