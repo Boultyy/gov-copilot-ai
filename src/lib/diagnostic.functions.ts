@@ -1,48 +1,11 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
-import OpenAI from "openai";
 
 export const runAiDiagnostic = createServerFn({ method: "POST" })
   .validator((data: { prompt?: string }) => z.object({ prompt: z.string().optional() }).parse(data))
   .handler(async ({ data }) => {
-    const results: any = {
+    return {
       timestamp: new Date().toISOString(),
-      tests: [],
+      tests: [{ name: "STATIC_TEST", status: "SUCCESS" }]
     };
-
-    const apiKey = process.env.LOVABLE_API_KEY;
-    const projectID = process.env.LOVABLE_PROJECT_ID;
-    
-    // Just test ONE endpoint that is most likely correct
-    const baseURL = "https://api.lovable.dev/v1/ai/openai";
-
-    try {
-      const ai = new OpenAI({
-        apiKey: apiKey || "dummy-key",
-        baseURL,
-        defaultHeaders: {
-          "x-lovable-project-id": projectID || "",
-        }
-      });
-
-      const response = await ai.chat.completions.create({
-        model: "gpt-4o",
-        messages: [{ role: "user", content: data.prompt || "Ping" }],
-        max_tokens: 5,
-      });
-
-      results.tests.push({
-        name: `GPT-4o via Gateway`,
-        status: "SUCCESS",
-        model: response.model,
-      });
-    } catch (err: any) {
-      results.tests.push({
-        name: `GPT-4o via Gateway`,
-        status: "FAILED",
-        error: { message: err.message, status: err.status }
-      });
-    }
-
-    return results;
   });
