@@ -92,7 +92,7 @@ function Copilot() {
   // Mutations
   const startConv = useMutation({
     mutationFn: (title?: string) => startConvFn({ data: { title } }),
-    onSuccess: (newConv) => {
+    onSuccess: (newConv: any) => {
       queryClient.invalidateQueries({ queryKey: ["conversations"] });
       setActiveId(newConv.id);
     },
