@@ -46,29 +46,38 @@ export type Database = {
       }
       application_events: {
         Row: {
+          actor_id: string | null
           application_id: string
           created_at: string
           description: string | null
           event_date: string | null
           id: string
+          metadata: Json | null
+          notes: string | null
           stage: string
           status: string
         }
         Insert: {
+          actor_id?: string | null
           application_id: string
           created_at?: string
           description?: string | null
           event_date?: string | null
           id?: string
+          metadata?: Json | null
+          notes?: string | null
           stage: string
           status: string
         }
         Update: {
+          actor_id?: string | null
           application_id?: string
           created_at?: string
           description?: string | null
           event_date?: string | null
           id?: string
+          metadata?: Json | null
+          notes?: string | null
           stage?: string
           status?: string
         }
@@ -84,37 +93,58 @@ export type Database = {
       }
       applications: {
         Row: {
+          application_date: string | null
           created_at: string
+          department: string | null
           estimated_completion_date: string | null
           external_app_id: string | null
           id: string
+          is_official_status: boolean | null
+          last_status_change_at: string | null
+          notes: string | null
+          official_source_id: string | null
           progress_percentage: number | null
           scheme_id: string | null
           service_id: string | null
+          source_reference: string | null
           status: string
           updated_at: string
           user_id: string
         }
         Insert: {
+          application_date?: string | null
           created_at?: string
+          department?: string | null
           estimated_completion_date?: string | null
           external_app_id?: string | null
           id?: string
+          is_official_status?: boolean | null
+          last_status_change_at?: string | null
+          notes?: string | null
+          official_source_id?: string | null
           progress_percentage?: number | null
           scheme_id?: string | null
           service_id?: string | null
+          source_reference?: string | null
           status: string
           updated_at?: string
           user_id: string
         }
         Update: {
+          application_date?: string | null
           created_at?: string
+          department?: string | null
           estimated_completion_date?: string | null
           external_app_id?: string | null
           id?: string
+          is_official_status?: boolean | null
+          last_status_change_at?: string | null
+          notes?: string | null
+          official_source_id?: string | null
           progress_percentage?: number | null
           scheme_id?: string | null
           service_id?: string | null
+          source_reference?: string | null
           status?: string
           updated_at?: string
           user_id?: string
