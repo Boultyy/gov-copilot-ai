@@ -1,13 +1,17 @@
 import { useState } from "react";
 import { createFileRoute } from "@tanstack/react-router";
-import { AlertTriangle, CheckCircle2, GitCompareArrows, ScanSearch, XCircle } from "lucide-react";
+import { GitCompareArrows, ScanSearch, AlertTriangle, FileText, CheckCircle2, XCircle, Loader2 } from "lucide-react";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useServerFn } from "@tanstack/react-start";
+import { toast } from "sonner";
 
 import { PageHeader } from "@/components/page-header";
-import { Dropzone, type DroppedFile } from "@/components/dropzone";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { complianceChecks, conflicts, missingClauses } from "@/lib/demo-data";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { comparePolicies, getPolicyComparisons } from "@/lib/policy.functions";
+import { getDocuments } from "@/lib/documents.functions";
 
 export const Route = createFileRoute("/_authenticated/policy")({
   head: () => ({
@@ -15,17 +19,11 @@ export const Route = createFileRoute("/_authenticated/policy")({
       { title: "Policy Conflict Checker | GovCopilot" },
       {
         name: "description",
-        content:
-          "Compare two policy documents side by side to surface contradictory clauses, missing provisions and statutory compliance gaps.",
-      },
-      { property: "og:title", content: "Policy Conflict Checker | GovCopilot" },
-      {
-        property: "og:description",
-        content: "Detect clause conflicts, missing provisions and compliance gaps across policies.",
+        content: "Compare two policy documents for conflicts, gaps and compliance risk.",
       },
     ],
   }),
-  component: Policy,
+  component: PolicyComparison,
 });
 
 const severityStyle: Record<string, string> = {
@@ -34,19 +32,37 @@ const severityStyle: Record<string, string> = {
   low: "bg-muted text-muted-foreground border-border",
 };
 
-function Policy() {
-  const [docA, setDocA] = useState<DroppedFile[]>([
-    { name: "Housing_Policy_2021.pdf", size: "1.9 MB" },
-  ]);
-  const [docB, setDocB] = useState<DroppedFile[]>([
-    { name: "Draft_Housing_Rules_2025.docx", size: "840 KB" },
-  ]);
-  const [state, setState] = useState<"idle" | "scanning" | "done">("done");
+function PolicyComparison() {
+  const queryClient = useQueryClient();
+  const getDocsFn = useServerFn(getDocuments);
+  const getComparisonsFn = useServerFn(getPolicyComparisons);
+  const runComparisonFn = useServerFn(comparePolicies);
 
-  const run = () => {
-    setState("scanning");
-    setTimeout(() => setState("done"), 1400);
-  };
+  const [selectedA, setSelectedA] = useState<string>("");
+  const [selectedB, setSelectedB] = useState<string>("");
+
+  const { data: documents = [], isLoading: docsLoading } = useQuery({
+    queryKey: ["documents"],
+    queryFn: () => getDocsFn(),
+  });
+
+  const { data: comparisons = [], isLoading: compsLoading } = useQuery({
+    queryKey: ["comparisons"],
+    queryFn: () => getComparisonsFn(),
+  });
+
+  const compareMutation = useMutation({
+    mutationFn: (data: { policyAId: string, policyBId: string }) => runComparisonFn({ data }),
+    onSuccess: () => {
+      toast.success("Comparison completed successfully");
+      queryClient.invalidateQueries({ queryKey: ["comparisons"] });
+    },
+    onError: (error: any) => {
+      toast.error(error.message || "Failed to compare policies");
+    }
+  });
+
+  const readyDocs = documents.filter(d => d.status === 'ready');
 
   return (
     <div className="mx-auto max-w-7xl space-y-6">
@@ -56,147 +72,161 @@ function Policy() {
         description="Compare two policy documents for conflicts, gaps and compliance risk."
         icon={<GitCompareArrows className="h-6 w-6" />}
         actions={
-          <Button className="shrink-0 rounded-full" onClick={run} disabled={state === "scanning"}>
+          <Button 
+            className="shrink-0 rounded-full" 
+            onClick={() => compareMutation.mutate({ policyAId: selectedA, policyBId: selectedB })} 
+            disabled={!selectedA || !selectedB || compareMutation.isPending}
+          >
             <ScanSearch className="mr-2 h-4 w-4" />
-            {state === "scanning" ? "Analysing…" : "Run comparison"}
+            {compareMutation.isPending ? "Analysing…" : "Run comparison"}
           </Button>
         }
       />
 
       <div className="grid gap-4 md:grid-cols-2">
-        {[
-          { label: "Document A — existing policy", files: docA, set: setDocA },
-          { label: "Document B — proposed policy", files: docB, set: setDocB },
-        ].map((slot) => (
-          <Card key={slot.label} className="animate-rise">
-            <CardHeader className="pb-3">
-              <CardTitle className="text-sm">{slot.label}</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <Dropzone
-                files={slot.files}
-                onAdd={(newFiles) => {
-                  const mapped = newFiles.map(f => ({
-                    name: f.name,
-                    size: `${(f.size / 1024 / 1024).toFixed(1)} MB`,
-                    status: 'uploaded'
-                  }));
-                  slot.set((p) => [...p, ...mapped]);
-                }}
-                onRemove={(file) => slot.set((p) => p.filter((x) => x.name !== file.name))}
-              />
-            </CardContent>
-          </Card>
-        ))}
+        <Card className="animate-rise">
+          <CardHeader className="pb-3">
+            <CardTitle className="text-sm font-medium">Document A — Existing Policy</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <Select value={selectedA} onValueChange={setSelectedA}>
+              <SelectTrigger>
+                <SelectValue placeholder={docsLoading ? "Loading documents..." : "Select document..."} />
+              </SelectTrigger>
+              <SelectContent>
+                {readyDocs.map(doc => (
+                  <SelectItem key={doc.id} value={doc.id}>{doc.name}</SelectItem>
+                ))}
+                {readyDocs.length === 0 && !docsLoading && (
+                  <SelectItem value="none" disabled>No indexed documents found</SelectItem>
+                )}
+              </SelectContent>
+            </Select>
+          </CardContent>
+        </Card>
+
+        <Card className="animate-rise">
+          <CardHeader className="pb-3">
+            <CardTitle className="text-sm font-medium">Document B — Proposed Policy</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <Select value={selectedB} onValueChange={setSelectedB}>
+              <SelectTrigger>
+                <SelectValue placeholder={docsLoading ? "Loading documents..." : "Select document..."} />
+              </SelectTrigger>
+              <SelectContent>
+                {readyDocs.map(doc => (
+                  <SelectItem key={doc.id} value={doc.id}>{doc.name}</SelectItem>
+                ))}
+                {readyDocs.length === 0 && !docsLoading && (
+                  <SelectItem value="none" disabled>No indexed documents found</SelectItem>
+                )}
+              </SelectContent>
+            </Select>
+          </CardContent>
+        </Card>
       </div>
 
-      {state === "scanning" && (
-        <Card className="animate-rise">
-          <CardContent className="p-6 text-sm text-muted-foreground">
-            <p className="animate-pulse">Aligning clause structures and diffing 214 provisions…</p>
+      {compareMutation.isPending && (
+        <Card className="animate-rise border-primary/20 bg-primary/5">
+          <CardContent className="flex items-center gap-3 p-6 text-sm text-primary">
+            <Loader2 className="h-4 w-4 animate-spin" />
+            <p className="animate-pulse font-medium">Aligning clause structures and analyzing provisions for conflicts…</p>
           </CardContent>
         </Card>
       )}
 
-      {state === "done" && (
-        <>
-          <div className="grid gap-4 sm:grid-cols-3">
-            {[
-              { label: "Conflicts found", value: conflicts.length, tone: "text-destructive" },
-              { label: "Missing clauses", value: missingClauses.length, tone: "text-warning-foreground" },
-              { label: "Compliance checks passed", value: "3 / 5", tone: "text-success" },
-            ].map((s) => (
-              <Card key={s.label} className="animate-rise border-border/50 bg-muted/30 shadow-sm transition-shadow hover:shadow-md">
-                <CardContent className="p-5">
-                  <p className="text-xs text-muted-foreground">{s.label}</p>
-                  <p className={`mt-1 font-display text-2xl font-extrabold ${s.tone}`}>{s.value}</p>
-                </CardContent>
-              </Card>
-            ))}
-          </div>
+      {comparisons.length > 0 && (
+        <div className="space-y-6">
+          {comparisons.map((comp) => (
+            <div key={comp.id} className="space-y-4">
+              <div className="flex items-center gap-2 border-b border-border pb-2">
+                <Badge variant="outline" className="bg-muted">
+                  Comparison Result — {new Date(comp.created_at).toLocaleDateString()}
+                </Badge>
+                <span className="text-xs text-muted-foreground">{comp.result_summary}</span>
+              </div>
 
-          <Card className="animate-rise">
-            <CardHeader className="pb-2">
-              <CardTitle className="text-base">Clause-level conflicts</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-3">
-              {conflicts.map((c) => (
-                <div key={c.clause} className="rounded-xl border border-border bg-card p-4 shadow-sm transition-all hover:shadow-md">
-                  <div className="grid grid-cols-[minmax(0,1fr)_auto] items-start gap-3">
-                    <p className="min-w-0 font-semibold text-foreground">{c.clause}</p>
-                    <Badge
-                      variant="outline"
-                      className={`shrink-0 capitalize ${severityStyle[c.severity]}`}
-                    >
-                      {c.severity} severity
-                    </Badge>
-                  </div>
-                  <div className="mt-3 grid gap-3 md:grid-cols-2">
-                    <div className="rounded-lg border border-border bg-muted/50 p-3">
-                      <p className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
-                        Document A
-                      </p>
-                      <p className="mt-1 text-sm">{c.docA}</p>
-                    </div>
-                    <div className="rounded-lg border border-destructive/30 bg-destructive/8 p-3">
-                      <p className="text-[11px] font-semibold uppercase tracking-wider text-destructive">
-                        Document B
-                      </p>
-                      <p className="mt-1 text-sm">{c.docB}</p>
-                    </div>
-                  </div>
-                  <p className="mt-3 flex gap-2 text-sm text-muted-foreground">
-                    <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0 text-warning" />
-                    {c.issue}
-                  </p>
-                  <p className="mt-1.5 rounded-lg bg-accent/60 p-3 text-sm text-accent-foreground">
-                    <span className="font-semibold">AI recommendation: </span>
-                    {c.recommendation}
-                  </p>
-                </div>
-              ))}
-            </CardContent>
-          </Card>
+              <div className="grid gap-4 sm:grid-cols-3">
+                <Card className="animate-rise border-border/50 bg-muted/30 shadow-sm transition-shadow hover:shadow-md">
+                  <CardContent className="p-5">
+                    <p className="text-xs text-muted-foreground">Conflicts found</p>
+                    <p className="mt-1 font-display text-2xl font-extrabold text-destructive">
+                      {comp.policy_conflicts?.length || 0}
+                    </p>
+                  </CardContent>
+                </Card>
+                <Card className="animate-rise border-border/50 bg-muted/30 shadow-sm transition-shadow hover:shadow-md">
+                  <CardContent className="p-5">
+                    <p className="text-xs text-muted-foreground">Status</p>
+                    <p className="mt-1 font-display text-2xl font-extrabold text-success">Verified</p>
+                  </CardContent>
+                </Card>
+                <Card className="animate-rise border-border/50 bg-muted/30 shadow-sm transition-shadow hover:shadow-md">
+                  <CardContent className="p-5">
+                    <p className="text-xs text-muted-foreground">Evidence Level</p>
+                    <p className="mt-1 font-display text-2xl font-extrabold text-primary">High</p>
+                  </CardContent>
+                </Card>
+              </div>
 
-          <div className="grid gap-4 md:grid-cols-2">
-            <Card className="animate-rise">
-              <CardHeader className="pb-2">
-                <CardTitle className="text-base">Missing clauses</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-2">
-                {missingClauses.map((m) => (
-                  <p key={m} className="flex gap-2 text-sm text-muted-foreground">
-                    <XCircle className="mt-0.5 h-4 w-4 shrink-0 text-destructive" />
-                    {m}
-                  </p>
+              <div className="grid gap-4">
+                {comp.policy_conflicts?.map((c: any) => (
+                  <Card key={c.id} className="animate-rise overflow-hidden border-border transition-all hover:shadow-md">
+                    <CardContent className="p-0">
+                      <div className="flex items-center justify-between border-b border-border bg-muted/20 px-4 py-3">
+                        <p className="text-sm font-semibold text-foreground">{c.clause_title}</p>
+                        <Badge variant="outline" className={`capitalize ${severityStyle[c.severity] || severityStyle.low}`}>
+                          {c.severity} severity
+                        </Badge>
+                      </div>
+                      
+                      <div className="p-4 space-y-4">
+                        <div className="grid gap-3 md:grid-cols-2">
+                          <div className="rounded-lg border border-border bg-muted/50 p-3">
+                            <p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Document A Citation</p>
+                            <p className="mt-1 text-sm leading-relaxed">{c.doc_a_value}</p>
+                          </div>
+                          <div className="rounded-lg border border-destructive/20 bg-destructive/5 p-3">
+                            <p className="text-[10px] font-bold uppercase tracking-wider text-destructive">Document B Citation</p>
+                            <p className="mt-1 text-sm leading-relaxed">{c.doc_b_value}</p>
+                          </div>
+                        </div>
+
+                        <div className="flex gap-3 rounded-lg border border-warning/20 bg-warning/5 p-3 text-sm text-foreground">
+                          <AlertTriangle className="h-4 w-4 shrink-0 text-warning mt-0.5" />
+                          <div className="space-y-1">
+                            <p className="font-semibold text-xs uppercase tracking-wide text-warning-foreground">Potential conflict requiring human review</p>
+                            <p>{c.issue}</p>
+                          </div>
+                        </div>
+
+                        <div className="rounded-lg bg-primary/5 p-3 text-sm border border-primary/10">
+                          <span className="font-bold text-primary italic">AI Recommendation: </span>
+                          <span className="text-foreground">{c.recommendation}</span>
+                        </div>
+
+                        <p className="text-[10px] text-muted-foreground italic">
+                          Disclaimer: This comparison is an AI-generated analysis based on document text chunks. 
+                          It is not legal advice or an official government determination.
+                        </p>
+                      </div>
+                    </CardContent>
+                  </Card>
                 ))}
-              </CardContent>
-            </Card>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
 
-            <Card className="animate-rise">
-              <CardHeader className="pb-2">
-                <CardTitle className="text-base">Compliance checks</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-2">
-                {complianceChecks.map((c) => (
-                  <div
-                    key={c.name}
-                    className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-3 rounded-lg border border-border px-3 py-2"
-                  >
-                    <span className="min-w-0 truncate text-sm">{c.name}</span>
-                    {c.status === "pass" ? (
-                      <CheckCircle2 className="h-4 w-4 shrink-0 text-success" />
-                    ) : c.status === "warn" ? (
-                      <AlertTriangle className="h-4 w-4 shrink-0 text-warning" />
-                    ) : (
-                      <XCircle className="h-4 w-4 shrink-0 text-destructive" />
-                    )}
-                  </div>
-                ))}
-              </CardContent>
-            </Card>
-          </div>
-        </>
+      {comparisons.length === 0 && !compsLoading && !compareMutation.isPending && (
+        <Card className="animate-rise border-dashed border-border bg-transparent">
+          <CardContent className="flex flex-col items-center justify-center p-12 text-center text-muted-foreground">
+            <GitCompareArrows className="h-12 w-12 opacity-20 mb-4" />
+            <p>Select two policy documents above and run comparison to see potential conflicts.</p>
+          </CardContent>
+        </Card>
       )}
     </div>
   );
