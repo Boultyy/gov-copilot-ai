@@ -173,7 +173,7 @@ export const triggerSourceSync = createServerFn({ method: "POST" })
         source_last_updated_at: mockExternalData[0]?.updated_at
       } as any).eq("id", sourceId);
 
-      return { success: true };
+      return { success: true, processed: mockExternalData.length };
     } catch (err: any) {
       await supabaseAdmin.from("ingestion_logs").update({ 
         status: "failed", 
