@@ -203,7 +203,7 @@ function VerificationDashboard() {
                               </div>
                               <div>
                                 <label className="text-xs text-muted-foreground">Source URL</label>
-                                <a href={scheme.official_source} target="_blank" rel="noreferrer" className="text-sm text-primary flex items-center gap-1">
+                                <a href={scheme.official_source || '#'} target="_blank" rel="noreferrer" className="text-sm text-primary flex items-center gap-1">
                                   View Original <ExternalLink className="h-3 w-3" />
                                 </a>
                               </div>
