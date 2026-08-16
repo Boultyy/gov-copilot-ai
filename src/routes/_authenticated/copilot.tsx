@@ -36,15 +36,22 @@ import { toast } from "sonner";
 export const Route = createFileRoute("/_authenticated/copilot")({
   head: () => ({
     meta: [
-      { title: "AI Copilot | GovCopilot" },
+      { title: "AI Citizen Copilot | GovCopilot" },
       {
         name: "description",
         content: "Experience the next generation of government interaction with our premium AI assistant.",
       },
     ],
   }),
+  loader: async ({ context }) => {
+    await context.queryClient.ensureQueryData({
+      queryKey: ["conversations"],
+      queryFn: () => getConversations(),
+    });
+  },
   component: Copilot,
 });
+
 
 const suggestedPrompts = [
   "Find scholarships I may qualify for",
