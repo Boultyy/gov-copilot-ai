@@ -20,14 +20,18 @@ export const getSchemes = createServerFn({ method: "GET" })
       .select(`
         *,
         scheme_requirements (*)
-      `);
+      `)
+      .eq("active_status", true)
+      .eq("verification_status", "verified");
 
     if (data?.query) {
-      queryBuilder = queryBuilder.ilike("name", `%${data.query}%`);
+      // Search in both name and official_name
+      queryBuilder = queryBuilder.or(`name.ilike.%${data.query}%,official_name.ilike.%${data.query}%,short_name.ilike.%${data.query}%`);
     }
 
     if (data?.type) {
-      queryBuilder = queryBuilder.eq("type", data.type);
+      // type corresponds to government_level in the new schema
+      queryBuilder = queryBuilder.eq("government_level", data.type);
     }
 
     if (data?.category) {
@@ -35,10 +39,10 @@ export const getSchemes = createServerFn({ method: "GET" })
     }
 
     if (data?.state) {
-      queryBuilder = queryBuilder.eq("state_or_ut", data.state);
+      queryBuilder = queryBuilder.eq("state_ut", data.state);
     }
 
-    const { data: schemes, error } = await queryBuilder;
+    const { data: schemes, error } = await queryBuilder.order('created_at', { ascending: false });
 
     if (error) {
       console.error("Error fetching schemes:", error);
