@@ -1,11 +1,13 @@
 import { createFileRoute, redirect } from '@tanstack/react-router'
-import { Auth } from '@supabase/auth-ui-react'
-import { ThemeSupa } from '@supabase/auth-ui-shared'
 import { supabase } from '@/integrations/supabase/client'
-import { useEffect } from 'react'
+import { useEffect, useState } from 'react'
 import { useNavigate } from '@tanstack/react-router'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { Sparkles } from 'lucide-react'
+import { Sparkles, Loader2 } from 'lucide-react'
+import React from 'react'
+
+const Auth = React.lazy(() => import('@supabase/auth-ui-react').then(m => ({ default: m.Auth })));
+const ThemeSupa = React.lazy(() => import('@supabase/auth-ui-shared').then(m => ({ default: m.ThemeSupa })));
 
 export const Route = createFileRoute('/auth')({
   component: AuthPage,
@@ -36,33 +38,41 @@ function AuthPage() {
           <p className="text-sm text-muted-foreground mt-2">Sign in to access your secure government assistant</p>
         </CardHeader>
         <CardContent>
-          <Auth
-            supabaseClient={supabase}
-            appearance={{
-              theme: ThemeSupa,
-              variables: {
-                default: {
-                  colors: {
-                    brand: 'oklch(0.55 0.15 250)',
-                    brandAccent: 'oklch(0.45 0.15 250)',
+          {typeof window !== 'undefined' ? (
+            <React.Suspense fallback={<div className="flex justify-center py-8"><Loader2 className="h-8 w-8 animate-spin text-primary" /></div>}>
+              <Auth
+                supabaseClient={supabase}
+                appearance={{
+                  theme: ThemeSupa as any,
+                  variables: {
+                    default: {
+                      colors: {
+                        brand: 'oklch(0.55 0.15 250)',
+                        brandAccent: 'oklch(0.45 0.15 250)',
+                      },
+                    },
                   },
-                },
-              },
-              className: {
-                button: 'rounded-xl font-bold py-2',
-                input: 'rounded-xl bg-muted/50 border-border',
-              }
-            }}
-            providers={['google', 'apple']}
-            redirectTo={typeof window !== 'undefined' ? `${window.location.origin}/auth` : ''}
-            localization={{
-              variables: {
-                sign_in: {
-                  social_provider_text: 'Sign in with {{provider}} (Dev Mode)',
-                },
-              },
-            }}
-          />
+                  className: {
+                    button: 'rounded-xl font-bold py-2',
+                    input: 'rounded-xl bg-muted/50 border-border',
+                  }
+                }}
+                providers={['google', 'apple']}
+                redirectTo={`${window.location.origin}/auth`}
+                localization={{
+                  variables: {
+                    sign_in: {
+                      social_provider_text: 'Sign in with {{provider}} (Dev Mode)',
+                    },
+                  },
+                }}
+              />
+            </React.Suspense>
+          ) : (
+            <div className="flex justify-center py-8">
+              <Loader2 className="h-8 w-8 animate-spin text-primary" />
+            </div>
+          )}
           <p className="text-[10px] text-muted-foreground mt-4 text-center px-4">
             Note: Google and Apple sign-in require manual configuration. If you see a configuration error, please use Email and Password to test the application.
           </p>
