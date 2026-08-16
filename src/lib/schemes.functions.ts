@@ -15,19 +15,23 @@ export const getSchemes = createServerFn({ method: "GET" })
       .parse(data)
   )
   .handler(async ({ data }) => {
-    let queryBuilder = supabase
+    // Note: Cast queryBuilder to any to bypass type checking until Supabase types regenerate
+    let queryBuilder: any = supabase
       .from("schemes")
       .select(`
         *,
         scheme_requirements (*)
       `);
 
+    queryBuilder = queryBuilder.eq("active_status", true);
+    queryBuilder = queryBuilder.eq("verification_status", "verified");
+
     if (data?.query) {
-      queryBuilder = queryBuilder.ilike("name", `%${data.query}%`);
+      queryBuilder = queryBuilder.or(`name.ilike.%${data.query}%,official_name.ilike.%${data.query}%,short_name.ilike.%${data.query}%`);
     }
 
     if (data?.type) {
-      queryBuilder = queryBuilder.eq("type", data.type);
+      queryBuilder = queryBuilder.eq("government_level", data.type);
     }
 
     if (data?.category) {
@@ -35,10 +39,10 @@ export const getSchemes = createServerFn({ method: "GET" })
     }
 
     if (data?.state) {
-      queryBuilder = queryBuilder.eq("state_or_ut", data.state);
+      queryBuilder = queryBuilder.eq("state_ut", data.state);
     }
 
-    const { data: schemes, error } = await queryBuilder;
+    const { data: schemes, error } = await queryBuilder.order("created_at", { ascending: false });
 
     if (error) {
       console.error("Error fetching schemes:", error);

@@ -508,6 +508,7 @@ export type Database = {
       }
       schemes: {
         Row: {
+          active_status: boolean | null
           application_process: string | null
           application_url: string | null
           benefits: string | null
@@ -516,20 +517,32 @@ export type Database = {
           deadline: string | null
           department: string
           description: string | null
+          eligibility_rules: Json | null
           eligibility_summary: string | null
+          government_level: string | null
           id: string
           last_verified_at: string | null
           ministry: string | null
           name: string
+          official_name: string | null
           official_source: string | null
+          required_documents: Json | null
+          short_name: string | null
+          source_last_updated_at: string | null
+          source_name: string | null
+          source_record_id: string | null
+          source_type: string | null
           source_url: string | null
           state_or_ut: string | null
+          state_ut: string | null
+          subcategory: string | null
           target_audience: string | null
           type: string | null
           updated_at: string
           verification_status: string | null
         }
         Insert: {
+          active_status?: boolean | null
           application_process?: string | null
           application_url?: string | null
           benefits?: string | null
@@ -538,20 +551,32 @@ export type Database = {
           deadline?: string | null
           department: string
           description?: string | null
+          eligibility_rules?: Json | null
           eligibility_summary?: string | null
+          government_level?: string | null
           id?: string
           last_verified_at?: string | null
           ministry?: string | null
           name: string
+          official_name?: string | null
           official_source?: string | null
+          required_documents?: Json | null
+          short_name?: string | null
+          source_last_updated_at?: string | null
+          source_name?: string | null
+          source_record_id?: string | null
+          source_type?: string | null
           source_url?: string | null
           state_or_ut?: string | null
+          state_ut?: string | null
+          subcategory?: string | null
           target_audience?: string | null
           type?: string | null
           updated_at?: string
           verification_status?: string | null
         }
         Update: {
+          active_status?: boolean | null
           application_process?: string | null
           application_url?: string | null
           benefits?: string | null
@@ -560,14 +585,25 @@ export type Database = {
           deadline?: string | null
           department?: string
           description?: string | null
+          eligibility_rules?: Json | null
           eligibility_summary?: string | null
+          government_level?: string | null
           id?: string
           last_verified_at?: string | null
           ministry?: string | null
           name?: string
+          official_name?: string | null
           official_source?: string | null
+          required_documents?: Json | null
+          short_name?: string | null
+          source_last_updated_at?: string | null
+          source_name?: string | null
+          source_record_id?: string | null
+          source_type?: string | null
           source_url?: string | null
           state_or_ut?: string | null
+          state_ut?: string | null
+          subcategory?: string | null
           target_audience?: string | null
           type?: string | null
           updated_at?: string
