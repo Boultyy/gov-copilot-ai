@@ -1,5 +1,6 @@
 import { useState, useRef, useEffect } from "react";
 import { createFileRoute } from "@tanstack/react-router";
+import { useSuspenseQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import {
   Sparkles,
   SendHorizonal,
@@ -12,12 +13,25 @@ import {
   ShieldCheck,
   Search,
   ArrowUpRight,
+  Loader2,
+  AlertCircle,
+  Clock,
+  ExternalLink,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
+import { 
+  getConversations, 
+  getConversationMessages, 
+  startNewConversation, 
+  sendCopilotMessage 
+} from "@/lib/copilot.functions";
+import { useServerFn } from "@tanstack/react-start";
+import { toast } from "sonner";
+
 
 export const Route = createFileRoute("/_authenticated/copilot")({
   head: () => ({
