@@ -57,10 +57,19 @@ function AiDiagnosticPage() {
               {results.tests.map((test: any, i: number) => (
                 <div key={i} className="p-4 border rounded mb-2">
                   <div className="flex justify-between">
-                    <span className="font-bold">{test.name}</span>
+                    <div className="flex flex-col">
+                      <span className="font-bold">{test.name}</span>
+                      <span className="text-xs text-muted-foreground">Requested Model: {test.requestedModel}</span>
+                    </div>
                     <span className={test.status === 'SUCCESS' ? 'text-success' : 'text-destructive'}>{test.status}</span>
                   </div>
-                  {test.error && <pre className="text-xs mt-2 overflow-auto">{JSON.stringify(test.error, null, 2)}</pre>}
+                  {test.model && <div className="text-xs mt-1 text-success">Responded Model: {test.model}</div>}
+                  {test.error && (
+                    <div className="mt-2 p-2 bg-destructive/5 rounded border border-destructive/10">
+                      <p className="text-xs font-semibold text-destructive">Error Details:</p>
+                      <pre className="text-xs mt-1 overflow-auto whitespace-pre-wrap">{JSON.stringify(test.error, null, 2)}</pre>
+                    </div>
+                  )}
                 </div>
               ))}
             </CardContent>
