@@ -191,50 +191,65 @@ function Copilot() {
 
         <div className="flex-1 overflow-y-auto p-6 lg:p-12" ref={scrollRef}>
           <div className="mx-auto max-w-3xl space-y-8">
-            {messages.map((msg, i) => (
-              <div key={i} className={cn("flex gap-4 animate-rise", msg.role === "user" ? "flex-row-reverse" : "flex-row")}>
-                <div className={cn("flex h-9 w-9 shrink-0 items-center justify-center rounded-xl shadow-lg", msg.role === "assistant" ? "bg-primary text-white shadow-primary/20" : "bg-foreground text-white shadow-foreground/10")}>
-                  {msg.role === "assistant" ? <Bot className="h-5 w-5" /> : <User className="h-5 w-5" />}
-                </div>
-                <div className={cn("flex flex-col gap-3", msg.role === "user" ? "items-end" : "items-start")}>
-                  <div className={cn("rounded-2xl px-5 py-3 text-sm leading-relaxed shadow-sm ring-1", msg.role === "assistant" ? "bg-card text-foreground ring-border shadow-md" : "bg-foreground text-white ring-foreground")}>
-                    {msg.content}
+            {messages.map((msg, i) => {
+              const metadata = msg.metadata as any;
+              const sources = metadata?.sources || [];
+              
+              return (
+                <div key={msg.id || i} className={cn("flex gap-4 animate-rise", msg.role === "user" ? "flex-row-reverse" : "flex-row")}>
+                  <div className={cn("flex h-9 w-9 shrink-0 items-center justify-center rounded-xl shadow-lg", msg.role === "assistant" ? "bg-primary text-white shadow-primary/20" : "bg-foreground text-white shadow-foreground/10")}>
+                    {msg.role === "assistant" ? <Bot className="h-5 w-5" /> : <User className="h-5 w-5" />}
                   </div>
-                  {msg.type === "scheme" && (
-                    <Card className="w-full max-w-md border-primary/20 bg-primary/5 shadow-md">
-                      <CardContent className="p-5 space-y-4">
-                        <div className="flex items-start justify-between">
-                          <div>
-                            <p className="text-[10px] font-bold uppercase tracking-wider text-primary">Recommended Scheme</p>
-                            <h4 className="mt-1 font-display font-bold text-foreground">{msg.data.name}</h4>
-                            <p className="text-xs text-muted-foreground">{msg.data.dept}</p>
-                          </div>
-                          <Badge className="bg-success text-white">Eligible</Badge>
-                        </div>
-                        <div className="rounded-lg bg-background p-3 text-xs border border-border">
-                          <p className="font-semibold text-foreground">Benefit:</p>
-                          <p className="mt-0.5 text-muted-foreground">{msg.data.benefits}</p>
-                        </div>
-                        <div className="flex gap-2">
-                          <Button size="sm" className="flex-1 rounded-lg">Start Application</Button>
-                          <Button size="sm" variant="outline" className="flex-1 rounded-lg">View Details</Button>
-                        </div>
-                      </CardContent>
-                    </Card>
-                  )}
-                  {msg.role === "assistant" && (
-                    <div className="flex gap-2">
-                      <Button variant="ghost" size="sm" className="h-7 text-[10px] rounded-full px-3 bg-muted/50 hover:bg-primary/10 hover:text-primary transition-colors">
-                        Save to Workspace
-                      </Button>
-                      <Button variant="ghost" size="sm" className="h-7 text-[10px] rounded-full px-3 bg-muted/50 hover:bg-primary/10 hover:text-primary transition-colors">
-                        Share Result
-                      </Button>
+                  <div className={cn("flex flex-col gap-3", msg.role === "user" ? "items-end" : "items-start")}>
+                    <div className={cn("rounded-2xl px-5 py-3 text-sm leading-relaxed shadow-sm ring-1 whitespace-pre-wrap", msg.role === "assistant" ? "bg-card text-foreground ring-border shadow-md" : "bg-foreground text-white ring-foreground")}>
+                      {msg.content}
                     </div>
-                  )}
+                    
+                    {sources.length > 0 && (
+                      <div className="flex flex-wrap gap-2 mt-1">
+                        {sources.map((source: any, idx: number) => (
+                          <Badge key={idx} variant="outline" className="text-[10px] py-0 h-6 bg-muted/30 border-primary/20 text-primary flex items-center gap-1">
+                            <ShieldCheck className="h-3 w-3" />
+                            {source.name}
+                            {source.url && (
+                              <a href={source.url} target="_blank" rel="noopener noreferrer" className="ml-1 hover:text-primary/70">
+                                <ExternalLink className="h-2 w-2" />
+                              </a>
+                            )}
+                          </Badge>
+                        ))}
+                      </div>
+                    )}
+
+                    {msg.role === "assistant" && (
+                      <div className="flex gap-2">
+                        <Button variant="ghost" size="sm" className="h-7 text-[10px] rounded-full px-3 bg-muted/50 hover:bg-primary/10 hover:text-primary transition-colors">
+                          Save to Workspace
+                        </Button>
+                        <Button variant="ghost" size="sm" className="h-7 text-[10px] rounded-full px-3 bg-muted/50 hover:bg-primary/10 hover:text-primary transition-colors">
+                          Share Result
+                        </Button>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              );
+            })}
+            
+            {sendMessage.isPending && (
+              <div className="flex gap-4 animate-pulse">
+                <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-primary text-white shadow-lg shadow-primary/20">
+                  <Bot className="h-5 w-5" />
+                </div>
+                <div className="flex flex-col gap-3 items-start">
+                  <div className="rounded-2xl px-5 py-3 text-sm bg-card text-foreground ring-1 ring-border shadow-md flex items-center gap-2">
+                    <Loader2 className="h-4 w-4 animate-spin text-primary" />
+                    GovCopilot is thinking...
+                  </div>
                 </div>
               </div>
-            ))}
+            )}
+
           </div>
         </div>
 
