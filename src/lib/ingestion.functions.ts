@@ -118,6 +118,7 @@ export const triggerSourceSync = createServerFn({ method: "POST" })
         const normalized: any = {
           official_name: item.scheme_name,
           name: item.scheme_name,
+          department: item.ministry_name || 'General', // Added department to fix not-null constraint
           description: item.description || null,
           ministry: item.ministry_name || null,
           government_level: (item.level === 'Central' || item.level === 'State') ? item.level : 'Central',
