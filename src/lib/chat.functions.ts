@@ -32,6 +32,8 @@ export const saveSchemeChatMessage = createServerFn({ method: "POST" })
   .handler(async ({ data, context }) => {
     const { supabase, userId } = context;
 
+    // Security: Only allow assistant role if we can verify the backend context 
+    // For now, since client calls this for mock responses, we allow it but enforce user_id
     const { data: insertedData, error } = await supabase
       .from("scheme_chat_messages")
       .insert({
@@ -49,6 +51,7 @@ export const saveSchemeChatMessage = createServerFn({ method: "POST" })
 
     return insertedData;
   });
+
 
 export const deleteSchemeChatMessage = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
