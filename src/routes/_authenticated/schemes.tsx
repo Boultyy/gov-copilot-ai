@@ -46,10 +46,13 @@ function Schemes() {
   const { data: schemes = [], isLoading } = useQuery({
     queryKey: ["schemes", searchQuery, selectedType, selectedCategory],
     queryFn: () => getSchemes({ 
-      query: searchQuery, 
-      type: selectedType as any, 
-      category: selectedCategory || undefined 
+      data: {
+        query: searchQuery, 
+        type: selectedType as any, 
+        category: selectedCategory || undefined 
+      }
     }),
+
   });
 
   const categories = useMemo(() => {
@@ -306,7 +309,8 @@ function Schemes() {
                         Verified: {format(new Date(selectedScheme.last_verified_at), 'dd MMM yyyy')}
                       </div>
                       <a 
-                        href={selectedScheme.source_url} 
+                        href={selectedScheme.source_url || '#'} 
+
                         target="_blank" 
                         rel="noopener noreferrer"
                         className="flex items-center gap-1 hover:text-primary transition-colors"
