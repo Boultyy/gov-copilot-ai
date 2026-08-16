@@ -2,65 +2,53 @@ import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { supabaseAdmin } from "@/integrations/supabase/client.server";
 
-// Define the normalization logic for scheme data
-const SchemeSchema = z.object({
-  name: z.string(),
-  official_name: z.string().optional(),
-  short_name: z.string().optional(),
-  description: z.string(),
-  ministry: z.string(),
-  department: z.string().optional(),
-  government_level: z.enum(['Central', 'State', 'UT', 'Local']),
-  state_ut: z.string().optional(),
-  category: z.string(),
-  subcategory: z.string().optional(),
-  benefits: z.string().optional(),
-  eligibility_rules: z.any().optional(),
-  required_documents: z.any().optional(),
-  application_url: z.string().url().optional(),
-  source_name: z.string(),
-  source_type: z.string(),
-  source_record_id: z.string(),
-});
+// Helper to calculate hash for change detection
+const calculateFingerprint = (data: any) => {
+  const significantFields = {
+    name: data.name,
+    official_name: data.official_name,
+    description: data.description,
+    ministry: data.ministry,
+    government_level: data.government_level,
+    category: data.category,
+    application_url: data.application_url,
+    benefits: data.benefits,
+    eligibility_rules: data.eligibility_rules,
+    required_documents: data.required_documents,
+    active_status: data.active_status
+  };
+  return btoa(JSON.stringify(significantFields));
+};
 
-/**
- * Triggers a manual sync for a specific government data source.
- * This runs entirely on the server to protect API credentials and perform secure fetching.
- */
 export const triggerSourceSync = createServerFn({ method: "POST" })
   .inputValidator((data) => z.object({ sourceId: z.string().uuid() }).parse(data))
   .handler(async ({ data }) => {
     const { sourceId } = data;
 
-    // 1. Fetch source configuration
     const { data: source, error: sourceError } = await supabaseAdmin
       .from("ingestion_sources")
       .select("*")
       .eq("id", sourceId)
       .single();
 
-    if (sourceError || !source) {
-      throw new Error(`Source not found: ${sourceError?.message}`);
-    }
+    if (sourceError || !source) throw new Error(`Source not found`);
 
-    // 2. Initialize log
+    // Update attempted sync
+    await supabaseAdmin
+      .from("ingestion_sources")
+      .update({ last_attempted_sync_at: new Date().toISOString() } as any)
+      .eq("id", sourceId);
+
     const { data: log, error: logError } = await supabaseAdmin
       .from("ingestion_logs")
-      .insert({ source_id: sourceId, status: "processing" })
+      .insert({ source_id: sourceId, status: "processing" } as any)
       .select()
       .single();
 
-    if (logError || !log) {
-      throw new Error(`Failed to create sync log: ${logError?.message}`);
-    }
+    if (logError || !log) throw new Error(`Log error`);
 
     try {
-      // 3. Perform Fetch (Mocking external GoI API call for now)
-      // In a real scenario, this would use fetch(source.base_url + source.api_endpoint)
-      // and handle source-specific auth from source.auth_config
-      console.log(`Fetching from ${source.name}...`);
-      
-      // Simulate successful fetch of 2 records
+      // Mock data representing changes
       const mockExternalData = [
         {
           external_id: "GOI-SCH-101",
@@ -68,28 +56,20 @@ export const triggerSourceSync = createServerFn({ method: "POST" })
           ministry_name: "Ministry of MSME",
           level: "Central",
           cat: "Livelihood",
-          desc: "A Central Sector Scheme to provide end-to-end support to artisans and craftspeople.",
-          url: "https://pmvishwakarma.gov.in/"
-        },
-        {
-          external_id: "GOI-SCH-102",
-          scheme_name: "Lakhpati Didi",
-          ministry_name: "Ministry of Rural Development",
-          level: "Central",
-          cat: "Women Empowerment",
-          desc: "Targeting women in SHGs to earn a sustainable income of at least Rs 1 Lakh per annum.",
-          url: "https://daynrlm.gov.in/"
+          desc: "Updated description to test change detection.",
+          url: "https://pmvishwakarma.gov.in/",
+          updated_at: new Date().toISOString()
         }
       ];
 
       let recordsInserted = 0;
       let recordsUpdated = 0;
+      let recordsReview = 0;
 
-      // 4. Process & Normalize
       for (const item of mockExternalData) {
         const normalized: any = {
-          name: item.scheme_name,
           official_name: item.scheme_name,
+          name: item.scheme_name,
           description: item.desc,
           ministry: item.ministry_name,
           government_level: item.level,
@@ -98,90 +78,115 @@ export const triggerSourceSync = createServerFn({ method: "POST" })
           source_name: source.name,
           source_type: source.source_type,
           source_record_id: item.external_id,
-          verification_status: "pending_verification",
           active_status: true,
         };
 
-        // 5. Upsert Scheme (Deduplication Logic)
-        const { data: existingScheme } = await supabaseAdmin
-          .from("schemes")
-          .select("id")
-          .eq("official_name", normalized.official_name)
+        // 1. Find existing via mapping or name
+        const { data: mapping } = await supabaseAdmin
+          .from("scheme_source_mapping")
+          .select("scheme_id, raw_data")
+          .eq("source_id", sourceId)
+          .eq("external_record_id", item.external_id)
           .maybeSingle();
 
-        let schemeId: string;
-
-        if (existingScheme) {
-          const { data: updated } = await supabaseAdmin
+        let schemeId = mapping?.scheme_id;
+        
+        if (!schemeId) {
+          const { data: existing } = await supabaseAdmin
             .from("schemes")
-            .update(normalized)
-            .eq("id", existingScheme.id)
-            .select()
+            .select("id")
+            .eq("official_name", normalized.official_name)
+            .maybeSingle();
+          schemeId = existing?.id;
+        }
+
+        if (schemeId) {
+          // Change Detection Logic
+          const { data: current } = await supabaseAdmin
+            .from("schemes")
+            .select("*")
+            .eq("id", schemeId)
             .single();
-          schemeId = updated!.id;
-          recordsUpdated++;
+
+          const fieldsToTrack = ['description', 'ministry', 'category', 'application_url'];
+          let hasChanges = false;
+
+          if (current) {
+            for (const field of fieldsToTrack) {
+              const currentValue = (current as any)[field];
+              if (currentValue !== normalized[field]) {
+                hasChanges = true;
+                // Record History
+                await supabaseAdmin.from("scheme_change_history").insert({
+                  scheme_id: schemeId,
+                  source_id: sourceId,
+                  field_name: field,
+                  old_value: currentValue as any,
+                  new_value: normalized[field] as any,
+                  source_updated_at: item.updated_at
+                } as any);
+              }
+            }
+          }
+
+          if (hasChanges) {
+            // Mark for review instead of silent overwrite of verified data
+            await supabaseAdmin.from("schemes").update({
+              ...normalized,
+              verification_status: 'pending_verification'
+            } as any).eq("id", schemeId);
+            recordsReview++;
+            recordsUpdated++;
+          }
         } else {
+          // New Record
           const { data: inserted } = await supabaseAdmin
             .from("schemes")
-            .insert(normalized)
+            .insert({ ...normalized, verification_status: 'pending_verification' } as any)
             .select()
             .single();
           schemeId = inserted!.id;
           recordsInserted++;
         }
 
-        // 6. Record Provenance
-        await supabaseAdmin
-          .from("scheme_source_mapping")
-          .upsert({
-            scheme_id: schemeId,
-            source_id: sourceId,
-            external_record_id: item.external_id,
-            raw_data: item as any,
-            source_url: item.url,
-          } as any, { onConflict: 'source_id,external_record_id' });
+        // Upsert Mapping
+        await supabaseAdmin.from("scheme_source_mapping").upsert({
+          scheme_id: schemeId,
+          source_id: sourceId,
+          external_record_id: item.external_id,
+          raw_data: item as any,
+          source_url: item.url
+        } as any, { onConflict: 'source_id,external_record_id' });
       }
 
-      // 7. Finalize Log
-      await supabaseAdmin
-        .from("ingestion_logs")
-        .update({
-          status: "success",
-          records_processed: mockExternalData.length,
-          records_inserted: recordsInserted,
-          records_updated: recordsUpdated
-        } as any)
-        .eq("id", log.id);
+      await supabaseAdmin.from("ingestion_logs").update({
+        status: "success",
+        records_processed: mockExternalData.length,
+        records_inserted: recordsInserted,
+        records_updated: recordsUpdated,
+        records_requiring_review: recordsReview
+      } as any).eq("id", log.id);
 
-      await supabaseAdmin
-        .from("ingestion_sources")
-        .update({
-          last_sync_at: new Date().toISOString(),
-          last_sync_status: "success"
-        })
-        .eq("id", sourceId);
+      await supabaseAdmin.from("ingestion_sources").update({
+        last_sync_at: new Date().toISOString(),
+        last_sync_status: "success",
+        source_last_updated_at: mockExternalData[0]?.updated_at
+      } as any).eq("id", sourceId);
 
       return { success: true, processed: mockExternalData.length };
     } catch (err: any) {
-      await supabaseAdmin
-        .from("ingestion_logs")
-        .update({ status: "failed", last_sync_error: err.message } as any)
-        .eq("id", log.id);
-      
+      await supabaseAdmin.from("ingestion_logs").update({ 
+        status: "failed", 
+        error_log: { message: err.message } as any 
+      } as any).eq("id", log.id);
       throw err;
     }
   });
 
-/**
- * Fetches configured ingestion sources.
- */
 export const getIngestionSources = createServerFn({ method: "GET" })
   .handler(async () => {
-    const { data, error } = await supabaseAdmin
-      .from("ingestion_sources")
-      .select("*")
-      .order("created_at", { ascending: false });
-
+    const { data, error } = await supabaseAdmin.from("ingestion_sources").select("*").order("created_at", { ascending: false });
     if (error) throw new Error(error.message);
     return data || [];
   });
+
