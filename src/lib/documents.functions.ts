@@ -114,7 +114,7 @@ export const processDocument = createServerFn({ method: "POST" })
             document_id: documentId,
             chunk_index: i,
             content: chunkText,
-            embedding: JSON.stringify(embedding) as any, // Cast to vector format
+            embedding: `[${embedding.join(",")}]` as any, // Cast to vector format
             metadata: { source: doc.name }
           });
       }
