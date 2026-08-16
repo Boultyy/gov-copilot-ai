@@ -68,45 +68,69 @@ type Message = {
 };
 
 function Copilot() {
-  const [messages, setMessages] = useState<Message[]>([
-    {
-      role: "assistant",
-      content: "Namaste! I'm your GovCopilot. How can I assist you with government services today?",
-    },
-  ]);
+  const [activeId, setActiveId] = useState<string | null>(null);
   const [input, setInput] = useState("");
   const scrollRef = useRef<HTMLDivElement>(null);
+  const queryClient = useQueryClient();
+
+  // Queries
+  const { data: conversations = [] } = useSuspenseQuery({
+    queryKey: ["conversations"],
+    queryFn: () => getConversations(),
+  });
+
+  const { data: messages = [], isLoading: isLoadingMessages } = useSuspenseQuery({
+    queryKey: ["messages", activeId],
+    queryFn: () => activeId ? getConversationMessages({ conversationId: activeId }) : Promise.resolve([]),
+    enabled: !!activeId,
+  });
+
+  // Mutations
+  const startConv = useMutation({
+    mutationFn: (title?: string) => startNewConversation({ title }),
+    onSuccess: (newConv) => {
+      queryClient.invalidateQueries({ queryKey: ["conversations"] });
+      setActiveId(newConv.id);
+    },
+  });
+
+  const sendMessage = useMutation({
+    mutationFn: sendCopilotMessage,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["messages", activeId] });
+      queryClient.invalidateQueries({ queryKey: ["conversations"] });
+    },
+  });
 
   useEffect(() => {
     if (scrollRef.current) {
       scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
     }
-  }, [messages]);
+  }, [messages, sendMessage.isPending]);
 
-  const handleSend = () => {
-    if (!input.trim()) return;
+  const handleSend = async () => {
+    if (!input.trim() || sendMessage.isPending) return;
+    
+    let currentId = activeId;
     const userMsg = input;
     setInput("");
-    setMessages((prev) => [...prev, { role: "user", content: userMsg }]);
 
-    // Mock AI response
-    setTimeout(() => {
-      setMessages((prev) => [
-        ...prev,
-        {
-          role: "assistant",
-          content: "Based on your interest, I've found a scheme you might qualify for:",
-          type: "scheme",
-          data: {
-            name: "PM Surya Ghar: Muft Bijli Yojana",
-            dept: "Ministry of New & Renewable Energy",
-            benefits: "Up to 300 units of free electricity monthly",
-            status: "Eligible",
-          },
-        },
-      ]);
-    }, 1000);
+    try {
+      if (!currentId) {
+        const newConv = await startConv.mutateAsync(userMsg.slice(0, 30));
+        currentId = newConv.id;
+      }
+
+      await sendMessage.mutateAsync({ 
+        conversationId: currentId, 
+        content: userMsg 
+      });
+    } catch (error) {
+      toast.error("Failed to send message. Please try again.");
+      console.error(error);
+    }
   };
+
 
   return (
     <div className="-mx-4 -my-6 flex h-[calc(100vh-64px)] overflow-hidden sm:-mx-6 lg:-mx-8">
