@@ -508,7 +508,10 @@ export type Database = {
       }
       schemes: {
         Row: {
+          application_process: string | null
+          application_url: string | null
           benefits: string | null
+          category: string | null
           created_at: string
           deadline: string | null
           department: string
@@ -521,12 +524,16 @@ export type Database = {
           official_source: string | null
           source_url: string | null
           state_or_ut: string | null
+          target_audience: string | null
           type: string | null
           updated_at: string
           verification_status: string | null
         }
         Insert: {
+          application_process?: string | null
+          application_url?: string | null
           benefits?: string | null
+          category?: string | null
           created_at?: string
           deadline?: string | null
           department: string
@@ -539,12 +546,16 @@ export type Database = {
           official_source?: string | null
           source_url?: string | null
           state_or_ut?: string | null
+          target_audience?: string | null
           type?: string | null
           updated_at?: string
           verification_status?: string | null
         }
         Update: {
+          application_process?: string | null
+          application_url?: string | null
           benefits?: string | null
+          category?: string | null
           created_at?: string
           deadline?: string | null
           department?: string
@@ -557,6 +568,7 @@ export type Database = {
           official_source?: string | null
           source_url?: string | null
           state_or_ut?: string | null
+          target_audience?: string | null
           type?: string | null
           updated_at?: string
           verification_status?: string | null
