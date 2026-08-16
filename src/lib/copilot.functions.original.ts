@@ -147,5 +147,3 @@ export const sendCopilotMessage = createServerFn({ method: "POST" })
     return aiMsg;
   });
 
-// Re-export other functions from original implementation
-export { startNewConversation, getConversations, getConversationMessages } from "./copilot.functions.original";
