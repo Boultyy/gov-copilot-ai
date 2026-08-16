@@ -200,7 +200,7 @@ function LandingDashboard() {
                 </Card>
               ) : (
                 data?.recentConversations.map((conv: any) => (
-                  <Link key={conv.id} to={`/copilot?id=${conv.id}`}>
+                  <Link key={conv.id} to="/copilot" search={{ id: conv.id }}>
                     <Card className="hover:border-primary/50 transition-colors cursor-pointer group h-full">
                       <CardContent className="p-4 flex flex-col gap-2">
                         <h4 className="font-bold text-sm group-hover:text-primary transition-colors truncate">
@@ -247,7 +247,7 @@ function LandingDashboard() {
             </h2>
             <div className="space-y-3">
               {data?.savedSchemes.map((scheme: any) => (
-                <Link key={scheme.id} to={`/schemes?id=${scheme.id}`}>
+                <Link key={scheme.id} to="/schemes" search={{ id: scheme.id }}>
                   <Card className="hover:bg-muted/30 transition-colors cursor-pointer">
                     <CardContent className="p-4 flex items-center gap-3">
                       <div className="h-10 w-10 rounded-xl bg-background border border-border flex items-center justify-center text-primary font-bold shadow-sm">
