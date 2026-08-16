@@ -26,8 +26,13 @@ export const triggerSourceSync = createServerFn({ method: "POST" })
   .inputValidator((data) => z.object({ sourceId: z.string().uuid() }).parse(data))
   .handler(async ({ data, context }) => {
     // Check admin
-    const { data: hasAdmin } = await context.supabase
+    const { data: hasAdmin, error: roleError } = await context.supabase
       .rpc('has_role', { _user_id: context.userId, _role: 'admin' });
+    
+    if (roleError) {
+      console.error("Sync Role Error:", roleError);
+      throw new Error(`Auth Error: ${roleError.message}`);
+    }
     
     if (!hasAdmin) throw new Error("Unauthorized");
 
