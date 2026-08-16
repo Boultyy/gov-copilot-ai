@@ -128,7 +128,7 @@ export const sendCopilotMessage = createServerFn({ method: "POST" })
         name: err.name,
         stack: err.stack
       });
-      throw new Error(`Citizen Copilot is temporarily unavailable due to a connection issue (${err.message}).`);
+      throw new Error(`Citizen Copilot is temporarily unavailable due to a connection issue (${err.message}). Please verify that your AI Gateway is correctly configured in the Cloud dashboard.`);
     });
 
 
