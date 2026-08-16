@@ -171,7 +171,8 @@ export const sendCopilotMessage = createServerFn({ method: "POST" })
       temperature: 0.2, 
     }).catch(err => {
       console.error("AI Gateway Error:", err);
-      throw new Error(`AI Gateway failed: ${err.message}`);
+      // provide a user-friendly message that includes the specific failure reason if possible
+      throw new Error(`AI Citizen Copilot is temporarily unavailable (Reason: ${err.message}). Please ensure the AI connector is enabled in Project Settings.`);
     });
 
     const aiContent = response.choices[0].message.content || "I apologize, I encountered an error generating a response.";
