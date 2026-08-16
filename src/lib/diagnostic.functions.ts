@@ -41,7 +41,7 @@ export const runAiDiagnostic = createServerFn({ method: "POST" })
           status: err.status,
           name: err.name,
           baseURL: ai.baseURL,
-          headers: ai.defaultHeaders,
+          // defaultHeaders is not public on the OpenAI client, skipping diagnostic
         }
       });
     }
