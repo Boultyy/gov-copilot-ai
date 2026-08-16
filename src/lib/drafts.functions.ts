@@ -21,9 +21,6 @@ export const generateDraft = createServerFn({ method: "POST" })
     const { createAiGateway } = await import("@/lib/ai-gateway.server");
     const ai = createAiGateway();
 
-    // 1. Retrieve authoritative information if needed (e.g. from schemes or documents)
-    // For now, we'll ground the AI with a strong system prompt and existing context
-    
     const systemPrompt = `
       You are GovCopilot, an AI assistant for the Government of India.
       Your task is to generate official drafts (letters, notices, circulars, RTI replies, or citizen applications).
@@ -51,12 +48,12 @@ export const generateDraft = createServerFn({ method: "POST" })
 
       const content = response.choices[0].message.content || "Failed to generate content.";
 
-      // 2. Log AI Generation
+      // 2. Log AI Generation (using types from schema)
       await supabaseAdmin.from("ai_generations").insert({
         user_id: userId,
-        feature: "draft_generator",
+        generation_type: "draft_generator",
         prompt: data.prompt,
-        response: content,
+        generated_content: content,
         metadata: {
           type: data.type,
           reference: data.reference,
@@ -157,3 +154,4 @@ export const deleteDraft = createServerFn({ method: "POST" })
     if (error) throw new Error(`Failed to delete draft: ${error.message}`);
     return { success: true };
   });
+
