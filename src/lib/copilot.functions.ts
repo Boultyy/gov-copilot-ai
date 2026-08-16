@@ -34,6 +34,7 @@ export const sendCopilotMessage = createServerFn({ method: "POST" })
     if (userMsgError) throw new Error("Failed to save user message");
 
     // 2. Retrieve Government Context (Schemes)
+    // We use a combination of simple ILIKE search and later could add vector search for schemes too
     const { data: schemes } = await supabaseAdmin
       .from("schemes")
       .select("*")
@@ -45,65 +46,69 @@ export const sendCopilotMessage = createServerFn({ method: "POST" })
     const { searchUserDocuments } = await import("./documents.functions");
     let docChunks: any[] = [];
     try {
-      docChunks = await searchUserDocuments({ data: { query: content, limit: 3 } });
+      docChunks = await searchUserDocuments({ data: { query: content, limit: 5 } });
     } catch (e) {
       console.warn("User document search failed:", e);
     }
 
+    // 4. Build Context
     const schemeContext = schemes && schemes.length > 0 
       ? schemes.map(s => `
-        [GOVT SCHEME]
-        Scheme: ${s.name}
+        [GOVERNMENT SCHEME]
+        Name: ${s.name}
         Benefits: ${s.benefits}
         Eligibility: ${s.eligibility_summary}
-        Official Source: ${s.official_source}
+        Source: ${s.official_source || 'Official Government Source'}
+        URL: ${s.source_url || 'N/A'}
       `).join("\n---\n")
       : "";
 
     const userDocContext = docChunks && docChunks.length > 0
-      ? docChunks.map(c => `
-        [USER DOCUMENT CHUNK]
-        Source Document: ${c.document_name}
-        Content: ${c.content}
-        Similarity: ${Math.round(c.similarity * 100)}%
+      ? docChunks.map((c, i) => `
+        [USER DOCUMENT SOURCE #${i+1}]
+        Document: ${c.document_name}
+        Content Snippet: ${c.content}
+        Page: ${c.page_number || 'N/A'}
+        Section: ${c.metadata?.section_title || 'N/A'}
       `).join("\n---\n")
       : "";
 
     const combinedContext = `
-      GOVERNMENT SCHEMES CONTEXT:
-      ${schemeContext || "No relevant government schemes found."}
+      Verified Government Information:
+      ${schemeContext || "No highly relevant government schemes found for this specific query."}
       
-      USER DOCUMENTS CONTEXT:
-      ${userDocContext || "No relevant information found in your uploaded documents."}
+      User's Personal Documents:
+      ${userDocContext || "No relevant information found in the user's uploaded documents."}
     `;
 
-    // 4. Call AI Gateway
+    // 5. Call AI Gateway
     const { createAiGateway } = await import("@/lib/ai-gateway.server");
     const ai = createAiGateway();
 
     const systemPrompt = `
-      You are GovCopilot, a professional AI assistant for the Indian Government.
+      You are GovCopilot, an official AI assistant for Indian citizens.
       
-      CRITICAL INSTRUCTIONS:
-      1. You must ONLY provide information if it is present in the provided context (Gov Schemes or User Documents).
-      2. If neither context contains the answer, state that you couldn't find verified information in the database or your documents.
-      3. DO NOT invent facts.
-      4. Always cite your sources using [Name of Scheme] or [Document Name].
-      5. If answering from user documents, mention the document name clearly.
+      Grounded Reasoning Instructions:
+      1. Your primary goal is to answer using the provided Verified Government Information and User's Personal Documents.
+      2. If the answer is found in User's Personal Documents, explicitly mention the document name.
+      3. If the answer is a Government Scheme, use the official name and cite the source.
+      4. If the provided context does not contain enough information to answer accurately, politely state that you couldn't find verified information in the database or the user's documents. 
+      5. DO NOT invent facts, URLs, or document contents.
+      6. Use a professional, helpful, and empathetic tone.
       
-      COMBINED CONTEXT:
+      Context Provided:
       ${combinedContext}
     `;
 
-    // Get last 5 messages for history
+    // Get message history for continuity
     const { data: history } = await supabase
       .from("messages")
       .select("role, content")
       .eq("conversation_id", conversationId)
       .order("created_at", { ascending: false })
-      .limit(5);
+      .limit(6);
     
-    const aiMessages = [
+    const messages = [
       { role: "system", content: systemPrompt },
       ...(history?.reverse().map(m => ({ role: m.role as "user" | "assistant", content: m.content })) || []),
       { role: "user", content: content }
@@ -111,22 +116,27 @@ export const sendCopilotMessage = createServerFn({ method: "POST" })
 
     const response = await ai.chat.completions.create({
       model: "gpt-4o",
-      messages: aiMessages as any,
-      temperature: 0.2, 
+      messages: messages as any,
+      temperature: 0.1, // Lower temperature for higher grounding
     }).catch(err => {
-      console.error("AI Gateway Error:", err);
-      throw new Error(`AI Citizen Copilot is temporarily unavailable.`);
+      console.error("AI Gateway Completion Error:", err);
+      throw new Error(`Citizen Copilot is temporarily unavailable due to a connection issue.`);
     });
 
-    const aiContent = response.choices[0].message.content || "I apologize, I encountered an error.";
+    const aiContent = response.choices[0].message.content || "I apologize, but I am unable to process your request at the moment.";
 
-    // 5. Prepare citations for metadata
+    // 6. Citations for Metadata
     const citations = [
       ...(schemes?.map(s => ({ type: 'govt', name: s.name, url: s.source_url })) || []),
-      ...(docChunks?.map(c => ({ type: 'user_doc', name: c.document_name })) || [])
+      ...(docChunks?.map(c => ({ 
+        type: 'user_doc', 
+        name: c.document_name, 
+        page: c.page_number,
+        snippet: c.content.substring(0, 100) + "..."
+      })) || [])
     ];
 
-    // 6. Save AI response
+    // 7. Save AI response
     const { data: aiMsg, error: aiMsgError } = await supabase
       .from("messages")
       .insert({
