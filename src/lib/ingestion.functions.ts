@@ -143,7 +143,7 @@ export const triggerSourceSync = createServerFn({ method: "POST" })
           // New Record
           const { data: inserted } = await supabaseAdmin
             .from("schemes")
-            .insert({ ...normalized, verification_status: 'pending_verification' } as any)
+            .insert({ ...normalized, verification_status: 'draft' } as any)
             .select()
             .single();
           schemeId = inserted!.id;
