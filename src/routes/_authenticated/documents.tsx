@@ -30,7 +30,7 @@ export const Route = createFileRoute("/_authenticated/documents")({
 });
 
 function Documents() {
-  const [files, setFiles] = useState<DroppedFile[]>(demoDocuments);
+  const [files, setFiles] = useState<DroppedFile[]>(demoDocuments as DroppedFile[]);
   const [input, setInput] = useState("");
   const [thinking, setThinking] = useState(false);
   const [turns, setTurns] = useState<ChatTurn[]>([
@@ -70,8 +70,15 @@ function Documents() {
           <CardContent>
             <Dropzone
               files={files}
-              onAdd={(f) => setFiles((prev) => [...prev, ...f])}
-              onRemove={(name) => setFiles((prev) => prev.filter((f) => f.name !== name))}
+              onAdd={(newFiles) => {
+                const mapped = newFiles.map(f => ({
+                  name: f.name,
+                  size: `${(f.size / 1024 / 1024).toFixed(1)} MB`,
+                  status: 'uploaded'
+                }));
+                setFiles((prev) => [...prev, ...mapped]);
+              }}
+              onRemove={(file) => setFiles((prev) => prev.filter((f) => f.name !== file.name))}
             />
           </CardContent>
         </Card>

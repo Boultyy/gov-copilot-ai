@@ -75,8 +75,15 @@ function Policy() {
             <CardContent>
               <Dropzone
                 files={slot.files}
-                onAdd={(f) => slot.set((p) => [...p, ...f])}
-                onRemove={(n) => slot.set((p) => p.filter((x) => x.name !== n))}
+                onAdd={(newFiles) => {
+                  const mapped = newFiles.map(f => ({
+                    name: f.name,
+                    size: `${(f.size / 1024 / 1024).toFixed(1)} MB`,
+                    status: 'uploaded'
+                  }));
+                  slot.set((p) => [...p, ...mapped]);
+                }}
+                onRemove={(file) => slot.set((p) => p.filter((x) => x.name !== file.name))}
               />
             </CardContent>
           </Card>
