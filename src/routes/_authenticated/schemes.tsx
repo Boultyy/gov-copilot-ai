@@ -11,7 +11,8 @@ import {
   Info,
   CheckCircle2,
   FileText,
-  AlertCircle
+  AlertCircle,
+  RefreshCw
 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -49,6 +50,8 @@ function Schemes() {
   const [selectedType, setSelectedType] = useState<string | null>(null);
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
   const [selectedSchemeId, setSelectedSchemeId] = useState<string | null>(searchParams.id || null);
+  const [page, setPage] = useState(1);
+  const [allSchemes, setAllSchemes] = useState<any[]>([]);
 
   useEffect(() => {
     if (searchParams.id) {
@@ -56,27 +59,47 @@ function Schemes() {
     }
   }, [searchParams.id]);
 
+  // Reset pagination when filters change
+  useEffect(() => {
+    setPage(1);
+    setAllSchemes([]);
+  }, [searchQuery, selectedType, selectedCategory]);
 
-  const { data: schemes = [], isLoading } = useQuery({
-    queryKey: ["schemes", searchQuery, selectedType, selectedCategory],
+  const { data, isLoading, isFetching } = useQuery({
+    queryKey: ["schemes", searchQuery, selectedType, selectedCategory, page],
     queryFn: () => getSchemes({ 
       data: {
         query: searchQuery || undefined, 
         type: (selectedType as "Central" | "State") || undefined, 
-        category: selectedCategory || undefined 
+        category: selectedCategory || undefined,
+        page,
+        pageSize: 6
       }
     }),
   });
 
+  useEffect(() => {
+    if (data?.schemes) {
+      if (page === 1) {
+        setAllSchemes(data.schemes);
+      } else {
+        setAllSchemes(prev => {
+          const existingIds = new Set(prev.map(s => s.id));
+          const newUnique = data.schemes.filter((s: any) => !existingIds.has(s.id));
+          return [...prev, ...newUnique];
+        });
+      }
+    }
+  }, [data, page]);
 
   const categories = useMemo(() => {
-    const cats = new Set((schemes as any[]).map(s => s.category).filter(Boolean));
+    const cats = new Set(allSchemes.map(s => s.category).filter(Boolean));
     return Array.from(cats);
-  }, [schemes]);
+  }, [allSchemes]);
 
   const selectedScheme = useMemo(() => 
-    (schemes as any[]).find(s => s.id === selectedSchemeId), 
-    [schemes, selectedSchemeId]
+    allSchemes.find(s => s.id === selectedSchemeId), 
+    [allSchemes, selectedSchemeId]
   );
 
   return (
@@ -160,13 +183,13 @@ function Schemes() {
 
         {/* Schemes Grid */}
         <div className="space-y-6">
-          {isLoading ? (
+          {isLoading && page === 1 ? (
              <div className="grid gap-6 md:grid-cols-2">
-                {[1,2,3,4].map(i => (
-                  <Card key={i} className="h-48 animate-pulse bg-muted/20" />
+                {[1,2,3,4,5,6].map(i => (
+                   <Card key={i} className="h-48 animate-pulse bg-muted/20" />
                 ))}
              </div>
-          ) : schemes.length === 0 ? (
+          ) : allSchemes.length === 0 ? (
             <div className="flex flex-col items-center justify-center py-20 text-center bg-muted/10 rounded-3xl border border-dashed border-border">
               <AlertCircle className="h-12 w-12 text-muted-foreground mb-4" />
               <h3 className="text-lg font-bold">No schemes found</h3>
@@ -174,7 +197,7 @@ function Schemes() {
             </div>
           ) : (
             <div className="grid gap-6 md:grid-cols-2">
-              {(schemes as any[]).map((scheme) => (
+              {allSchemes.map((scheme) => (
                 <Card key={scheme.id} className="group flex flex-col overflow-hidden border-border transition-all hover:-translate-y-1 hover:shadow-xl">
                   <CardContent className="flex-1 p-6 space-y-4">
                     <div className="flex items-start justify-between gap-4">
@@ -231,12 +254,27 @@ function Schemes() {
             </div>
           )}
 
-          {!isLoading && schemes.length > 0 && (
+          {!isLoading && data?.hasMore && (
             <div className="flex items-center justify-center pt-4">
-              <Button variant="ghost" className="text-muted-foreground">
-                Load more schemes <ChevronRight className="ml-2 h-4 w-4" />
+              <Button 
+                variant="outline" 
+                className="text-muted-foreground rounded-xl px-8"
+                onClick={() => setPage(p => p + 1)}
+                disabled={isFetching}
+              >
+                {isFetching ? (
+                  <RefreshCw className="mr-2 h-4 w-4 animate-spin" />
+                ) : (
+                  <ChevronRight className="mr-2 h-4 w-4 rotate-90" />
+                )}
+                Load more schemes
               </Button>
             </div>
+          )}
+          {!isLoading && !data?.hasMore && allSchemes.length > 0 && (
+             <p className="text-center text-xs text-muted-foreground py-4 italic">
+               Showing all {data?.totalCount} matching schemes
+             </p>
           )}
         </div>
       </div>
