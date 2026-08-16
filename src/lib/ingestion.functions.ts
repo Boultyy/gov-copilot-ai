@@ -222,3 +222,40 @@ export const getIngestionSources = createServerFn({ method: "GET" })
     return data || [];
   });
 
+export const getIngestionStats = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }) => {
+    // Check admin
+    const { data: hasAdmin, error: roleError } = await context.supabase
+      .rpc('has_role', { _user_id: context.userId, _role: 'admin' });
+    
+    if (roleError) {
+      console.error("Role Check Error:", roleError);
+      throw new Error(`Auth Error: ${roleError.message}`);
+    }
+    
+    if (!hasAdmin) throw new Error("Unauthorized");
+
+    const { count: total } = await supabaseAdmin.from("schemes").select("*", { count: 'exact', head: true });
+    
+    const { data: statusCounts } = await supabaseAdmin.rpc('get_scheme_counts_by_status');
+    const { data: levelCounts } = await supabaseAdmin.rpc('get_scheme_counts_by_level');
+    const { data: categoryCounts } = await supabaseAdmin.rpc('get_scheme_counts_by_category');
+    
+    const { data: lastSync } = await supabaseAdmin
+      .from("ingestion_logs")
+      .select("created_at")
+      .eq("status", "success")
+      .order("created_at", { ascending: false })
+      .limit(1)
+      .maybeSingle();
+
+    return {
+      total: total || 0,
+      status: statusCounts || [],
+      levels: levelCounts || [],
+      categories: categoryCounts || [],
+      lastSync: lastSync?.created_at
+    };
+  });
+
