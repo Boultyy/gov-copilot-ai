@@ -121,12 +121,12 @@ function Copilot() {
 
     try {
       if (!currentId) {
-        const newConv = await startConv.mutateAsync(userMsg.slice(0, 30));
+        const newConv = (await startConv.mutateAsync(userMsg.slice(0, 30))) as any;
         currentId = newConv.id;
       }
 
       await sendMessage.mutateAsync({ 
-        conversationId: currentId, 
+        conversationId: currentId as string, 
         content: userMsg 
       });
     } catch (error) {
