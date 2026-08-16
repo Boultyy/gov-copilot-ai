@@ -111,18 +111,21 @@ export const triggerSourceSync = createServerFn({ method: "POST" })
           const fieldsToTrack = ['description', 'ministry', 'category', 'application_url'];
           let hasChanges = false;
 
-          for (const field of fieldsToTrack) {
-            if (current[field] !== normalized[field]) {
-              hasChanges = true;
-              // Record History
-              await supabaseAdmin.from("scheme_change_history").insert({
-                scheme_id: schemeId,
-                source_id: sourceId,
-                field_name: field,
-                old_value: current[field] as any,
-                new_value: normalized[field] as any,
-                source_updated_at: item.updated_at
-              } as any);
+          if (current) {
+            for (const field of fieldsToTrack) {
+              const currentValue = (current as any)[field];
+              if (currentValue !== normalized[field]) {
+                hasChanges = true;
+                // Record History
+                await supabaseAdmin.from("scheme_change_history").insert({
+                  scheme_id: schemeId,
+                  source_id: sourceId,
+                  field_name: field,
+                  old_value: currentValue as any,
+                  new_value: normalized[field] as any,
+                  source_updated_at: item.updated_at
+                } as any);
+              }
             }
           }
 
