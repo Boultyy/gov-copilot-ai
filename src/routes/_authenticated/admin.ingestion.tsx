@@ -94,7 +94,12 @@ function IngestionManagementPage() {
             <div className="w-full bg-muted rounded-full h-1.5 overflow-hidden">
                <div 
                 className="bg-amber-500 h-full" 
-                style={{ width: `${(stats?.total ? ((stats?.status.find((s: any) => s.status === 'pending_verification')?.count || 0) / (stats.total + (stats?.status.find((s: any) => s.status === 'pending_verification')?.count || 0))) * 100) : 0)}%` }} 
+                style={{ 
+                  width: `${stats?.total ? 
+                    ((stats.status.find((s: any) => s.status === 'pending_verification')?.count || 0) / 
+                    (stats.total + (stats.status.find((s: any) => s.status === 'pending_verification')?.count || 0)) * 100) 
+                    : 0}%` 
+                }} 
                />
             </div>
           </CardContent>
