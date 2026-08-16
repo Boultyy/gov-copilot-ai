@@ -267,15 +267,16 @@ function Copilot() {
 
         <div className="border-t border-border bg-background p-6">
           <div className="mx-auto max-w-3xl space-y-4">
-            {messages.length === 1 && (
+            {(!activeId || (messages.length === 0 && !sendMessage.isPending)) && (
               <div className="flex flex-wrap gap-2">
                 {suggestedPrompts.map((p) => (
-                  <button key={p} onClick={() => { setInput(p); }} className="rounded-full border border-border px-4 py-1.5 text-xs text-muted-foreground transition-all hover:border-primary hover:bg-primary/5 hover:text-primary">
+                  <button key={p} onClick={() => { setInput(p); handleSend(); }} className="rounded-full border border-border px-4 py-1.5 text-xs text-muted-foreground transition-all hover:border-primary hover:bg-primary/5 hover:text-primary">
                     {p}
                   </button>
                 ))}
               </div>
             )}
+
             <div className="relative">
               <Input
                 value={input}
