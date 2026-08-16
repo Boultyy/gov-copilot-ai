@@ -154,7 +154,7 @@ export function AppSidebar() {
           </SidebarMenuItem>
           <SidebarMenuItem>
             <SidebarMenuButton asChild tooltip="Profile" className="h-10 px-3">
-              <Link to="/" className="flex items-center gap-3">
+              <Link to="/profile" className="flex items-center gap-3">
                 <User className="h-4.5 w-4.5 text-muted-foreground" />
                 {!collapsed && <span className="text-sm font-medium text-sidebar-foreground">Profile</span>}
               </Link>
