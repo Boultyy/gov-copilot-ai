@@ -160,7 +160,7 @@ export const sendCopilotMessage = createServerFn({ method: "POST" })
       
       const isNotFound = err.status === 404 || err.message?.includes("404");
       const errorMessage = isNotFound
-        ? "Citizen Copilot is temporarily unavailable due to an AI Gateway configuration issue (404). Please ensure the AI Connector is enabled in your Cloud settings."
+        ? "Citizen Copilot is temporarily unavailable due to a Lovable AI Gateway configuration issue (404). Please ensure 'Lovable AI' is enabled and 'Gemini' or 'OpenAI' models are accessible in your project's Cloud settings."
         : `Citizen Copilot error: ${err.message}`;
 
       throw new Error(errorMessage);

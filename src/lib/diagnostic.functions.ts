@@ -31,15 +31,21 @@ export const runAiDiagnostic = createServerFn({ method: "POST" })
       });
 
       results.tests.push({
-        name: `GPT-4o via Gateway`,
+        name: `Lovable AI Gateway`,
         status: "SUCCESS",
         model: response.model,
+        details: "Built-in Lovable AI integration responded successfully."
       });
     } catch (err: any) {
       results.tests.push({
-        name: `GPT-4o via Gateway`,
+        name: `Lovable AI Gateway`,
         status: "FAILED",
-        error: { message: err.message, status: err.status }
+        error: { 
+          message: err.status === 404 
+            ? "404 Not Found: The Lovable AI Gateway is reachable but the requested AI resource is missing. Ensure Lovable AI is enabled in Cloud settings." 
+            : err.message, 
+          status: err.status 
+        }
       });
     }
 
