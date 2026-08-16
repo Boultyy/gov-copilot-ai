@@ -92,7 +92,7 @@ function Copilot() {
   // Mutations
   const startConv = useMutation({
     mutationFn: (title?: string) => startConvFn({ data: { title } }),
-    onSuccess: (newConv) => {
+    onSuccess: (newConv: any) => {
       queryClient.invalidateQueries({ queryKey: ["conversations"] });
       setActiveId(newConv.id);
     },
@@ -121,12 +121,12 @@ function Copilot() {
 
     try {
       if (!currentId) {
-        const newConv = await startConv.mutateAsync(userMsg.slice(0, 30));
+        const newConv = (await startConv.mutateAsync(userMsg.slice(0, 30))) as any;
         currentId = newConv.id;
       }
 
       await sendMessage.mutateAsync({ 
-        conversationId: currentId, 
+        conversationId: currentId as string, 
         content: userMsg 
       });
     } catch (error) {
@@ -156,8 +156,9 @@ function Copilot() {
             {conversations.length === 0 ? (
               <p className="px-3 py-2 text-xs text-muted-foreground italic">No recent chats</p>
             ) : (
-              conversations.map((chat) => (
+              conversations.map((chat: any) => (
                 <button 
+
                   key={chat.id} 
                   onClick={() => setActiveId(chat.id)}
                   className={cn(
@@ -203,7 +204,7 @@ function Copilot() {
 
         <div className="flex-1 overflow-y-auto p-6 lg:p-12" ref={scrollRef}>
           <div className="mx-auto max-w-3xl space-y-8">
-            {messages.map((msg, i) => {
+            {messages.map((msg: any, i: number) => {
               const metadata = msg.metadata as any;
               const sources = metadata?.sources || [];
               
