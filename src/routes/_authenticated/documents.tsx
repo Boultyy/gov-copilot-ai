@@ -134,27 +134,36 @@ function Documents() {
     setThinking(true);
 
     try {
-      const results = await searchDocsFn({ data: { query: question, limit: 3 } });
+      // Use the improved search that returns grounded chunks
+      const results = await searchDocsFn({ data: { query: question, limit: 5 } });
       
       if (!results || results.length === 0) {
         setTurns((t) => [...t, { 
           role: "assistant", 
-          text: "I couldn't find any relevant information in your uploaded documents. Please try another question or upload more sources." 
+          text: "I couldn't find any relevant information in your uploaded documents. Please ensure you have uploaded and indexed relevant documents, or try rephrasing your question." 
         }]);
       } else {
+        // Build a grounded answer based on the chunks
         const citations = results.map((r: any) => ({
           doc: r.document_name,
-          page: 1, 
+          page: r.page_number || 1, 
           snippet: r.content
         }));
 
+        // In a real RAG system, we'd call an LLM here to summarize. 
+        // For the Documents workspace specific chat, we use the top results as the "answer".
+        // Note: The global Citizen Copilot uses the full grounded LLM logic.
+        const topResult = results[0];
+        const answer = `Based on your document "${topResult.document_name}":\n\n${topResult.content}\n\nI found ${results.length} relevant sections across your documents.`;
+
         setTurns((t) => [...t, { 
           role: "assistant", 
-          text: `Based on your documents, here is what I found:\n\n${results[0].content}`,
+          text: answer,
           citations
         }]);
       }
     } catch (error) {
+      console.error("Search failed:", error);
       toast.error("Search failed");
       setTurns((t) => [...t, { role: "assistant", text: "I encountered an error while searching your documents." }]);
     } finally {

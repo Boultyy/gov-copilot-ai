@@ -2,6 +2,8 @@ import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { supabaseAdmin } from "@/integrations/supabase/client.server";
+import pdf from "pdf-parse-fork";
+import mammoth from "mammoth";
 
 /**
  * Handles document upload metadata and triggers processing.
@@ -38,8 +40,6 @@ export const uploadDocumentMetadata = createServerFn({ method: "POST" })
     }
 
     // Trigger processing (async)
-    // In a real production environment, this would be a background job.
-    // For this implementation, we trigger it immediately.
     processDocument({ data: { documentId: doc.id } }).catch(console.error);
 
     return doc;
@@ -47,7 +47,6 @@ export const uploadDocumentMetadata = createServerFn({ method: "POST" })
 
 /**
  * Internal function to process documents (extract text, chunk, embed).
- * This is triggered by uploadDocumentMetadata but can also be called for re-processing.
  */
 export const processDocument = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
@@ -55,7 +54,7 @@ export const processDocument = createServerFn({ method: "POST" })
     z.object({ documentId: z.string().uuid() }).parse(data)
   )
   .handler(async ({ data, context }) => {
-    const { supabase, userId } = context;
+    const { userId } = context;
     const { documentId } = data;
 
     try {
@@ -78,25 +77,40 @@ export const processDocument = createServerFn({ method: "POST" })
       if (downloadError || !fileData) throw new Error("Failed to download document");
 
       // 3. Extract Text
-      // For this implementation, we'll use a simplified text extraction.
-      // Real implementation would use pdf-parse, mammoth, etc.
       let text = "";
+      const buffer = Buffer.from(await fileData.arrayBuffer());
+
       if (doc.mime_type === "application/pdf") {
-        // Mock PDF extraction - in a real app, use a lib here
-        text = "This is the extracted content of the PDF document: " + doc.name + ". \n" +
-               "It contains information about government policies and guidelines. \n" +
-               "Clause 1.1: Eligibility requires being a resident. \n" +
-               "Page 2: The budget allocated is 500 crores.";
+        const pdfData = await pdf(buffer);
+        text = pdfData.text;
+      } else if (
+        doc.mime_type === "application/vnd.openxmlformats-officedocument.wordprocessingml.document" ||
+        doc.name.endsWith(".docx")
+      ) {
+        const result = await mammoth.extractRawText({ buffer });
+        text = result.value;
+      } else if (doc.mime_type === "text/plain" || doc.name.endsWith(".txt")) {
+        text = buffer.toString("utf-8");
       } else {
-        text = await fileData.text();
+        throw new Error(`Unsupported file type: ${doc.mime_type}`);
       }
 
-      // 4. Chunking
-      const chunks = splitTextIntoChunks(text, 500);
+      if (!text || text.trim().length === 0) {
+        throw new Error("Document appears to be empty or text could not be extracted.");
+      }
+
+      // 4. Chunking (Overlap for better context)
+      const chunks = splitTextIntoChunks(text, 1000, 200);
 
       // 5. Generate Embeddings & Save
       const { createAiGateway } = await import("@/lib/ai-gateway.server");
       const ai = createAiGateway();
+
+      // Delete existing chunks if any (re-processing)
+      await supabaseAdmin
+        .from("document_chunks")
+        .delete()
+        .eq("document_id", documentId);
 
       for (let i = 0; i < chunks.length; i++) {
         const chunkText = chunks[i];
@@ -114,15 +128,19 @@ export const processDocument = createServerFn({ method: "POST" })
             document_id: documentId,
             chunk_index: i,
             content: chunkText,
-            embedding: `[${embedding.join(",")}]` as any, // Cast to vector format
-            metadata: { source: doc.name }
+            embedding: `[${embedding.join(",")}]` as any,
+            metadata: { 
+              source: doc.name,
+              chunk_size: chunkText.length,
+              processed_at: new Date().toISOString()
+            }
           });
       }
 
       // 6. Update Status
       await supabaseAdmin
         .from("documents")
-        .update({ status: "ready" })
+        .update({ status: "ready", error_message: null })
         .eq("id", documentId);
 
     } catch (err: any) {
@@ -131,7 +149,7 @@ export const processDocument = createServerFn({ method: "POST" })
         .from("documents")
         .update({ 
           status: "failed",
-          error_message: err.message
+          error_message: err.message || "Unknown error during processing"
         })
         .eq("id", documentId);
     }
@@ -149,7 +167,7 @@ export const searchUserDocuments = createServerFn({ method: "POST" })
     }).parse(data)
   )
   .handler(async ({ data, context }) => {
-    const { supabase, userId } = context;
+    const { userId } = context;
     const { query, limit } = data;
 
     // 1. Generate Query Embedding
@@ -162,15 +180,10 @@ export const searchUserDocuments = createServerFn({ method: "POST" })
     });
     const queryEmbedding = embeddingResponse.data[0].embedding;
 
-    // 2. Perform Vector Search via RPC or manual query if RPC not defined
-    // We'll use a direct select with vector similarity since we haven't defined an RPC yet.
-    // Note: To use vector similarity in JS, you usually need an RPC or raw SQL.
-    // We'll use supabaseAdmin.rpc if we define one, or we can use match_documents.
-    
-    // For now, let's assume we use match_documents RPC (we should create it in migration)
+    // 2. Perform Vector Search via RPC
     const { data: results, error } = await supabaseAdmin.rpc("match_document_chunks", {
       query_embedding: `[${queryEmbedding.join(",")}]` as any,
-      match_threshold: 0.5,
+      match_threshold: 0.3, // Lowered threshold for better recall
       match_count: limit,
       p_user_id: userId
     });
@@ -214,7 +227,7 @@ export const deleteDocument = createServerFn({ method: "POST" })
     // 1. Delete from Storage
     await supabase.storage.from("documents").remove([data.storagePath]);
 
-    // 2. Delete from Database (cascades to chunks if set, but we handle explicitly for safety)
+    // 2. Delete from Database (cascades handle chunks)
     const { error } = await supabase
       .from("documents")
       .delete()
@@ -225,13 +238,31 @@ export const deleteDocument = createServerFn({ method: "POST" })
     return { success: true };
   });
 
-// Utility
-function splitTextIntoChunks(text: string, chunkSize: number): string[] {
+// Utility: Improved chunking with overlap
+function splitTextIntoChunks(text: string, chunkSize: number, overlap: number): string[] {
   const chunks: string[] = [];
-  let currentPos = 0;
-  while (currentPos < text.length) {
-    chunks.push(text.substring(currentPos, currentPos + chunkSize));
-    currentPos += chunkSize;
+  let start = 0;
+  
+  while (start < text.length) {
+    let end = start + chunkSize;
+    
+    // If not at the end, try to find a newline or space to break at
+    if (end < text.length) {
+      const lastNewline = text.lastIndexOf("\n", end);
+      if (lastNewline > start + chunkSize / 2) {
+        end = lastNewline + 1;
+      } else {
+        const lastSpace = text.lastIndexOf(" ", end);
+        if (lastSpace > start + chunkSize / 2) {
+          end = lastSpace + 1;
+        }
+      }
+    }
+    
+    chunks.push(text.substring(start, end).trim());
+    start = end - overlap;
+    if (start < 0) start = end; // Safety
   }
-  return chunks;
+  
+  return chunks.filter(c => c.length > 0);
 }
