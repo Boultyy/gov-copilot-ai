@@ -165,7 +165,7 @@ export const triggerSourceSync = createServerFn({ method: "POST" })
     } catch (err: any) {
       await supabaseAdmin
         .from("ingestion_logs")
-        .update({ status: "failed", last_sync_error: err.message })
+        .update({ status: "failed", last_sync_error: err.message } as any)
         .eq("id", log.id);
       
       throw err;
