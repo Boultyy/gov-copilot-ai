@@ -10,7 +10,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Textarea } from "@/components/ui/textarea";
 import { demoDocuments, documentQA, suggestedDocQuestions, type ChatTurn } from "@/lib/demo-data";
 
-export const Route = createFileRoute("/documents")({
+export const Route = createFileRoute("/_authenticated/documents")({
   head: () => ({
     meta: [
       { title: "AI Document Intelligence | GovCopilot" },

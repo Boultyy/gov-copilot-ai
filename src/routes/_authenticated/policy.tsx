@@ -9,7 +9,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { complianceChecks, conflicts, missingClauses } from "@/lib/demo-data";
 
-export const Route = createFileRoute("/policy")({
+export const Route = createFileRoute("/_authenticated/policy")({
   head: () => ({
     meta: [
       { title: "Policy Conflict Checker | GovCopilot" },

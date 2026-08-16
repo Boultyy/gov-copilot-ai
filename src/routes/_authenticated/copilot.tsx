@@ -19,7 +19,7 @@ import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 
-export const Route = createFileRoute("/copilot")({
+export const Route = createFileRoute("/_authenticated/copilot")({
   head: () => ({
     meta: [
       { title: "AI Copilot | GovCopilot" },

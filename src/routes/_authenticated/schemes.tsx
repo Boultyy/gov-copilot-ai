@@ -16,7 +16,7 @@ import { Card, CardContent, CardFooter } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 
-export const Route = createFileRoute("/schemes")({
+export const Route = createFileRoute("/_authenticated/schemes")({
   head: () => ({
     meta: [
       { title: "Scheme Discovery | GovCopilot" },
