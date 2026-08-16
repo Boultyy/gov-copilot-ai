@@ -14,6 +14,8 @@ export const runAiDiagnostic = createServerFn({ method: "POST" })
     const projectID = process.env.LOVABLE_PROJECT_ID;
     const baseURL = "https://api.lovable.dev/v1/ai/openai";
 
+    const requestedModel = "google/gemini-3.6-flash";
+
     try {
       const ai = new OpenAI({
         apiKey: apiKey || "dummy-key",
@@ -25,7 +27,7 @@ export const runAiDiagnostic = createServerFn({ method: "POST" })
       });
 
       const response = await ai.chat.completions.create({
-        model: "gpt-4o",
+        model: requestedModel,
         messages: [{ role: "user", content: data.prompt || "Ping" }],
         max_tokens: 5,
       });
@@ -34,17 +36,20 @@ export const runAiDiagnostic = createServerFn({ method: "POST" })
         name: `Lovable AI Gateway`,
         status: "SUCCESS",
         model: response.model,
+        requestedModel: requestedModel,
         details: "Built-in Lovable AI integration responded successfully."
       });
     } catch (err: any) {
       results.tests.push({
         name: `Lovable AI Gateway`,
         status: "FAILED",
+        requestedModel: requestedModel,
         error: { 
           message: err.status === 404 
-            ? "404 Not Found: The Lovable AI Gateway is reachable but the requested AI resource is missing. Ensure Lovable AI is enabled in Cloud settings." 
+            ? `404 Not Found: The Lovable AI Gateway returned a 404 for model '${requestedModel}'.` 
             : err.message, 
-          status: err.status 
+          status: err.status,
+          body: err.body
         }
       });
     }
