@@ -4,6 +4,8 @@ import { z } from "zod";
 export const runAiDiagnostic = createServerFn({ method: "POST" })
   .validator((data: { prompt?: string }) => z.object({ prompt: z.string().optional() }).parse(data))
   .handler(async ({ data }) => {
+    console.log("DIAGNOSTIC HANDLER START");
+
     const results: any = {
       timestamp: new Date().toISOString(),
       env: {
