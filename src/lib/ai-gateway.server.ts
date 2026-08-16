@@ -4,7 +4,7 @@ export function createAiGateway() {
   const apiKey = process.env.LOVABLE_API_KEY;
   const projectID = process.env.LOVABLE_PROJECT_ID;
   
-  // The correct baseURL for modern projects using the platform AI gateway
+  // Base platform URL
   const baseURL = "https://api.lovable.dev/v1/ai/openai";
 
   if (!apiKey) {

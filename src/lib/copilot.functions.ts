@@ -34,7 +34,6 @@ export const sendCopilotMessage = createServerFn({ method: "POST" })
     if (userMsgError) throw new Error("Failed to save user message");
 
     // 2. Retrieve Government Context (Schemes)
-    // We use a combination of simple ILIKE search and later could add vector search for schemes too
     const { data: schemes } = await supabaseAdmin
       .from("schemes")
       .select("*")
@@ -46,11 +45,9 @@ export const sendCopilotMessage = createServerFn({ method: "POST" })
     const { searchUserDocuments } = await import("./documents.functions");
     let docChunks: any[] = [];
     try {
-      // searchUserDocuments might throw 404 if it uses the same faulty AI gateway config
       docChunks = await searchUserDocuments({ data: { query: content, limit: 5 } });
     } catch (e: any) {
       console.warn("User document search failed:", e);
-      // Fallback: don't crash the whole chat if document search fails
       docChunks = [];
     }
 
@@ -117,54 +114,55 @@ export const sendCopilotMessage = createServerFn({ method: "POST" })
       { role: "user", content: content }
     ];
 
-    const response = await ai.chat.completions.create({
-      model: "gpt-4o",
-      messages: messages as any,
-      temperature: 0.1, // Lower temperature for higher grounding
-    }).catch(err => {
-      console.error("AI Gateway Completion Error details:", {
-        message: err.message,
-        status: err.status,
-        name: err.name,
-        stack: err.stack
+    try {
+      const response = await ai.chat.completions.create({
+        model: "gpt-4o",
+        messages: messages as any,
+        temperature: 0.1,
       });
-      throw new Error(`Citizen Copilot is temporarily unavailable due to a connection issue (${err.message}). Please verify that your AI Gateway is correctly configured in the Cloud dashboard.`);
-    });
 
+      const aiContent = response.choices[0].message.content || "I apologize, but I am unable to process your request at the moment.";
 
+      // 6. Citations for Metadata
+      const citations = [
+        ...(schemes?.map(s => ({ type: 'govt', name: s.name, url: s.source_url })) || []),
+        ...(docChunks?.map(c => ({ 
+          type: 'user_doc', 
+          name: c.document_name, 
+          page: c.page_number,
+          snippet: c.content.substring(0, 100) + "..."
+        })) || [])
+      ];
 
-    const aiContent = response.choices[0].message.content || "I apologize, but I am unable to process your request at the moment.";
+      // 7. Save AI response
+      const { data: aiMsg, error: aiMsgError } = await supabase
+        .from("messages")
+        .insert({
+          conversation_id: conversationId,
+          role: "assistant",
+          content: aiContent,
+          metadata: { sources: citations }
+        })
+        .select()
+        .single();
 
-    // 6. Citations for Metadata
-    const citations = [
-      ...(schemes?.map(s => ({ type: 'govt', name: s.name, url: s.source_url })) || []),
-      ...(docChunks?.map(c => ({ 
-        type: 'user_doc', 
-        name: c.document_name, 
-        page: c.page_number,
-        snippet: c.content.substring(0, 100) + "..."
-      })) || [])
-    ];
+      if (aiMsgError) throw new Error("Failed to save AI response");
 
-    // 7. Save AI response
-    const { data: aiMsg, error: aiMsgError } = await supabase
-      .from("messages")
-      .insert({
-        conversation_id: conversationId,
-        role: "assistant",
-        content: aiContent,
-        metadata: { sources: citations }
-      })
-      .select()
-      .single();
+      // Update conversation timestamp
+      await supabase
+        .from("conversations")
+        .update({ updated_at: new Date().toISOString() })
+        .eq("id", conversationId);
 
-    if (aiMsgError) throw new Error("Failed to save AI response");
+      return aiMsg;
+    } catch (err: any) {
+      console.error("AI Gateway Completion Error details:", err);
+      
+      const isNotFound = err.status === 404 || err.message?.includes("404");
+      const errorMessage = isNotFound
+        ? "Citizen Copilot is temporarily unavailable due to an AI Gateway configuration issue (404). Please ensure the AI Connector is enabled in your Cloud settings."
+        : `Citizen Copilot error: ${err.message}`;
 
-    // Update conversation timestamp
-    await supabase
-      .from("conversations")
-      .update({ updated_at: new Date().toISOString() })
-      .eq("id", conversationId);
-
-    return aiMsg;
+      throw new Error(errorMessage);
+    }
   });
