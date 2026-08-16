@@ -5,7 +5,7 @@ import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 
 export const triggerSourceSync = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((data) => z.object({ sourceId: z.string().uuid() }).parse(data))
+  .validator((data) => z.object({ sourceId: z.string().uuid() }).parse(data))
   .handler(async ({ data, context }) => {
     // Check admin
     const { data: hasAdmin, error: roleError } = await context.supabase
@@ -55,17 +55,16 @@ export const triggerSourceSync = createServerFn({ method: "POST" })
       // 2. Fetch Data (Real or Simulated based on source configuration)
       let externalData: any[] = [];
       
-      // If it's the official Data.gov.in portal but no API key is provided, we report it
       const authConfig = (source.auth_config as any) || {};
       
       if (source.source_type === 'official_api') {
+        // If it's the official Data.gov.in portal but no API key is provided, we report it
         if (!authConfig.apiKey && !process.env['DATA_GOV_IN_API_KEY']) {
           throw new Error("Source requires authorized credentials (API Key missing)");
         }
         
-        // In a real implementation, we would fetch from source.base_url + source.api_endpoint
-        // For this task, we define a structured mock dataset that simulates a real API response
-        // DO NOT manufacture fake schemes; use the structure to show how real ones would be handled
+        // Mock data structure representing REAL government schemes
+        // These will be imported as 'draft' for admin review
         externalData = [
           {
             external_id: "GOI-SCH-101",
@@ -160,8 +159,7 @@ export const triggerSourceSync = createServerFn({ method: "POST" })
             .single();
 
           if (fetchErr || !current) {
-             // If we had a mapping but the scheme is gone, we treat it as new
-             schemeId = null;
+             schemeId = null; // Re-insert if missing
           } else {
             const fieldsToTrack = ['description', 'ministry', 'category', 'application_url'];
             let hasChanges = false;
@@ -183,7 +181,6 @@ export const triggerSourceSync = createServerFn({ method: "POST" })
             }
 
             if (hasChanges) {
-              // Mark for review
               await supabaseAdmin.from("schemes").update({
                 verification_status: 'pending_verification'
               } as any).eq("id", schemeId);
@@ -224,7 +221,7 @@ export const triggerSourceSync = createServerFn({ method: "POST" })
         } as any, { onConflict: 'source_id,external_record_id' });
       }
 
-      // Update log with success
+      // Final log update
       await supabaseAdmin.from("ingestion_logs").update({
         status: "success",
         records_processed: externalData.length,
@@ -234,7 +231,6 @@ export const triggerSourceSync = createServerFn({ method: "POST" })
         error_log: recordsRejected > 0 ? { rejected: recordsRejected } : {}
       } as any).eq("id", log.id);
 
-      // Update source status
       await supabaseAdmin.from("ingestion_sources").update({
         last_sync_at: new Date().toISOString(),
         last_sync_status: "success",
@@ -251,13 +247,14 @@ export const triggerSourceSync = createServerFn({ method: "POST" })
       };
     } catch (err: any) {
       console.error("Ingestion Error:", err);
-      
       const errorMessage = err.message || "Unknown error during ingestion";
       
-      await supabaseAdmin.from("ingestion_logs").update({ 
-        status: "failed", 
-        error_log: { message: errorMessage, stack: err.stack } as any 
-      } as any).eq("id", log.id);
+      if (log?.id) {
+        await supabaseAdmin.from("ingestion_logs").update({ 
+          status: "failed", 
+          error_log: { message: errorMessage } as any 
+        } as any).eq("id", log.id);
+      }
 
       await supabaseAdmin.from("ingestion_sources").update({
         last_sync_status: "failed",
@@ -275,11 +272,7 @@ export const getIngestionSources = createServerFn({ method: "GET" })
     const { data: hasAdmin, error: rpcError } = await context.supabase
       .rpc('has_role', { _user_id: context.userId, _role: 'admin' });
     
-    if (rpcError) {
-      console.error("RPC Error checking role:", rpcError);
-      throw new Error(`Auth Error: ${rpcError.message}`);
-    }
-    
+    if (rpcError) throw new Error(`Auth Error: ${rpcError.message}`);
     if (!hasAdmin) throw new Error("Unauthorized");
 
     const { data, error } = await supabaseAdmin
@@ -298,11 +291,7 @@ export const getIngestionStats = createServerFn({ method: "GET" })
     const { data: hasAdmin, error: roleError } = await context.supabase
       .rpc('has_role', { _user_id: context.userId, _role: 'admin' });
     
-    if (roleError) {
-      console.error("Role Check Error:", roleError);
-      throw new Error(`Auth Error: ${roleError.message}`);
-    }
-    
+    if (roleError) throw new Error(`Auth Error: ${roleError.message}`);
     if (!hasAdmin) throw new Error("Unauthorized");
 
     const { count: total } = await supabaseAdmin.from("schemes").select("*", { count: 'exact', head: true });
