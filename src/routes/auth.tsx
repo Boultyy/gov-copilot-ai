@@ -7,7 +7,8 @@ import { Sparkles, Loader2 } from 'lucide-react'
 import React from 'react'
 
 const Auth = React.lazy(() => import('@supabase/auth-ui-react').then(m => ({ default: m.Auth })));
-const ThemeSupa = React.lazy(() => import('@supabase/auth-ui-shared').then(m => ({ default: m.ThemeSupa })));
+// ThemeSupa is an object, not a component, so we don't need to lazy load it as a component.
+// We can just dynamically import it inside the component or just check if it's browser.
 
 export const Route = createFileRoute('/auth')({
   component: AuthPage,
