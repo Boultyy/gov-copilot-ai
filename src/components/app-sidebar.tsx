@@ -1,4 +1,4 @@
-import { Link, useRouterState } from "@tanstack/react-router";
+import { Link, useRouterState, useNavigate } from "@tanstack/react-router";
 import {
   BarChart3,
   FileSearch,
@@ -10,7 +10,10 @@ import {
   Sparkle,
   Settings,
   User,
+  LogOut,
 } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
 
 import {
   Sidebar,
@@ -45,6 +48,17 @@ export function AppSidebar() {
   const { state } = useSidebar();
   const collapsed = state === "collapsed";
   const pathname = useRouterState({ select: (r) => r.location.pathname });
+  const navigate = useNavigate();
+
+  const handleLogout = async () => {
+    const { error } = await supabase.auth.signOut();
+    if (error) {
+      toast.error("Failed to sign out");
+    } else {
+      toast.success("Signed out successfully");
+      navigate({ to: "/auth" });
+    }
+  };
 
   return (
     <Sidebar collapsible="icon" className="border-r border-sidebar-border">
@@ -144,6 +158,16 @@ export function AppSidebar() {
                 <User className="h-4.5 w-4.5 text-muted-foreground" />
                 {!collapsed && <span className="text-sm font-medium text-sidebar-foreground">Profile</span>}
               </Link>
+            </SidebarMenuButton>
+          </SidebarMenuItem>
+          <SidebarMenuItem>
+            <SidebarMenuButton 
+              onClick={handleLogout}
+              tooltip="Logout" 
+              className="h-10 px-3 text-destructive hover:text-destructive hover:bg-destructive/10"
+            >
+              <LogOut className="h-4.5 w-4.5" />
+              {!collapsed && <span className="text-sm font-medium">Logout</span>}
             </SidebarMenuButton>
           </SidebarMenuItem>
         </SidebarMenu>
