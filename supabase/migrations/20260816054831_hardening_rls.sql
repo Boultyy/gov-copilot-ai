@@ -15,6 +15,8 @@ FOR UPDATE USING (auth.uid() = id);
 ALTER TABLE public.conversations ENABLE ROW LEVEL SECURITY;
 
 DROP POLICY IF EXISTS "Users can manage own conversations" ON public.conversations;
+-- Policy already exists from foundation, but let's ensure it's hardened
+DROP POLICY IF EXISTS "Users can manage their own conversations" ON public.conversations;
 CREATE POLICY "Users can manage own conversations" ON public.conversations
 FOR ALL TO authenticated USING (auth.uid() = user_id);
 
@@ -22,22 +24,30 @@ FOR ALL TO authenticated USING (auth.uid() = user_id);
 ALTER TABLE public.messages ENABLE ROW LEVEL SECURITY;
 
 DROP POLICY IF EXISTS "Users can manage own messages" ON public.messages;
+DROP POLICY IF EXISTS "Users can manage their own messages" ON public.messages;
 CREATE POLICY "Users can manage own messages" ON public.messages
-FOR ALL TO authenticated USING (auth.uid() = user_id);
+FOR ALL TO authenticated 
+USING (EXISTS (
+  SELECT 1 FROM public.conversations 
+  WHERE conversations.id = messages.conversation_id 
+  AND conversations.user_id = auth.uid()
+));
 
 -- 4. Documents: Users can manage their own documents
 ALTER TABLE public.documents ENABLE ROW LEVEL SECURITY;
 
 DROP POLICY IF EXISTS "Users can manage own documents" ON public.documents;
+DROP POLICY IF EXISTS "Users can manage their own documents" ON public.documents;
 CREATE POLICY "Users can manage own documents" ON public.documents
 FOR ALL TO authenticated USING (auth.uid() = user_id);
 
--- 5. Document Chunks: Indirect protection via documents table or inherit user_id
+-- 5. Document Chunks: Indirect protection via documents table
 ALTER TABLE public.document_chunks ENABLE ROW LEVEL SECURITY;
 
 DROP POLICY IF EXISTS "Users can view own document chunks" ON public.document_chunks;
-CREATE POLICY "Users can view own document chunks" ON public.document_chunks
-FOR SELECT TO authenticated 
+DROP POLICY IF EXISTS "Users can manage their own chunks" ON public.document_chunks;
+CREATE POLICY "Users can manage own chunks" ON public.document_chunks
+FOR ALL TO authenticated 
 USING (EXISTS (
   SELECT 1 FROM public.documents 
   WHERE documents.id = document_chunks.document_id 
@@ -48,6 +58,7 @@ USING (EXISTS (
 ALTER TABLE public.applications ENABLE ROW LEVEL SECURITY;
 
 DROP POLICY IF EXISTS "Users can manage own applications" ON public.applications;
+DROP POLICY IF EXISTS "Users can manage their own applications" ON public.applications;
 CREATE POLICY "Users can manage own applications" ON public.applications
 FOR ALL TO authenticated USING (auth.uid() = user_id);
 
@@ -55,14 +66,16 @@ FOR ALL TO authenticated USING (auth.uid() = user_id);
 ALTER TABLE public.policy_comparisons ENABLE ROW LEVEL SECURITY;
 
 DROP POLICY IF EXISTS "Users can manage own policy comparisons" ON public.policy_comparisons;
+DROP POLICY IF EXISTS "Users can manage their own comparisons" ON public.policy_comparisons;
 CREATE POLICY "Users can manage own policy comparisons" ON public.policy_comparisons
 FOR ALL TO authenticated USING (auth.uid() = user_id);
 
 ALTER TABLE public.policy_conflicts ENABLE ROW LEVEL SECURITY;
 
 DROP POLICY IF EXISTS "Users can view own policy conflicts" ON public.policy_conflicts;
-CREATE POLICY "Users can view own policy conflicts" ON public.policy_conflicts
-FOR SELECT TO authenticated 
+DROP POLICY IF EXISTS "Users can manage their own conflicts" ON public.policy_conflicts;
+CREATE POLICY "Users can manage own conflicts" ON public.policy_conflicts
+FOR ALL TO authenticated 
 USING (EXISTS (
   SELECT 1 FROM public.policy_comparisons 
   WHERE policy_comparisons.id = policy_conflicts.comparison_id 
@@ -73,6 +86,7 @@ USING (EXISTS (
 ALTER TABLE public.ai_generations ENABLE ROW LEVEL SECURITY;
 
 DROP POLICY IF EXISTS "Users can manage own AI generations" ON public.ai_generations;
+DROP POLICY IF EXISTS "Users can view their own generations" ON public.ai_generations;
 CREATE POLICY "Users can manage own AI generations" ON public.ai_generations
 FOR ALL TO authenticated USING (auth.uid() = user_id);
 
@@ -80,6 +94,7 @@ FOR ALL TO authenticated USING (auth.uid() = user_id);
 ALTER TABLE public.audit_logs ENABLE ROW LEVEL SECURITY;
 
 DROP POLICY IF EXISTS "Users can view own audit logs" ON public.audit_logs;
+DROP POLICY IF EXISTS "Users can view their own logs" ON public.audit_logs;
 CREATE POLICY "Users can view own audit logs" ON public.audit_logs
 FOR SELECT TO authenticated USING (auth.uid() = user_id);
 
@@ -87,11 +102,13 @@ FOR SELECT TO authenticated USING (auth.uid() = user_id);
 -- We assume these are public/global for all authenticated users
 ALTER TABLE public.schemes ENABLE ROW LEVEL SECURITY;
 DROP POLICY IF EXISTS "Allow read for authenticated users" ON public.schemes;
+DROP POLICY IF EXISTS "Public schemes are viewable by all users" ON public.schemes;
 CREATE POLICY "Allow read for authenticated users" ON public.schemes
 FOR SELECT TO authenticated USING (true);
 
 ALTER TABLE public.services ENABLE ROW LEVEL SECURITY;
 DROP POLICY IF EXISTS "Allow read for authenticated users" ON public.services;
+DROP POLICY IF EXISTS "Public services are viewable by all users" ON public.services;
 CREATE POLICY "Allow read for authenticated users" ON public.services
 FOR SELECT TO authenticated USING (true);
 
