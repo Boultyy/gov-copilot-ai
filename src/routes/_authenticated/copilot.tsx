@@ -73,21 +73,25 @@ function Copilot() {
   const scrollRef = useRef<HTMLDivElement>(null);
   const queryClient = useQueryClient();
 
+  const getConvsFn = useServerFn(getConversations);
+  const getMsgsFn = useServerFn(getConversationMessages);
+  const startConvFn = useServerFn(startNewConversation);
+  const sendMsgFn = useServerFn(sendCopilotMessage);
+
   // Queries
   const { data: conversations = [] } = useSuspenseQuery({
     queryKey: ["conversations"],
-    queryFn: () => getConversations(),
+    queryFn: () => getConvsFn(),
   });
 
-  const { data: messages = [], isLoading: isLoadingMessages } = useSuspenseQuery({
+  const { data: messages = [] } = useSuspenseQuery({
     queryKey: ["messages", activeId],
-    queryFn: () => activeId ? getConversationMessages({ conversationId: activeId }) : Promise.resolve([]),
-    enabled: !!activeId,
+    queryFn: () => activeId ? getMsgsFn({ data: { conversationId: activeId } }) : Promise.resolve([]),
   });
 
   // Mutations
   const startConv = useMutation({
-    mutationFn: (title?: string) => startNewConversation({ title }),
+    mutationFn: (title?: string) => startConvFn({ data: { title } }),
     onSuccess: (newConv) => {
       queryClient.invalidateQueries({ queryKey: ["conversations"] });
       setActiveId(newConv.id);
@@ -95,7 +99,7 @@ function Copilot() {
   });
 
   const sendMessage = useMutation({
-    mutationFn: sendCopilotMessage,
+    mutationFn: (args: { conversationId: string; content: string }) => sendMsgFn({ data: args }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["messages", activeId] });
       queryClient.invalidateQueries({ queryKey: ["conversations"] });
@@ -130,6 +134,7 @@ function Copilot() {
       console.error(error);
     }
   };
+
 
 
   return (
