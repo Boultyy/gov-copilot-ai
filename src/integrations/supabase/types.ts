@@ -1080,6 +1080,27 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      get_scheme_counts_by_category: {
+        Args: never
+        Returns: {
+          category: string
+          count: number
+        }[]
+      }
+      get_scheme_counts_by_level: {
+        Args: never
+        Returns: {
+          count: number
+          level: string
+        }[]
+      }
+      get_scheme_counts_by_status: {
+        Args: never
+        Returns: {
+          count: number
+          status: string
+        }[]
+      }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]

@@ -10,18 +10,24 @@ export const getSchemes = createServerFn({ method: "GET" })
         type: z.enum(["Central", "State"]).optional(),
         category: z.string().optional(),
         state: z.string().optional(),
+        page: z.number().default(1),
+        pageSize: z.number().default(10),
       })
       .optional()
       .parse(data)
   )
   .handler(async ({ data }) => {
-    // Note: Cast queryBuilder to any to bypass type checking until Supabase types regenerate
-    let queryBuilder: any = supabase
+    const page = data?.page || 1;
+    const pageSize = data?.pageSize || 10;
+    const from = (page - 1) * pageSize;
+    const to = from + pageSize - 1;
+
+    let queryBuilder = supabase
       .from("schemes")
       .select(`
         *,
         scheme_requirements (*)
-      `);
+      `, { count: 'exact' });
 
     queryBuilder = queryBuilder.eq("active_status", true);
     queryBuilder = queryBuilder.eq("verification_status", "verified");
@@ -42,14 +48,22 @@ export const getSchemes = createServerFn({ method: "GET" })
       queryBuilder = queryBuilder.eq("state_ut", data.state);
     }
 
-    const { data: schemes, error } = await queryBuilder.order("created_at", { ascending: false });
+    const { data: schemes, error, count } = await queryBuilder
+      .order("created_at", { ascending: false })
+      .range(from, to);
 
     if (error) {
       console.error("Error fetching schemes:", error);
       throw new Error("Failed to fetch schemes");
     }
 
-    return schemes || [];
+    return {
+      schemes: schemes || [],
+      totalCount: count || 0,
+      page,
+      pageSize,
+      hasMore: (count || 0) > to + 1
+    };
   });
 
 export const getSchemeById = createServerFn({ method: "GET" })

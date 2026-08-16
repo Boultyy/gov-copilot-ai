@@ -68,9 +68,40 @@ export const triggerSourceSync = createServerFn({ method: "POST" })
           scheme_name: "PM Vishwakarma",
           ministry_name: "Ministry of MSME",
           level: "Central",
-          cat: "Livelihood",
-          desc: "Updated description to test change detection.",
+          cat: "Business/Self-employed",
+          desc: "Support for traditional artisans and craftspeople.",
           url: "https://pmvishwakarma.gov.in/",
+          updated_at: new Date().toISOString()
+        },
+        {
+          external_id: "GOI-SCH-HEALTH-202",
+          scheme_name: "Ayushman Bharat PM-JAY",
+          ministry_name: "Ministry of Health and Family Welfare",
+          level: "Central",
+          cat: "Health",
+          desc: "World's largest health insurance/assurance scheme fully financed by the government.",
+          url: "https://pmjay.gov.in/",
+          updated_at: new Date().toISOString()
+        },
+        {
+          external_id: "KA-SCH-EDU-303",
+          scheme_name: "Kanya Shiksha Protsahan Yojana",
+          ministry_name: "Department of Education (State)",
+          level: "State",
+          state: "Karnataka",
+          cat: "Education",
+          desc: "Financial assistance to girls for pursuing higher education.",
+          url: "https://karnataka.gov.in/education",
+          updated_at: new Date().toISOString()
+        },
+        {
+          external_id: "GOI-SCH-FARM-404",
+          scheme_name: "PM-KISAN",
+          ministry_name: "Ministry of Agriculture & Farmers Welfare",
+          level: "Central",
+          cat: "Farming/Agriculture",
+          desc: "Income support to all landholding farmers' families in the country.",
+          url: "https://pmkisan.gov.in/",
           updated_at: new Date().toISOString()
         }
       ];
@@ -91,6 +122,7 @@ export const triggerSourceSync = createServerFn({ method: "POST" })
           source_name: source.name,
           source_type: source.source_type,
           source_record_id: item.external_id,
+          state_ut: (item as any).state,
           active_status: true,
         };
 
@@ -220,5 +252,42 @@ export const getIngestionSources = createServerFn({ method: "GET" })
     const { data, error } = await supabaseAdmin.from("ingestion_sources").select("*").order("created_at", { ascending: false });
     if (error) throw new Error(error.message);
     return data || [];
+  });
+
+export const getIngestionStats = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }) => {
+    // Check admin
+    const { data: hasAdmin, error: roleError } = await context.supabase
+      .rpc('has_role', { _user_id: context.userId, _role: 'admin' });
+    
+    if (roleError) {
+      console.error("Role Check Error:", roleError);
+      throw new Error(`Auth Error: ${roleError.message}`);
+    }
+    
+    if (!hasAdmin) throw new Error("Unauthorized");
+
+    const { count: total } = await supabaseAdmin.from("schemes").select("*", { count: 'exact', head: true });
+    
+    const { data: statusCounts } = await supabaseAdmin.rpc('get_scheme_counts_by_status');
+    const { data: levelCounts } = await supabaseAdmin.rpc('get_scheme_counts_by_level');
+    const { data: categoryCounts } = await supabaseAdmin.rpc('get_scheme_counts_by_category');
+    
+    const { data: lastSync } = await supabaseAdmin
+      .from("ingestion_logs")
+      .select("created_at")
+      .eq("status", "success")
+      .order("created_at", { ascending: false })
+      .limit(1)
+      .maybeSingle();
+
+    return {
+      total: total || 0,
+      status: statusCounts || [],
+      levels: levelCounts || [],
+      categories: categoryCounts || [],
+      lastSync: lastSync?.created_at
+    };
   });
 
