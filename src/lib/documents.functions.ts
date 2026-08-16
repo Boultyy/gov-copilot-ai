@@ -169,7 +169,7 @@ export const searchUserDocuments = createServerFn({ method: "POST" })
     
     // For now, let's assume we use match_documents RPC (we should create it in migration)
     const { data: results, error } = await supabaseAdmin.rpc("match_document_chunks", {
-      query_embedding: queryEmbedding,
+      query_embedding: `[${queryEmbedding.join(",")}]` as any,
       match_threshold: 0.5,
       match_count: limit,
       p_user_id: userId
