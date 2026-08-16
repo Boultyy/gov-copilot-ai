@@ -11,6 +11,7 @@ import {
   Settings,
   User,
   LogOut,
+  Database,
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
@@ -42,6 +43,7 @@ const primaryNav = [
 const advancedModules = [
   { title: "Policy Checker", url: "/policy", icon: GitCompareArrows },
   { title: "Draft Generator", url: "/drafts", icon: PenLine },
+  { title: "Data Management", url: "/admin/ingestion", icon: Database },
 ];
 
 export function AppSidebar() {
