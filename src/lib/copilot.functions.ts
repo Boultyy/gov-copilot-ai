@@ -168,7 +168,10 @@ export const sendCopilotMessage = createServerFn({ method: "POST" })
     const response = await ai.chat.completions.create({
       model: "gpt-4o",
       messages: messages as any,
-      temperature: 0.2, // Low temperature for factual accuracy
+      temperature: 0.2, 
+    }).catch(err => {
+      console.error("AI Gateway Error:", err);
+      throw new Error(`AI Gateway failed: ${err.message}`);
     });
 
     const aiContent = response.choices[0].message.content || "I apologize, I encountered an error generating a response.";
