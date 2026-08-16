@@ -47,13 +47,13 @@ function Schemes() {
     queryKey: ["schemes", searchQuery, selectedType, selectedCategory],
     queryFn: () => getSchemes({ 
       data: {
-        query: searchQuery, 
-        type: selectedType as any, 
+        query: searchQuery || undefined, 
+        type: (selectedType as "Central" | "State") || undefined, 
         category: selectedCategory || undefined 
       }
     }),
-
   });
+
 
   const categories = useMemo(() => {
     const cats = new Set(schemes.map(s => s.category).filter(Boolean));
