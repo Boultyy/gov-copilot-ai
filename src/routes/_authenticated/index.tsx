@@ -113,7 +113,7 @@ function LandingDashboard() {
           {
             title: "Application Tracker",
             desc: "Real-time updates on your pending applications.",
-            icon: RouteIcon,
+            icon: Landmark, // Reusing Landmark for applications link
             link: "/applications",
             color: "text-purple-500",
             bg: "bg-purple-50",
@@ -207,4 +207,4 @@ function LandingDashboard() {
 }
 
 // Simple internal icon mapper if needed, but imported lucide icons are better
-const RouteIcon = (props: any) => <Landmark {...props} />;
+
