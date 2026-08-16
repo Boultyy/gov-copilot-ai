@@ -10,8 +10,7 @@ export const globalSearch = createServerFn({ method: "POST" })
     const { supabase, userId } = context;
     const { query } = data;
 
-    // 1. Structured Data Search (Schemes, Services, Applications, Policies)
-    // ONLY published/verified schemes
+    // 1. Structured Data Search (Schemes, Services, Applications)
     const schemesPromise = supabaseAdmin
       .from("schemes")
       .select("id, name, government_level, state_ut, department, official_source, source_url, last_verified_at")
@@ -49,9 +48,27 @@ export const globalSearch = createServerFn({ method: "POST" })
     ] = await Promise.all([schemesPromise, servicesPromise, appsPromise]);
 
     return {
-      schemes: schemes || [],
-      services: services || [],
-      applications: apps || [],
-      documents: docResults || [],
+      schemes: (schemes || []).map((s: any) => ({
+        id: s.id as string,
+        name: s.name as string,
+        government_level: s.government_level as string,
+        department: s.department as string,
+        last_verified_at: s.last_verified_at as string
+      })),
+      services: (services || []).map((s: any) => ({
+        id: s.id as string,
+        name: s.name as string,
+        department: s.department as string
+      })),
+      applications: (apps || []).map((a: any) => ({
+        id: a.id as string,
+        external_app_id: a.external_app_id as string,
+        status: a.status as string,
+        department: a.department as string
+      })),
+      documents: (docResults || []).map((d: any) => ({
+        document_name: d.document_name as string,
+        content: d.content as string
+      })),
     };
   });
