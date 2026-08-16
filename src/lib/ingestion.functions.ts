@@ -131,8 +131,9 @@ export const triggerSourceSync = createServerFn({ method: "POST" })
 
           if (hasChanges) {
             // Mark for review instead of silent overwrite of verified data
+            // We do NOT overwrite the scheme table directly with 'normalized' 
+            // the admin must approve the changes in the verification UI.
             await supabaseAdmin.from("schemes").update({
-              ...normalized,
               verification_status: 'pending_verification'
             } as any).eq("id", schemeId);
             recordsReview++;
