@@ -1,6 +1,7 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { supabaseAdmin } from "@/integrations/supabase/client.server";
+import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 
 // Helper to calculate hash for change detection
 const calculateFingerprint = (data: any) => {
@@ -21,8 +22,15 @@ const calculateFingerprint = (data: any) => {
 };
 
 export const triggerSourceSync = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
   .inputValidator((data) => z.object({ sourceId: z.string().uuid() }).parse(data))
-  .handler(async ({ data }) => {
+  .handler(async ({ data, context }) => {
+    // Check admin
+    const { data: hasAdmin } = await context.supabase
+      .rpc('has_role', { _user_id: context.userId, _role: 'admin' });
+    
+    if (!hasAdmin) throw new Error("Unauthorized");
+
     const { sourceId } = data;
 
     const { data: source, error: sourceError } = await supabaseAdmin
@@ -185,7 +193,14 @@ export const triggerSourceSync = createServerFn({ method: "POST" })
   });
 
 export const getIngestionSources = createServerFn({ method: "GET" })
-  .handler(async () => {
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }) => {
+    // Check admin
+    const { data: hasAdmin } = await context.supabase
+      .rpc('has_role', { _user_id: context.userId, _role: 'admin' });
+    
+    if (!hasAdmin) throw new Error("Unauthorized");
+
     const { data, error } = await supabaseAdmin.from("ingestion_sources").select("*").order("created_at", { ascending: false });
     if (error) throw new Error(error.message);
     return data || [];
