@@ -168,7 +168,15 @@ export const sendCopilotMessage = createServerFn({ method: "POST" })
     const response = await ai.chat.completions.create({
       model: "gpt-4o",
       messages: messages as any,
-      temperature: 0.2, // Low temperature for factual accuracy
+      temperature: 0.2, 
+    }).catch(err => {
+      console.error("AI Gateway Error:", {
+        message: err.message,
+        name: err.name,
+        projectId: process.env.LOVABLE_PROJECT_ID,
+        hasKey: !!process.env.LOVABLE_API_KEY
+      });
+      throw new Error(`AI Citizen Copilot is temporarily unavailable (Reason: ${err.message}). Please ensure the AI connector is enabled in Project Settings.`);
     });
 
     const aiContent = response.choices[0].message.content || "I apologize, I encountered an error generating a response.";
