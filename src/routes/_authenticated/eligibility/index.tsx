@@ -30,7 +30,7 @@ const eligibilitySearchSchema = z.object({
   schemeId: z.string().uuid().optional(),
 });
 
-export const Route = createFileRoute("/_authenticated/eligibility")({
+export const Route = createFileRoute("/_authenticated/eligibility/")({
   validateSearch: (search) => eligibilitySearchSchema.parse(search),
   head: () => ({
     meta: [
@@ -45,7 +45,8 @@ export const Route = createFileRoute("/_authenticated/eligibility")({
 });
 
 function EligibilityPage() {
-  const { schemeId } = useSearch({ from: "/_authenticated/eligibility" });
+  const search = useSearch({ from: "/_authenticated/eligibility" });
+  const schemeId = search.schemeId;
   const [step, setStep] = useState(schemeId ? "form" : "select");
   
   const [formData, setFormData] = useState({

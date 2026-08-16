@@ -22,6 +22,7 @@ import { Route as AuthenticatedDraftsRouteImport } from './routes/_authenticated
 import { Route as AuthenticatedDocumentsRouteImport } from './routes/_authenticated/documents'
 import { Route as AuthenticatedCopilotRouteImport } from './routes/_authenticated/copilot'
 import { Route as AuthenticatedApplicationsRouteImport } from './routes/_authenticated/applications'
+import { Route as AuthenticatedEligibilityIndexRouteImport } from './routes/_authenticated/eligibility/index'
 import { Route as AuthenticatedAdminVerificationRouteImport } from './routes/_authenticated/admin/verification'
 import { Route as AuthenticatedAdminIngestionRouteImport } from './routes/_authenticated/admin.ingestion'
 
@@ -91,6 +92,12 @@ const AuthenticatedApplicationsRoute =
     path: '/applications',
     getParentRoute: () => AuthenticatedRoute,
   } as any)
+const AuthenticatedEligibilityIndexRoute =
+  AuthenticatedEligibilityIndexRouteImport.update({
+    id: '/',
+    path: '/',
+    getParentRoute: () => AuthenticatedEligibilityRoute,
+  } as any)
 const AuthenticatedAdminVerificationRoute =
   AuthenticatedAdminVerificationRouteImport.update({
     id: '/admin/verification',
@@ -112,13 +119,14 @@ export interface FileRoutesByFullPath {
   '/copilot': typeof AuthenticatedCopilotRoute
   '/documents': typeof AuthenticatedDocumentsRoute
   '/drafts': typeof AuthenticatedDraftsRoute
-  '/eligibility': typeof AuthenticatedEligibilityRoute
+  '/eligibility': typeof AuthenticatedEligibilityRouteWithChildren
   '/policy': typeof AuthenticatedPolicyRoute
   '/profile': typeof AuthenticatedProfileRoute
   '/schemes': typeof AuthenticatedSchemesRoute
   '/workflow': typeof AuthenticatedWorkflowRoute
   '/admin/ingestion': typeof AuthenticatedAdminIngestionRoute
   '/admin/verification': typeof AuthenticatedAdminVerificationRoute
+  '/eligibility/': typeof AuthenticatedEligibilityIndexRoute
 }
 export interface FileRoutesByTo {
   '/auth': typeof AuthRoute
@@ -127,7 +135,6 @@ export interface FileRoutesByTo {
   '/copilot': typeof AuthenticatedCopilotRoute
   '/documents': typeof AuthenticatedDocumentsRoute
   '/drafts': typeof AuthenticatedDraftsRoute
-  '/eligibility': typeof AuthenticatedEligibilityRoute
   '/policy': typeof AuthenticatedPolicyRoute
   '/profile': typeof AuthenticatedProfileRoute
   '/schemes': typeof AuthenticatedSchemesRoute
@@ -135,6 +142,7 @@ export interface FileRoutesByTo {
   '/': typeof AuthenticatedIndexRoute
   '/admin/ingestion': typeof AuthenticatedAdminIngestionRoute
   '/admin/verification': typeof AuthenticatedAdminVerificationRoute
+  '/eligibility': typeof AuthenticatedEligibilityIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -145,7 +153,7 @@ export interface FileRoutesById {
   '/_authenticated/copilot': typeof AuthenticatedCopilotRoute
   '/_authenticated/documents': typeof AuthenticatedDocumentsRoute
   '/_authenticated/drafts': typeof AuthenticatedDraftsRoute
-  '/_authenticated/eligibility': typeof AuthenticatedEligibilityRoute
+  '/_authenticated/eligibility': typeof AuthenticatedEligibilityRouteWithChildren
   '/_authenticated/policy': typeof AuthenticatedPolicyRoute
   '/_authenticated/profile': typeof AuthenticatedProfileRoute
   '/_authenticated/schemes': typeof AuthenticatedSchemesRoute
@@ -153,6 +161,7 @@ export interface FileRoutesById {
   '/_authenticated/': typeof AuthenticatedIndexRoute
   '/_authenticated/admin/ingestion': typeof AuthenticatedAdminIngestionRoute
   '/_authenticated/admin/verification': typeof AuthenticatedAdminVerificationRoute
+  '/_authenticated/eligibility/': typeof AuthenticatedEligibilityIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -171,6 +180,7 @@ export interface FileRouteTypes {
     | '/workflow'
     | '/admin/ingestion'
     | '/admin/verification'
+    | '/eligibility/'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/auth'
@@ -179,7 +189,6 @@ export interface FileRouteTypes {
     | '/copilot'
     | '/documents'
     | '/drafts'
-    | '/eligibility'
     | '/policy'
     | '/profile'
     | '/schemes'
@@ -187,6 +196,7 @@ export interface FileRouteTypes {
     | '/'
     | '/admin/ingestion'
     | '/admin/verification'
+    | '/eligibility'
   id:
     | '__root__'
     | '/_authenticated'
@@ -204,6 +214,7 @@ export interface FileRouteTypes {
     | '/_authenticated/'
     | '/_authenticated/admin/ingestion'
     | '/_authenticated/admin/verification'
+    | '/_authenticated/eligibility/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -305,6 +316,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedApplicationsRouteImport
       parentRoute: typeof AuthenticatedRoute
     }
+    '/_authenticated/eligibility/': {
+      id: '/_authenticated/eligibility/'
+      path: '/'
+      fullPath: '/eligibility/'
+      preLoaderRoute: typeof AuthenticatedEligibilityIndexRouteImport
+      parentRoute: typeof AuthenticatedEligibilityRoute
+    }
     '/_authenticated/admin/verification': {
       id: '/_authenticated/admin/verification'
       path: '/admin/verification'
@@ -322,12 +340,26 @@ declare module '@tanstack/react-router' {
   }
 }
 
+interface AuthenticatedEligibilityRouteChildren {
+  AuthenticatedEligibilityIndexRoute: typeof AuthenticatedEligibilityIndexRoute
+}
+
+const AuthenticatedEligibilityRouteChildren: AuthenticatedEligibilityRouteChildren =
+  {
+    AuthenticatedEligibilityIndexRoute: AuthenticatedEligibilityIndexRoute,
+  }
+
+const AuthenticatedEligibilityRouteWithChildren =
+  AuthenticatedEligibilityRoute._addFileChildren(
+    AuthenticatedEligibilityRouteChildren,
+  )
+
 interface AuthenticatedRouteChildren {
   AuthenticatedApplicationsRoute: typeof AuthenticatedApplicationsRoute
   AuthenticatedCopilotRoute: typeof AuthenticatedCopilotRoute
   AuthenticatedDocumentsRoute: typeof AuthenticatedDocumentsRoute
   AuthenticatedDraftsRoute: typeof AuthenticatedDraftsRoute
-  AuthenticatedEligibilityRoute: typeof AuthenticatedEligibilityRoute
+  AuthenticatedEligibilityRoute: typeof AuthenticatedEligibilityRouteWithChildren
   AuthenticatedPolicyRoute: typeof AuthenticatedPolicyRoute
   AuthenticatedProfileRoute: typeof AuthenticatedProfileRoute
   AuthenticatedSchemesRoute: typeof AuthenticatedSchemesRoute
@@ -342,7 +374,7 @@ const AuthenticatedRouteChildren: AuthenticatedRouteChildren = {
   AuthenticatedCopilotRoute: AuthenticatedCopilotRoute,
   AuthenticatedDocumentsRoute: AuthenticatedDocumentsRoute,
   AuthenticatedDraftsRoute: AuthenticatedDraftsRoute,
-  AuthenticatedEligibilityRoute: AuthenticatedEligibilityRoute,
+  AuthenticatedEligibilityRoute: AuthenticatedEligibilityRouteWithChildren,
   AuthenticatedPolicyRoute: AuthenticatedPolicyRoute,
   AuthenticatedProfileRoute: AuthenticatedProfileRoute,
   AuthenticatedSchemesRoute: AuthenticatedSchemesRoute,
