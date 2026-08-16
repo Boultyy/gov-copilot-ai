@@ -31,9 +31,10 @@ export const runAiDiagnostic = createServerFn({ method: "POST" })
       });
 
       results.tests.push({
-        name: `GPT-4o via Gateway`,
+        name: `Lovable AI Gateway`,
         status: "SUCCESS",
         model: response.model,
+        details: "Built-in Lovable AI integration responded successfully."
       });
     } catch (err: any) {
       results.tests.push({
