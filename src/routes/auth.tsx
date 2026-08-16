@@ -54,7 +54,7 @@ function AuthPage() {
               }
             }}
             providers={['google', 'apple']}
-            redirectTo={`${window.location.origin}/auth`}
+            redirectTo={typeof window !== 'undefined' ? `${window.location.origin}/auth` : ''}
             localization={{
               variables: {
                 sign_in: {
