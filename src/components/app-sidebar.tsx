@@ -43,7 +43,8 @@ const primaryNav = [
 const advancedModules = [
   { title: "Policy Checker", url: "/policy", icon: GitCompareArrows },
   { title: "Draft Generator", url: "/drafts", icon: PenLine },
-  { title: "Data Management", url: "/admin/ingestion", icon: Database },
+  { title: "Data Ingestion", url: "/admin/ingestion", icon: Database },
+  { title: "Verification Queue", url: "/admin/verification", icon: ShieldCheck },
 ];
 
 export function AppSidebar() {

@@ -718,6 +718,47 @@ export type Database = {
           },
         ]
       }
+      scheme_verification_logs: {
+        Row: {
+          action: string
+          created_at: string
+          id: string
+          new_status: string | null
+          notes: string | null
+          previous_status: string | null
+          reviewer_id: string
+          scheme_id: string
+        }
+        Insert: {
+          action: string
+          created_at?: string
+          id?: string
+          new_status?: string | null
+          notes?: string | null
+          previous_status?: string | null
+          reviewer_id: string
+          scheme_id: string
+        }
+        Update: {
+          action?: string
+          created_at?: string
+          id?: string
+          new_status?: string | null
+          notes?: string | null
+          previous_status?: string | null
+          reviewer_id?: string
+          scheme_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "scheme_verification_logs_scheme_id_fkey"
+            columns: ["scheme_id"]
+            isOneToOne: false
+            referencedRelation: "schemes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       schemes: {
         Row: {
           active_status: boolean | null
