@@ -4,10 +4,13 @@ import { z } from "zod";
 export const runAiDiagnostic = createServerFn({ method: "POST" })
   .validator((data: { prompt?: string }) => z.object({ prompt: z.string().optional() }).parse(data))
   .handler(async ({ data }) => {
-    console.log("DIAGNOSTIC HANDLER START");
-
+    // Unique ID for this specific handler instance
+    const RUN_ID = Math.random().toString(36).substring(7);
+    console.log(`[DIAGNOSTIC-${RUN_ID}] HANDLER START`);
+    
     const results: any = {
       timestamp: new Date().toISOString(),
+      runId: RUN_ID,
       env: {
         LOVABLE_API_KEY_EXISTS: !!process.env.LOVABLE_API_KEY,
         LOVABLE_PROJECT_ID_EXISTS: !!process.env.LOVABLE_PROJECT_ID,
@@ -20,6 +23,7 @@ export const runAiDiagnostic = createServerFn({ method: "POST" })
     const url = "https://api.lovable.dev/v1/ai/openai/chat/completions";
 
     try {
+      console.log(`[DIAGNOSTIC-${RUN_ID}] FETCHING: ${url}`);
       const start = Date.now();
       const response = await fetch(url, {
         method: 'POST',
@@ -35,8 +39,12 @@ export const runAiDiagnostic = createServerFn({ method: "POST" })
         }),
       });
 
+      console.log(`[DIAGNOSTIC-${RUN_ID}] RESPONSE: ${response.status}`);
+      
+      const body = await response.text();
+      console.log(`[DIAGNOSTIC-${RUN_ID}] BODY: ${body.substring(0, 100)}`);
+
       if (!response.ok) {
-        const body = await response.text();
         results.tests.push({
           name: "Direct Fetch (chat/completions)",
           status: "FAILED",
@@ -48,7 +56,7 @@ export const runAiDiagnostic = createServerFn({ method: "POST" })
           }
         });
       } else {
-        const json = await response.json();
+        const json = JSON.parse(body);
         results.tests.push({
           name: "Direct Fetch (chat/completions)",
           status: "SUCCESS",
@@ -57,6 +65,7 @@ export const runAiDiagnostic = createServerFn({ method: "POST" })
         });
       }
     } catch (err: any) {
+      console.error(`[DIAGNOSTIC-${RUN_ID}] ERROR:`, err);
       results.tests.push({
         name: "Direct Fetch (chat/completions)",
         status: "FAILED",
