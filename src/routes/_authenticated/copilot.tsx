@@ -142,24 +142,36 @@ function Copilot() {
       {/* Copilot Sidebar */}
       <aside className="hidden w-72 flex-col border-r border-border bg-muted/30 lg:flex">
         <div className="p-4">
-          <Button className="w-full justify-start rounded-xl shadow-lg shadow-primary/20 py-6" variant="default">
+          <Button 
+            onClick={() => setActiveId(null)}
+            className="w-full justify-start rounded-xl shadow-lg shadow-primary/20 py-6" 
+            variant={activeId === null ? "default" : "outline"}
+          >
             <Plus className="mr-2 h-4 w-4" /> New Conversation
           </Button>
         </div>
         <div className="flex-1 overflow-y-auto px-2 py-4">
           <div className="space-y-1">
             <p className="px-3 text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Recent</p>
-            {[
-              "Scholarship search",
-              "Housing eligibility",
-              "Income certificate docs",
-            ].map((chat) => (
-              <button key={chat} className="flex w-full items-center gap-3 rounded-lg px-3 py-2 text-sm text-foreground transition-colors hover:bg-accent">
-                <History className="h-4 w-4 text-muted-foreground" />
-                <span className="truncate">{chat}</span>
-              </button>
-            ))}
+            {conversations.length === 0 ? (
+              <p className="px-3 py-2 text-xs text-muted-foreground italic">No recent chats</p>
+            ) : (
+              conversations.map((chat) => (
+                <button 
+                  key={chat.id} 
+                  onClick={() => setActiveId(chat.id)}
+                  className={cn(
+                    "flex w-full items-center gap-3 rounded-lg px-3 py-2 text-sm transition-colors hover:bg-accent",
+                    activeId === chat.id ? "bg-accent text-primary font-medium" : "text-foreground"
+                  )}
+                >
+                  <History className="h-4 w-4 text-muted-foreground" />
+                  <span className="truncate">{chat.title || "Untitled Chat"}</span>
+                </button>
+              ))
+            )}
           </div>
+
           <div className="mt-8 space-y-1">
             <p className="px-3 text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Workspace</p>
             {[
