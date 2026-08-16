@@ -93,7 +93,7 @@ function VerificationDashboard() {
                     <div>
                       <div className="flex items-center gap-2 mb-1">
                         <Badge variant="outline" className="capitalize">{scheme.government_level}</Badge>
-                        <Badge variant="secondary" className="capitalize">{scheme.verification_status.replace('_', ' ')}</Badge>
+                        <Badge variant="secondary" className="capitalize">{(scheme.verification_status || 'draft').replace('_', ' ')}</Badge>
                         {scheme.scheme_change_history?.length > 0 && (
                           <Badge variant="destructive" className="flex items-center gap-1">
                             <AlertCircle className="h-3 w-3" />
@@ -117,8 +117,8 @@ function VerificationDashboard() {
                       <span className="text-muted-foreground block text-[10px] font-bold uppercase">Source</span>
                       <span className="flex items-center gap-1">
                         {scheme.source_name}
-                        {scheme.official_source_url && (
-                          <a href={scheme.official_source_url} target="_blank" rel="noreferrer" className="text-primary hover:underline">
+                        {scheme.official_source && (
+                          <a href={scheme.official_source} target="_blank" rel="noreferrer" className="text-primary hover:underline">
                             <ExternalLink className="h-3 w-3" />
                           </a>
                         )}
@@ -203,7 +203,7 @@ function VerificationDashboard() {
                               </div>
                               <div>
                                 <label className="text-xs text-muted-foreground">Source URL</label>
-                                <a href={scheme.official_source_url} target="_blank" rel="noreferrer" className="text-sm text-primary flex items-center gap-1">
+                                <a href={scheme.official_source} target="_blank" rel="noreferrer" className="text-sm text-primary flex items-center gap-1">
                                   View Original <ExternalLink className="h-3 w-3" />
                                 </a>
                               </div>
