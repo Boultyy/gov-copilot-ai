@@ -116,7 +116,7 @@ export const sendCopilotMessage = createServerFn({ method: "POST" })
 
     try {
       const response = await ai.chat.completions.create({
-        model: "gpt-4o",
+        model: "google/gemini-3.6-flash",
         messages: messages as any,
         temperature: 0.1,
       });
