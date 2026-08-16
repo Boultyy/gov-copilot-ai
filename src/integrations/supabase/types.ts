@@ -275,8 +275,10 @@ export type Database = {
           created_at: string | null
           error_log: Json | null
           id: string
+          records_archived: number | null
           records_inserted: number | null
           records_processed: number | null
+          records_requiring_review: number | null
           records_updated: number | null
           source_id: string | null
           status: Database["public"]["Enums"]["ingestion_sync_status"] | null
@@ -285,8 +287,10 @@ export type Database = {
           created_at?: string | null
           error_log?: Json | null
           id?: string
+          records_archived?: number | null
           records_inserted?: number | null
           records_processed?: number | null
+          records_requiring_review?: number | null
           records_updated?: number | null
           source_id?: string | null
           status?: Database["public"]["Enums"]["ingestion_sync_status"] | null
@@ -295,8 +299,10 @@ export type Database = {
           created_at?: string | null
           error_log?: Json | null
           id?: string
+          records_archived?: number | null
           records_inserted?: number | null
           records_processed?: number | null
+          records_requiring_review?: number | null
           records_updated?: number | null
           source_id?: string | null
           status?: Database["public"]["Enums"]["ingestion_sync_status"] | null
@@ -320,6 +326,7 @@ export type Database = {
           dataset_identifier: string | null
           enabled: boolean | null
           id: string
+          last_attempted_sync_at: string | null
           last_sync_at: string | null
           last_sync_error: string | null
           last_sync_status:
@@ -327,6 +334,7 @@ export type Database = {
             | null
           name: string
           refresh_frequency_seconds: number | null
+          source_last_updated_at: string | null
           source_type: Database["public"]["Enums"]["ingestion_source_type"]
           updated_at: string | null
         }
@@ -338,6 +346,7 @@ export type Database = {
           dataset_identifier?: string | null
           enabled?: boolean | null
           id?: string
+          last_attempted_sync_at?: string | null
           last_sync_at?: string | null
           last_sync_error?: string | null
           last_sync_status?:
@@ -345,6 +354,7 @@ export type Database = {
             | null
           name: string
           refresh_frequency_seconds?: number | null
+          source_last_updated_at?: string | null
           source_type: Database["public"]["Enums"]["ingestion_source_type"]
           updated_at?: string | null
         }
@@ -356,6 +366,7 @@ export type Database = {
           dataset_identifier?: string | null
           enabled?: boolean | null
           id?: string
+          last_attempted_sync_at?: string | null
           last_sync_at?: string | null
           last_sync_error?: string | null
           last_sync_status?:
@@ -363,6 +374,7 @@ export type Database = {
             | null
           name?: string
           refresh_frequency_seconds?: number | null
+          source_last_updated_at?: string | null
           source_type?: Database["public"]["Enums"]["ingestion_source_type"]
           updated_at?: string | null
         }
@@ -547,6 +559,63 @@ export type Database = {
           updated_at?: string
         }
         Relationships: []
+      }
+      scheme_change_history: {
+        Row: {
+          detected_at: string | null
+          field_name: string
+          id: string
+          new_value: Json | null
+          old_value: Json | null
+          scheme_id: string
+          source_id: string | null
+          source_updated_at: string | null
+          verification_status: string | null
+          verified_at: string | null
+          verified_by: string | null
+        }
+        Insert: {
+          detected_at?: string | null
+          field_name: string
+          id?: string
+          new_value?: Json | null
+          old_value?: Json | null
+          scheme_id: string
+          source_id?: string | null
+          source_updated_at?: string | null
+          verification_status?: string | null
+          verified_at?: string | null
+          verified_by?: string | null
+        }
+        Update: {
+          detected_at?: string | null
+          field_name?: string
+          id?: string
+          new_value?: Json | null
+          old_value?: Json | null
+          scheme_id?: string
+          source_id?: string | null
+          source_updated_at?: string | null
+          verification_status?: string | null
+          verified_at?: string | null
+          verified_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "scheme_change_history_scheme_id_fkey"
+            columns: ["scheme_id"]
+            isOneToOne: false
+            referencedRelation: "schemes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "scheme_change_history_source_id_fkey"
+            columns: ["source_id"]
+            isOneToOne: false
+            referencedRelation: "ingestion_sources"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       scheme_chat_messages: {
         Row: {
