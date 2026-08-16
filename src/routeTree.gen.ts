@@ -12,7 +12,7 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as SitemapDotxmlRouteImport } from './routes/sitemap[.]xml'
 import { Route as AuthRouteImport } from './routes/auth'
 import { Route as AuthenticatedRouteImport } from './routes/_authenticated'
-import { Route as IndexRouteImport } from './routes/index'
+import { Route as AuthenticatedIndexRouteImport } from './routes/_authenticated/index'
 import { Route as AuthenticatedWorkflowRouteImport } from './routes/_authenticated/workflow'
 import { Route as AuthenticatedSchemesRouteImport } from './routes/_authenticated/schemes'
 import { Route as AuthenticatedPolicyRouteImport } from './routes/_authenticated/policy'
@@ -36,10 +36,10 @@ const AuthenticatedRoute = AuthenticatedRouteImport.update({
   id: '/_authenticated',
   getParentRoute: () => rootRouteImport,
 } as any)
-const IndexRoute = IndexRouteImport.update({
+const AuthenticatedIndexRoute = AuthenticatedIndexRouteImport.update({
   id: '/',
   path: '/',
-  getParentRoute: () => rootRouteImport,
+  getParentRoute: () => AuthenticatedRoute,
 } as any)
 const AuthenticatedWorkflowRoute = AuthenticatedWorkflowRouteImport.update({
   id: '/workflow',
@@ -85,7 +85,7 @@ const AuthenticatedApplicationsRoute =
   } as any)
 
 export interface FileRoutesByFullPath {
-  '/': typeof IndexRoute
+  '/': typeof AuthenticatedIndexRoute
   '/auth': typeof AuthRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/applications': typeof AuthenticatedApplicationsRoute
@@ -98,7 +98,6 @@ export interface FileRoutesByFullPath {
   '/workflow': typeof AuthenticatedWorkflowRoute
 }
 export interface FileRoutesByTo {
-  '/': typeof IndexRoute
   '/auth': typeof AuthRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/applications': typeof AuthenticatedApplicationsRoute
@@ -109,10 +108,10 @@ export interface FileRoutesByTo {
   '/policy': typeof AuthenticatedPolicyRoute
   '/schemes': typeof AuthenticatedSchemesRoute
   '/workflow': typeof AuthenticatedWorkflowRoute
+  '/': typeof AuthenticatedIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
-  '/': typeof IndexRoute
   '/_authenticated': typeof AuthenticatedRouteWithChildren
   '/auth': typeof AuthRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
@@ -124,6 +123,7 @@ export interface FileRoutesById {
   '/_authenticated/policy': typeof AuthenticatedPolicyRoute
   '/_authenticated/schemes': typeof AuthenticatedSchemesRoute
   '/_authenticated/workflow': typeof AuthenticatedWorkflowRoute
+  '/_authenticated/': typeof AuthenticatedIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -141,7 +141,6 @@ export interface FileRouteTypes {
     | '/workflow'
   fileRoutesByTo: FileRoutesByTo
   to:
-    | '/'
     | '/auth'
     | '/sitemap.xml'
     | '/applications'
@@ -152,9 +151,9 @@ export interface FileRouteTypes {
     | '/policy'
     | '/schemes'
     | '/workflow'
+    | '/'
   id:
     | '__root__'
-    | '/'
     | '/_authenticated'
     | '/auth'
     | '/sitemap.xml'
@@ -166,10 +165,10 @@ export interface FileRouteTypes {
     | '/_authenticated/policy'
     | '/_authenticated/schemes'
     | '/_authenticated/workflow'
+    | '/_authenticated/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
-  IndexRoute: typeof IndexRoute
   AuthenticatedRoute: typeof AuthenticatedRouteWithChildren
   AuthRoute: typeof AuthRoute
   SitemapDotxmlRoute: typeof SitemapDotxmlRoute
@@ -198,12 +197,12 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/': {
-      id: '/'
+    '/_authenticated/': {
+      id: '/_authenticated/'
       path: '/'
       fullPath: '/'
-      preLoaderRoute: typeof IndexRouteImport
-      parentRoute: typeof rootRouteImport
+      preLoaderRoute: typeof AuthenticatedIndexRouteImport
+      parentRoute: typeof AuthenticatedRoute
     }
     '/_authenticated/workflow': {
       id: '/_authenticated/workflow'
@@ -273,6 +272,7 @@ interface AuthenticatedRouteChildren {
   AuthenticatedPolicyRoute: typeof AuthenticatedPolicyRoute
   AuthenticatedSchemesRoute: typeof AuthenticatedSchemesRoute
   AuthenticatedWorkflowRoute: typeof AuthenticatedWorkflowRoute
+  AuthenticatedIndexRoute: typeof AuthenticatedIndexRoute
 }
 
 const AuthenticatedRouteChildren: AuthenticatedRouteChildren = {
@@ -284,6 +284,7 @@ const AuthenticatedRouteChildren: AuthenticatedRouteChildren = {
   AuthenticatedPolicyRoute: AuthenticatedPolicyRoute,
   AuthenticatedSchemesRoute: AuthenticatedSchemesRoute,
   AuthenticatedWorkflowRoute: AuthenticatedWorkflowRoute,
+  AuthenticatedIndexRoute: AuthenticatedIndexRoute,
 }
 
 const AuthenticatedRouteWithChildren = AuthenticatedRoute._addFileChildren(
@@ -291,7 +292,6 @@ const AuthenticatedRouteWithChildren = AuthenticatedRoute._addFileChildren(
 )
 
 const rootRouteChildren: RootRouteChildren = {
-  IndexRoute: IndexRoute,
   AuthenticatedRoute: AuthenticatedRouteWithChildren,
   AuthRoute: AuthRoute,
   SitemapDotxmlRoute: SitemapDotxmlRoute,
