@@ -306,7 +306,7 @@ function Schemes() {
                     <div className="flex items-center gap-4">
                       <div className="flex items-center gap-1">
                         <Clock className="h-3 w-3" />
-                        Verified: {format(new Date(selectedScheme.last_verified_at), 'dd MMM yyyy')}
+                        Verified: {selectedScheme.last_verified_at ? format(new Date(selectedScheme.last_verified_at), 'dd MMM yyyy') : 'Recently'}
                       </div>
                       <a 
                         href={selectedScheme.source_url || '#'} 
