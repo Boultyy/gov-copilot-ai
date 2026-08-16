@@ -243,6 +243,33 @@ function Schemes() {
                 </DialogDescription>
               </DialogHeader>
               <ScrollArea className="max-h-[60vh] p-8">
+                {/* Freshness Indicator */}
+                <div className="mb-6 flex flex-wrap gap-2">
+                  <Badge variant="outline" className="flex items-center gap-1.5 py-1 px-3 bg-muted/30 border-muted">
+                    <Clock className="h-3.5 w-3.5 text-primary" />
+                    <span className="text-xs">
+                      Last Verified: {selectedScheme.last_verified_at ? format(new Date(selectedScheme.last_verified_at), 'MMM d, yyyy') : 'Recently'}
+                    </span>
+                  </Badge>
+                  {selectedScheme.source_name && (
+                    <Badge variant="outline" className="flex items-center gap-1.5 py-1 px-3 bg-primary/5 border-primary/10">
+                      <Landmark className="h-3.5 w-3.5 text-primary" />
+                      <span className="text-xs text-primary font-medium">Source: {selectedScheme.source_name}</span>
+                    </Badge>
+                  )}
+                  {selectedScheme.verification_status === 'verified' ? (
+                    <Badge variant="outline" className="flex items-center gap-1.5 py-1 px-3 bg-emerald-50 border-emerald-100 text-emerald-700">
+                      <CheckCircle2 className="h-3.5 w-3.5" />
+                      <span className="text-xs font-bold uppercase tracking-wider">Recently Verified</span>
+                    </Badge>
+                  ) : (
+                    <Badge variant="outline" className="flex items-center gap-1.5 py-1 px-3 bg-amber-50 border-amber-100 text-amber-700">
+                      <AlertCircle className="h-3.5 w-3.5" />
+                      <span className="text-xs font-bold uppercase tracking-wider">Verification Due</span>
+                    </Badge>
+                  )}
+                </div>
+
                 <div className="space-y-8">
                   <div className="space-y-3">
                     <h4 className="flex items-center gap-2 font-bold text-foreground">
