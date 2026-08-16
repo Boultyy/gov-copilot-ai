@@ -156,8 +156,9 @@ function Copilot() {
             {conversations.length === 0 ? (
               <p className="px-3 py-2 text-xs text-muted-foreground italic">No recent chats</p>
             ) : (
-              conversations.map((chat) => (
+              conversations.map((chat: any) => (
                 <button 
+
                   key={chat.id} 
                   onClick={() => setActiveId(chat.id)}
                   className={cn(
