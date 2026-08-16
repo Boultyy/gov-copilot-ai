@@ -43,12 +43,12 @@ export const runAiDiagnostic = createServerFn({ method: "POST" })
       results.tests.push({
         name: "Chat Completion (gpt-4o)",
         status: "FAILED",
-        error: {
+        diagnostic: {
           message: err.message,
           status: err.status,
-          name: err.name,
-          actualBaseURL: ai.baseURL,
-          expectedBaseURL: "https://api.lovable.dev/v1/ai/openai"
+          runtimeBaseURL: ai.baseURL,
+          envApiKey: !!process.env.LOVABLE_API_KEY,
+          envProjId: !!process.env.LOVABLE_PROJECT_ID,
         }
       });
     }
