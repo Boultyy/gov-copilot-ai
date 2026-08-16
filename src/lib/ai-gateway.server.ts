@@ -2,7 +2,9 @@ import OpenAI from "openai";
 
 export function createAiGateway() {
   const apiKey = process.env.LOVABLE_API_KEY;
-  // Use the internal gateway URL which is available in the sandbox/worker environment.
+  // The official baseURL for the built-in AI connector in modern TanStack Start projects
+  // is typically determined by the environment, but for external SDKs, 
+  // we point to the gateway proxy.
   const baseURL = "https://api.lovable.dev/v1";
 
   if (!apiKey) {
@@ -12,6 +14,7 @@ export function createAiGateway() {
   return new OpenAI({
     apiKey: apiKey || "dummy-key",
     baseURL,
+    // Add project header to help the gateway route correctly
     defaultHeaders: {
       "x-lovable-project-id": process.env.LOVABLE_PROJECT_ID || "",
     }
