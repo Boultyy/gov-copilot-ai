@@ -154,12 +154,18 @@ export const triggerSourceSync = createServerFn({ method: "POST" })
           }
         } else {
           // New Record
-          const { data: inserted } = await supabaseAdmin
+          const { data: inserted, error: insertError } = await supabaseAdmin
             .from("schemes")
             .insert({ ...normalized, verification_status: 'draft' } as any)
             .select()
             .single();
-          schemeId = inserted!.id;
+
+          if (insertError || !inserted) {
+            console.error("Failed to insert scheme:", insertError);
+            continue; // Skip mapping if insert failed
+          }
+
+          schemeId = inserted.id;
           recordsInserted++;
         }
 
