@@ -56,12 +56,12 @@ function Schemes() {
 
 
   const categories = useMemo(() => {
-    const cats = new Set(schemes.map(s => s.category).filter(Boolean));
+    const cats = new Set((schemes as any[]).map(s => s.category).filter(Boolean));
     return Array.from(cats);
   }, [schemes]);
 
   const selectedScheme = useMemo(() => 
-    schemes.find(s => s.id === selectedSchemeId), 
+    (schemes as any[]).find(s => s.id === selectedSchemeId), 
     [schemes, selectedSchemeId]
   );
 
@@ -160,7 +160,7 @@ function Schemes() {
             </div>
           ) : (
             <div className="grid gap-6 md:grid-cols-2">
-              {schemes.map((scheme) => (
+              {(schemes as any[]).map((scheme) => (
                 <Card key={scheme.id} className="group flex flex-col overflow-hidden border-border transition-all hover:-translate-y-1 hover:shadow-xl">
                   <CardContent className="flex-1 p-6 space-y-4">
                     <div className="flex items-start justify-between gap-4">
