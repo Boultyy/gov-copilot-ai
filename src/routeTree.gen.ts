@@ -22,6 +22,7 @@ import { Route as AuthenticatedDraftsRouteImport } from './routes/_authenticated
 import { Route as AuthenticatedDocumentsRouteImport } from './routes/_authenticated/documents'
 import { Route as AuthenticatedCopilotRouteImport } from './routes/_authenticated/copilot'
 import { Route as AuthenticatedApplicationsRouteImport } from './routes/_authenticated/applications'
+import { Route as AuthenticatedAdminVerificationRouteImport } from './routes/_authenticated/admin/verification'
 import { Route as AuthenticatedAdminIngestionRouteImport } from './routes/_authenticated/admin.ingestion'
 
 const SitemapDotxmlRoute = SitemapDotxmlRouteImport.update({
@@ -90,6 +91,12 @@ const AuthenticatedApplicationsRoute =
     path: '/applications',
     getParentRoute: () => AuthenticatedRoute,
   } as any)
+const AuthenticatedAdminVerificationRoute =
+  AuthenticatedAdminVerificationRouteImport.update({
+    id: '/admin/verification',
+    path: '/admin/verification',
+    getParentRoute: () => AuthenticatedRoute,
+  } as any)
 const AuthenticatedAdminIngestionRoute =
   AuthenticatedAdminIngestionRouteImport.update({
     id: '/admin/ingestion',
@@ -111,6 +118,7 @@ export interface FileRoutesByFullPath {
   '/schemes': typeof AuthenticatedSchemesRoute
   '/workflow': typeof AuthenticatedWorkflowRoute
   '/admin/ingestion': typeof AuthenticatedAdminIngestionRoute
+  '/admin/verification': typeof AuthenticatedAdminVerificationRoute
 }
 export interface FileRoutesByTo {
   '/auth': typeof AuthRoute
@@ -126,6 +134,7 @@ export interface FileRoutesByTo {
   '/workflow': typeof AuthenticatedWorkflowRoute
   '/': typeof AuthenticatedIndexRoute
   '/admin/ingestion': typeof AuthenticatedAdminIngestionRoute
+  '/admin/verification': typeof AuthenticatedAdminVerificationRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -143,6 +152,7 @@ export interface FileRoutesById {
   '/_authenticated/workflow': typeof AuthenticatedWorkflowRoute
   '/_authenticated/': typeof AuthenticatedIndexRoute
   '/_authenticated/admin/ingestion': typeof AuthenticatedAdminIngestionRoute
+  '/_authenticated/admin/verification': typeof AuthenticatedAdminVerificationRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -160,6 +170,7 @@ export interface FileRouteTypes {
     | '/schemes'
     | '/workflow'
     | '/admin/ingestion'
+    | '/admin/verification'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/auth'
@@ -175,6 +186,7 @@ export interface FileRouteTypes {
     | '/workflow'
     | '/'
     | '/admin/ingestion'
+    | '/admin/verification'
   id:
     | '__root__'
     | '/_authenticated'
@@ -191,6 +203,7 @@ export interface FileRouteTypes {
     | '/_authenticated/workflow'
     | '/_authenticated/'
     | '/_authenticated/admin/ingestion'
+    | '/_authenticated/admin/verification'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -292,6 +305,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedApplicationsRouteImport
       parentRoute: typeof AuthenticatedRoute
     }
+    '/_authenticated/admin/verification': {
+      id: '/_authenticated/admin/verification'
+      path: '/admin/verification'
+      fullPath: '/admin/verification'
+      preLoaderRoute: typeof AuthenticatedAdminVerificationRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
     '/_authenticated/admin/ingestion': {
       id: '/_authenticated/admin/ingestion'
       path: '/admin/ingestion'
@@ -314,6 +334,7 @@ interface AuthenticatedRouteChildren {
   AuthenticatedWorkflowRoute: typeof AuthenticatedWorkflowRoute
   AuthenticatedIndexRoute: typeof AuthenticatedIndexRoute
   AuthenticatedAdminIngestionRoute: typeof AuthenticatedAdminIngestionRoute
+  AuthenticatedAdminVerificationRoute: typeof AuthenticatedAdminVerificationRoute
 }
 
 const AuthenticatedRouteChildren: AuthenticatedRouteChildren = {
@@ -328,6 +349,7 @@ const AuthenticatedRouteChildren: AuthenticatedRouteChildren = {
   AuthenticatedWorkflowRoute: AuthenticatedWorkflowRoute,
   AuthenticatedIndexRoute: AuthenticatedIndexRoute,
   AuthenticatedAdminIngestionRoute: AuthenticatedAdminIngestionRoute,
+  AuthenticatedAdminVerificationRoute: AuthenticatedAdminVerificationRoute,
 }
 
 const AuthenticatedRouteWithChildren = AuthenticatedRoute._addFileChildren(
