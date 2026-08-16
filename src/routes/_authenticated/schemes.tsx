@@ -200,7 +200,7 @@ function Schemes() {
                   <CardFooter className="border-t border-border bg-muted/20 p-4">
                     <div className="flex w-full gap-2">
                       <Button className="flex-1 rounded-lg" size="sm" asChild>
-                        <Link to="/eligibility">Check Eligibility</Link>
+                        <Link to="/eligibility" search={{ schemeId: scheme.id }}>Check Eligibility</Link>
                       </Button>
                       <Button 
                         variant="outline" 
