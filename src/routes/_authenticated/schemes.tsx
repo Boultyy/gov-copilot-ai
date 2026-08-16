@@ -1,5 +1,5 @@
-import { useState, useMemo } from "react";
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { useState, useMemo, useEffect } from "react";
+import { createFileRoute, Link, useSearch } from "@tanstack/react-router";
 import {
   Search,
   Filter,
@@ -23,8 +23,14 @@ import { getSchemes } from "@/lib/schemes.functions";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { format } from "date-fns";
+import { z } from "zod";
+
+const schemesSearchSchema = z.object({
+  id: z.string().uuid().optional(),
+});
 
 export const Route = createFileRoute("/_authenticated/schemes")({
+  validateSearch: (search) => schemesSearchSchema.parse(search),
   head: () => ({
     meta: [
       { title: "Scheme Discovery | GovCopilot" },
@@ -38,10 +44,18 @@ export const Route = createFileRoute("/_authenticated/schemes")({
 });
 
 function Schemes() {
+  const searchParams = useSearch({ from: "/_authenticated/schemes" });
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedType, setSelectedType] = useState<string | null>(null);
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
-  const [selectedSchemeId, setSelectedSchemeId] = useState<string | null>(null);
+  const [selectedSchemeId, setSelectedSchemeId] = useState<string | null>(searchParams.id || null);
+
+  useEffect(() => {
+    if (searchParams.id) {
+      setSelectedSchemeId(searchParams.id);
+    }
+  }, [searchParams.id]);
+
 
   const { data: schemes = [], isLoading } = useQuery({
     queryKey: ["schemes", searchQuery, selectedType, selectedCategory],
