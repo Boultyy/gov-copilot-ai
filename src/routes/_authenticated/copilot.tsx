@@ -204,7 +204,7 @@ function Copilot() {
 
         <div className="flex-1 overflow-y-auto p-6 lg:p-12" ref={scrollRef}>
           <div className="mx-auto max-w-3xl space-y-8">
-            {messages.map((msg, i) => {
+            {messages.map((msg: any, i: number) => {
               const metadata = msg.metadata as any;
               const sources = metadata?.sources || [];
               
