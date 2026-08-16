@@ -205,8 +205,8 @@ export const getDocuments = createServerFn({ method: "GET" })
  */
 export const deleteDocument = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .validator((data: { id: string; storagePath: string }) =>
-    z.object({ id: z.string().uuid(), storagePath: z.string() }).parse(data)
+  .validator((data: { documentId: string; storagePath: string }) =>
+    z.object({ documentId: z.string().uuid(), storagePath: z.string() }).parse(data)
   )
   .handler(async ({ data, context }) => {
     const { supabase, userId } = context;
@@ -218,7 +218,7 @@ export const deleteDocument = createServerFn({ method: "POST" })
     const { error } = await supabase
       .from("documents")
       .delete()
-      .eq("id", data.id)
+      .eq("id", data.documentId)
       .eq("user_id", userId);
 
     if (error) throw new Error("Failed to delete document");

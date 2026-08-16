@@ -1,7 +1,7 @@
 import { useRef, useState, useEffect } from "react";
 import { createFileRoute } from "@tanstack/react-router";
 import { FileSearch, Quote, SendHorizonal, Sparkle, Loader2 } from "lucide-react";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { toast } from "sonner";
 
@@ -87,9 +87,9 @@ function Documents() {
         const doc = await uploadMetaFn({ 
           data: {
             name: file.name,
-            file_path: filePath,
-            file_size: file.size,
-            content_type: file.type
+            storage_path: filePath,
+            size_bytes: file.size,
+            mime_type: file.type
           }
         });
 
@@ -114,9 +114,11 @@ function Documents() {
   };
 
   const handleDelete = async (file: DroppedFile) => {
-    if (!file.id) return;
+    const doc = documents.find(d => d.id === file.id);
+    if (!doc) return;
+    
     try {
-      await deleteDocFn({ data: { documentId: file.id } });
+      await deleteDocFn({ data: { documentId: doc.id, storagePath: doc.storage_path } });
       toast.success("Document deleted");
       queryClient.invalidateQueries({ queryKey: ["documents"] });
     } catch (error: any) {
@@ -134,15 +136,15 @@ function Documents() {
     try {
       const results = await searchDocsFn({ data: { query: question, limit: 3 } });
       
-      if (results.length === 0) {
+      if (!results || results.length === 0) {
         setTurns((t) => [...t, { 
           role: "assistant", 
           text: "I couldn't find any relevant information in your uploaded documents. Please try another question or upload more sources." 
         }]);
       } else {
-        const citations = results.map(r => ({
+        const citations = results.map((r: any) => ({
           doc: r.document_name,
-          page: 1, // Mock page for now as extraction doesn't provide real pages
+          page: 1, 
           snippet: r.content
         }));
 
@@ -163,7 +165,7 @@ function Documents() {
   const mappedFiles: DroppedFile[] = documents.map(d => ({
     id: d.id,
     name: d.name,
-    size: `${(d.file_size / 1024 / 1024).toFixed(1)} MB`,
+    size: `${((d.size_bytes || 0) / 1024 / 1024).toFixed(1)} MB`,
     status: d.status,
     error: d.error_message
   }));
