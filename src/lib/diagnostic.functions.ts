@@ -12,7 +12,7 @@ export const runAiDiagnostic = createServerFn({ method: "POST" })
 
     const apiKey = process.env.LOVABLE_API_KEY;
     const projectID = process.env.LOVABLE_PROJECT_ID;
-    const baseURL = "https://api.lovable.dev/v1/ai/openai";
+    const baseURL = "https://api.lovable.dev/v1";
 
     try {
       const ai = new OpenAI({
