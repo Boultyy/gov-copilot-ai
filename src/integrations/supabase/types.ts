@@ -198,6 +198,7 @@ export type Database = {
       }
       document_chunks: {
         Row: {
+          chunk_index: number | null
           content: string
           created_at: string
           document_id: string
@@ -205,8 +206,10 @@ export type Database = {
           id: string
           metadata: Json | null
           page_number: number | null
+          section_title: string | null
         }
         Insert: {
+          chunk_index?: number | null
           content: string
           created_at?: string
           document_id: string
@@ -214,8 +217,10 @@ export type Database = {
           id?: string
           metadata?: Json | null
           page_number?: number | null
+          section_title?: string | null
         }
         Update: {
+          chunk_index?: number | null
           content?: string
           created_at?: string
           document_id?: string
@@ -223,6 +228,7 @@ export type Database = {
           id?: string
           metadata?: Json | null
           page_number?: number | null
+          section_title?: string | null
         }
         Relationships: [
           {
@@ -237,6 +243,7 @@ export type Database = {
       documents: {
         Row: {
           created_at: string
+          error_message: string | null
           id: string
           mime_type: string | null
           name: string
@@ -248,6 +255,7 @@ export type Database = {
         }
         Insert: {
           created_at?: string
+          error_message?: string | null
           id?: string
           mime_type?: string | null
           name: string
@@ -259,6 +267,7 @@ export type Database = {
         }
         Update: {
           created_at?: string
+          error_message?: string | null
           id?: string
           mime_type?: string | null
           name?: string
