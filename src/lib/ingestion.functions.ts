@@ -87,12 +87,12 @@ export const triggerSourceSync = createServerFn({ method: "POST" })
 
       // 4. Process & Normalize
       for (const item of mockExternalData) {
-        const normalized = {
+        const normalized: any = {
           name: item.scheme_name,
           official_name: item.scheme_name,
           description: item.desc,
           ministry: item.ministry_name,
-          government_level: item.level as any,
+          government_level: item.level,
           category: item.cat,
           application_url: item.url,
           source_name: source.name,
@@ -139,7 +139,7 @@ export const triggerSourceSync = createServerFn({ method: "POST" })
             external_record_id: item.external_id,
             raw_data: item as any,
             source_url: item.url,
-          }, { onConflict: 'source_id,external_record_id' });
+          } as any, { onConflict: 'source_id,external_record_id' });
       }
 
       // 7. Finalize Log
@@ -148,9 +148,9 @@ export const triggerSourceSync = createServerFn({ method: "POST" })
         .update({
           status: "success",
           records_processed: mockExternalData.length,
-          records_inserted,
-          records_updated
-        })
+          records_inserted: recordsInserted,
+          records_updated: recordsUpdated
+        } as any)
         .eq("id", log.id);
 
       await supabaseAdmin
