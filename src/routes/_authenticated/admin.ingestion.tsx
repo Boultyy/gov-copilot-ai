@@ -58,7 +58,7 @@ function IngestionManagementPage() {
         <div className="flex items-center gap-2 text-xs bg-muted/50 px-3 py-1.5 rounded-lg border border-border">
           <Clock className="h-3.5 w-3.5 text-muted-foreground" />
           <span className="text-muted-foreground font-medium">Last Global Sync:</span>
-          <span className="font-bold">{stats?.lastSync ? format(new Date(stats.lastSync), 'MMM d, HH:mm') : 'Never'}</span>
+          <span className="font-bold">{stats?.lastSync?.created_at ? format(new Date(stats.lastSync.created_at), 'MMM d, HH:mm') : 'Never'}</span>
         </div>
       </div>
 
