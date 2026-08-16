@@ -48,6 +48,7 @@ export const runAiDiagnostic = createServerFn({ method: "POST" })
           status: err.status,
           name: err.name,
           actualBaseURL: ai.baseURL,
+          expectedBaseURL: "https://api.lovable.dev/v1/ai/openai"
         }
       });
     }
