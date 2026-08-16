@@ -38,7 +38,7 @@ export const runAiDiagnostic = createServerFn({ method: "POST" })
         message: err.message,
         status: err.status,
         baseURL: ai.baseURL,
-        headers: ai.defaultHeaders
+        // headers: ai.defaultHeaders
       });
       results.tests.push({
         name: "Chat Completion (gpt-4o)",
