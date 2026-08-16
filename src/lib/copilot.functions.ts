@@ -114,8 +114,8 @@ export const sendCopilotMessage = createServerFn({ method: "POST" })
       messages: aiMessages as any,
       temperature: 0.2, 
     }).catch(err => {
-      console.error("AI Gateway Full Error Details:", JSON.stringify(err, Object.getOwnPropertyNames(err)));
-      throw new Error(`AI Citizen Copilot is temporarily unavailable. Error: ${err.message || 'Unknown error'}`);
+      console.error("AI Gateway Error:", err);
+      throw new Error(`AI Citizen Copilot is temporarily unavailable.`);
     });
 
     const aiContent = response.choices[0].message.content || "I apologize, I encountered an error.";
