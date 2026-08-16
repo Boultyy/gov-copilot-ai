@@ -34,6 +34,12 @@ export const runAiDiagnostic = createServerFn({ method: "POST" })
         usage: response.usage,
       });
     } catch (err: any) {
+      console.error("DIAGNOSTIC completion error:", {
+        message: err.message,
+        status: err.status,
+        baseURL: ai.baseURL,
+        headers: ai.defaultHeaders
+      });
       results.tests.push({
         name: "Chat Completion (gpt-4o)",
         status: "FAILED",
@@ -41,8 +47,7 @@ export const runAiDiagnostic = createServerFn({ method: "POST" })
           message: err.message,
           status: err.status,
           name: err.name,
-          baseURL: ai.baseURL,
-          // defaultHeaders is not public on the OpenAI client, skipping diagnostic
+          actualBaseURL: ai.baseURL,
         }
       });
     }
