@@ -24,6 +24,7 @@ import { Route as AuthenticatedCopilotRouteImport } from './routes/_authenticate
 import { Route as AuthenticatedApplicationsRouteImport } from './routes/_authenticated/applications'
 import { Route as AuthenticatedEligibilityIndexRouteImport } from './routes/_authenticated/eligibility/index'
 import { Route as AuthenticatedAdminVerificationRouteImport } from './routes/_authenticated/admin/verification'
+import { Route as AuthenticatedAdminProvenanceRouteImport } from './routes/_authenticated/admin/provenance'
 import { Route as AuthenticatedAdminIngestionRouteImport } from './routes/_authenticated/admin.ingestion'
 
 const SitemapDotxmlRoute = SitemapDotxmlRouteImport.update({
@@ -104,6 +105,12 @@ const AuthenticatedAdminVerificationRoute =
     path: '/admin/verification',
     getParentRoute: () => AuthenticatedRoute,
   } as any)
+const AuthenticatedAdminProvenanceRoute =
+  AuthenticatedAdminProvenanceRouteImport.update({
+    id: '/admin/provenance',
+    path: '/admin/provenance',
+    getParentRoute: () => AuthenticatedRoute,
+  } as any)
 const AuthenticatedAdminIngestionRoute =
   AuthenticatedAdminIngestionRouteImport.update({
     id: '/admin/ingestion',
@@ -125,6 +132,7 @@ export interface FileRoutesByFullPath {
   '/schemes': typeof AuthenticatedSchemesRoute
   '/workflow': typeof AuthenticatedWorkflowRoute
   '/admin/ingestion': typeof AuthenticatedAdminIngestionRoute
+  '/admin/provenance': typeof AuthenticatedAdminProvenanceRoute
   '/admin/verification': typeof AuthenticatedAdminVerificationRoute
   '/eligibility/': typeof AuthenticatedEligibilityIndexRoute
 }
@@ -141,6 +149,7 @@ export interface FileRoutesByTo {
   '/workflow': typeof AuthenticatedWorkflowRoute
   '/': typeof AuthenticatedIndexRoute
   '/admin/ingestion': typeof AuthenticatedAdminIngestionRoute
+  '/admin/provenance': typeof AuthenticatedAdminProvenanceRoute
   '/admin/verification': typeof AuthenticatedAdminVerificationRoute
   '/eligibility': typeof AuthenticatedEligibilityIndexRoute
 }
@@ -160,6 +169,7 @@ export interface FileRoutesById {
   '/_authenticated/workflow': typeof AuthenticatedWorkflowRoute
   '/_authenticated/': typeof AuthenticatedIndexRoute
   '/_authenticated/admin/ingestion': typeof AuthenticatedAdminIngestionRoute
+  '/_authenticated/admin/provenance': typeof AuthenticatedAdminProvenanceRoute
   '/_authenticated/admin/verification': typeof AuthenticatedAdminVerificationRoute
   '/_authenticated/eligibility/': typeof AuthenticatedEligibilityIndexRoute
 }
@@ -179,6 +189,7 @@ export interface FileRouteTypes {
     | '/schemes'
     | '/workflow'
     | '/admin/ingestion'
+    | '/admin/provenance'
     | '/admin/verification'
     | '/eligibility/'
   fileRoutesByTo: FileRoutesByTo
@@ -195,6 +206,7 @@ export interface FileRouteTypes {
     | '/workflow'
     | '/'
     | '/admin/ingestion'
+    | '/admin/provenance'
     | '/admin/verification'
     | '/eligibility'
   id:
@@ -213,6 +225,7 @@ export interface FileRouteTypes {
     | '/_authenticated/workflow'
     | '/_authenticated/'
     | '/_authenticated/admin/ingestion'
+    | '/_authenticated/admin/provenance'
     | '/_authenticated/admin/verification'
     | '/_authenticated/eligibility/'
   fileRoutesById: FileRoutesById
@@ -330,6 +343,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAdminVerificationRouteImport
       parentRoute: typeof AuthenticatedRoute
     }
+    '/_authenticated/admin/provenance': {
+      id: '/_authenticated/admin/provenance'
+      path: '/admin/provenance'
+      fullPath: '/admin/provenance'
+      preLoaderRoute: typeof AuthenticatedAdminProvenanceRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
     '/_authenticated/admin/ingestion': {
       id: '/_authenticated/admin/ingestion'
       path: '/admin/ingestion'
@@ -366,6 +386,7 @@ interface AuthenticatedRouteChildren {
   AuthenticatedWorkflowRoute: typeof AuthenticatedWorkflowRoute
   AuthenticatedIndexRoute: typeof AuthenticatedIndexRoute
   AuthenticatedAdminIngestionRoute: typeof AuthenticatedAdminIngestionRoute
+  AuthenticatedAdminProvenanceRoute: typeof AuthenticatedAdminProvenanceRoute
   AuthenticatedAdminVerificationRoute: typeof AuthenticatedAdminVerificationRoute
 }
 
@@ -381,6 +402,7 @@ const AuthenticatedRouteChildren: AuthenticatedRouteChildren = {
   AuthenticatedWorkflowRoute: AuthenticatedWorkflowRoute,
   AuthenticatedIndexRoute: AuthenticatedIndexRoute,
   AuthenticatedAdminIngestionRoute: AuthenticatedAdminIngestionRoute,
+  AuthenticatedAdminProvenanceRoute: AuthenticatedAdminProvenanceRoute,
   AuthenticatedAdminVerificationRoute: AuthenticatedAdminVerificationRoute,
 }
 

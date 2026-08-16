@@ -35,7 +35,7 @@ export const getPendingSchemes = createServerFn({ method: "GET" })
 
 export const verifyScheme = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((data) => z.object({
+  .validator((data) => z.object({
     schemeId: z.string().uuid(),
     action: z.enum(["approve", "reject", "archive", "re-verify"]),
     notes: z.string().optional(),
@@ -94,7 +94,7 @@ export const verifyScheme = createServerFn({ method: "POST" })
 
 export const getVerificationLogs = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((data) => z.object({ schemeId: z.string().uuid() }).parse(data))
+  .validator((data) => z.object({ schemeId: z.string().uuid() }).parse(data))
   .handler(async ({ data, context }) => {
     const { data: hasAdmin, error: roleError } = await context.supabase
       .rpc('has_role', { _user_id: context.userId, _role: 'admin' });
@@ -117,4 +117,64 @@ export const getVerificationLogs = createServerFn({ method: "GET" })
 
     if (error) throw new Error(error.message);
     return logs || [];
+  });
+
+export const getProvenanceAudit = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }) => {
+    const { data: hasAdmin } = await context.supabase
+      .rpc('has_role', { _user_id: context.userId, _role: 'admin' });
+    
+    if (!hasAdmin) throw new Error("Unauthorized");
+
+    const { data: schemes, error } = await supabaseAdmin
+      .from("schemes")
+      .select("*")
+      .order("official_name", { ascending: true });
+
+    if (error) throw new Error(error.message);
+
+    const auditResults = schemes.map(scheme => {
+      const isProvenanceComplete = !!(
+        scheme.official_source && 
+        scheme.source_name && 
+        scheme.source_type && 
+        scheme.application_url
+      );
+
+      return {
+        id: scheme.id,
+        name: scheme.official_name || scheme.name,
+        verification: scheme.verification_status,
+        source: scheme.source_name || 'Unknown',
+        sourceUrl: scheme.official_source || 'None',
+        govLevel: scheme.government_level,
+        ministry: scheme.ministry,
+        stateUt: scheme.state_ut,
+        lastVerified: scheme.last_verified_at,
+        provenanceComplete: isProvenanceComplete ? 'YES' : 'NO'
+      };
+    });
+
+    // Calculate database state stats
+    const stats = {
+      total: schemes.length,
+      verified: schemes.filter(s => s.verification_status === 'verified').length,
+      pending: schemes.filter(s => s.verification_status === 'pending_verification').length,
+      archived: schemes.filter(s => s.verification_status === 'archived').length,
+      active: schemes.filter(s => s.active_status === true).length,
+      inactive: schemes.filter(s => s.active_status === false).length,
+      central: schemes.filter(s => s.government_level === 'Central').length,
+      stateUt: schemes.filter(s => s.government_level === 'State' || s.government_level === 'UT').length,
+      categories: {
+        energy: schemes.filter(s => s.category === 'Energy').length,
+        health: schemes.filter(s => s.category === 'Health').length,
+        education: schemes.filter(s => s.category === 'Education').length,
+        housing: schemes.filter(s => s.category === 'Housing').length,
+        farming: schemes.filter(s => s.category === 'Farming/Agriculture').length,
+        business: schemes.filter(s => s.category === 'Business/Self-employed').length,
+      }
+    };
+
+    return { auditResults, stats };
   });
