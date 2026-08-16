@@ -12,7 +12,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { draftTypes } from "@/lib/demo-data";
 
-export const Route = createFileRoute("/drafts")({
+export const Route = createFileRoute("/_authenticated/drafts")({
   head: () => ({
     meta: [
       { title: "AI Draft Generator | GovCopilot" },

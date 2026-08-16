@@ -9,60 +9,31 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
-import { Route as WorkflowRouteImport } from './routes/workflow'
 import { Route as SitemapDotxmlRouteImport } from './routes/sitemap[.]xml'
-import { Route as SchemesRouteImport } from './routes/schemes'
-import { Route as PolicyRouteImport } from './routes/policy'
-import { Route as EligibilityRouteImport } from './routes/eligibility'
-import { Route as DraftsRouteImport } from './routes/drafts'
-import { Route as DocumentsRouteImport } from './routes/documents'
-import { Route as CopilotRouteImport } from './routes/copilot'
-import { Route as ApplicationsRouteImport } from './routes/applications'
+import { Route as AuthRouteImport } from './routes/auth'
+import { Route as AuthenticatedRouteImport } from './routes/_authenticated'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as AuthenticatedWorkflowRouteImport } from './routes/_authenticated/workflow'
+import { Route as AuthenticatedSchemesRouteImport } from './routes/_authenticated/schemes'
+import { Route as AuthenticatedPolicyRouteImport } from './routes/_authenticated/policy'
+import { Route as AuthenticatedEligibilityRouteImport } from './routes/_authenticated/eligibility'
+import { Route as AuthenticatedDraftsRouteImport } from './routes/_authenticated/drafts'
+import { Route as AuthenticatedDocumentsRouteImport } from './routes/_authenticated/documents'
+import { Route as AuthenticatedCopilotRouteImport } from './routes/_authenticated/copilot'
+import { Route as AuthenticatedApplicationsRouteImport } from './routes/_authenticated/applications'
 
-const WorkflowRoute = WorkflowRouteImport.update({
-  id: '/workflow',
-  path: '/workflow',
-  getParentRoute: () => rootRouteImport,
-} as any)
 const SitemapDotxmlRoute = SitemapDotxmlRouteImport.update({
   id: '/sitemap.xml',
   path: '/sitemap.xml',
   getParentRoute: () => rootRouteImport,
 } as any)
-const SchemesRoute = SchemesRouteImport.update({
-  id: '/schemes',
-  path: '/schemes',
+const AuthRoute = AuthRouteImport.update({
+  id: '/auth',
+  path: '/auth',
   getParentRoute: () => rootRouteImport,
 } as any)
-const PolicyRoute = PolicyRouteImport.update({
-  id: '/policy',
-  path: '/policy',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const EligibilityRoute = EligibilityRouteImport.update({
-  id: '/eligibility',
-  path: '/eligibility',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const DraftsRoute = DraftsRouteImport.update({
-  id: '/drafts',
-  path: '/drafts',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const DocumentsRoute = DocumentsRouteImport.update({
-  id: '/documents',
-  path: '/documents',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const CopilotRoute = CopilotRouteImport.update({
-  id: '/copilot',
-  path: '/copilot',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const ApplicationsRoute = ApplicationsRouteImport.update({
-  id: '/applications',
-  path: '/applications',
+const AuthenticatedRoute = AuthenticatedRouteImport.update({
+  id: '/_authenticated',
   getParentRoute: () => rootRouteImport,
 } as any)
 const IndexRoute = IndexRouteImport.update({
@@ -70,48 +41,96 @@ const IndexRoute = IndexRouteImport.update({
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AuthenticatedWorkflowRoute = AuthenticatedWorkflowRouteImport.update({
+  id: '/workflow',
+  path: '/workflow',
+  getParentRoute: () => AuthenticatedRoute,
+} as any)
+const AuthenticatedSchemesRoute = AuthenticatedSchemesRouteImport.update({
+  id: '/schemes',
+  path: '/schemes',
+  getParentRoute: () => AuthenticatedRoute,
+} as any)
+const AuthenticatedPolicyRoute = AuthenticatedPolicyRouteImport.update({
+  id: '/policy',
+  path: '/policy',
+  getParentRoute: () => AuthenticatedRoute,
+} as any)
+const AuthenticatedEligibilityRoute =
+  AuthenticatedEligibilityRouteImport.update({
+    id: '/eligibility',
+    path: '/eligibility',
+    getParentRoute: () => AuthenticatedRoute,
+  } as any)
+const AuthenticatedDraftsRoute = AuthenticatedDraftsRouteImport.update({
+  id: '/drafts',
+  path: '/drafts',
+  getParentRoute: () => AuthenticatedRoute,
+} as any)
+const AuthenticatedDocumentsRoute = AuthenticatedDocumentsRouteImport.update({
+  id: '/documents',
+  path: '/documents',
+  getParentRoute: () => AuthenticatedRoute,
+} as any)
+const AuthenticatedCopilotRoute = AuthenticatedCopilotRouteImport.update({
+  id: '/copilot',
+  path: '/copilot',
+  getParentRoute: () => AuthenticatedRoute,
+} as any)
+const AuthenticatedApplicationsRoute =
+  AuthenticatedApplicationsRouteImport.update({
+    id: '/applications',
+    path: '/applications',
+    getParentRoute: () => AuthenticatedRoute,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
-  '/applications': typeof ApplicationsRoute
-  '/copilot': typeof CopilotRoute
-  '/documents': typeof DocumentsRoute
-  '/drafts': typeof DraftsRoute
-  '/eligibility': typeof EligibilityRoute
-  '/policy': typeof PolicyRoute
-  '/schemes': typeof SchemesRoute
+  '/auth': typeof AuthRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
-  '/workflow': typeof WorkflowRoute
+  '/applications': typeof AuthenticatedApplicationsRoute
+  '/copilot': typeof AuthenticatedCopilotRoute
+  '/documents': typeof AuthenticatedDocumentsRoute
+  '/drafts': typeof AuthenticatedDraftsRoute
+  '/eligibility': typeof AuthenticatedEligibilityRoute
+  '/policy': typeof AuthenticatedPolicyRoute
+  '/schemes': typeof AuthenticatedSchemesRoute
+  '/workflow': typeof AuthenticatedWorkflowRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
-  '/applications': typeof ApplicationsRoute
-  '/copilot': typeof CopilotRoute
-  '/documents': typeof DocumentsRoute
-  '/drafts': typeof DraftsRoute
-  '/eligibility': typeof EligibilityRoute
-  '/policy': typeof PolicyRoute
-  '/schemes': typeof SchemesRoute
+  '/auth': typeof AuthRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
-  '/workflow': typeof WorkflowRoute
+  '/applications': typeof AuthenticatedApplicationsRoute
+  '/copilot': typeof AuthenticatedCopilotRoute
+  '/documents': typeof AuthenticatedDocumentsRoute
+  '/drafts': typeof AuthenticatedDraftsRoute
+  '/eligibility': typeof AuthenticatedEligibilityRoute
+  '/policy': typeof AuthenticatedPolicyRoute
+  '/schemes': typeof AuthenticatedSchemesRoute
+  '/workflow': typeof AuthenticatedWorkflowRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
-  '/applications': typeof ApplicationsRoute
-  '/copilot': typeof CopilotRoute
-  '/documents': typeof DocumentsRoute
-  '/drafts': typeof DraftsRoute
-  '/eligibility': typeof EligibilityRoute
-  '/policy': typeof PolicyRoute
-  '/schemes': typeof SchemesRoute
+  '/_authenticated': typeof AuthenticatedRouteWithChildren
+  '/auth': typeof AuthRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
-  '/workflow': typeof WorkflowRoute
+  '/_authenticated/applications': typeof AuthenticatedApplicationsRoute
+  '/_authenticated/copilot': typeof AuthenticatedCopilotRoute
+  '/_authenticated/documents': typeof AuthenticatedDocumentsRoute
+  '/_authenticated/drafts': typeof AuthenticatedDraftsRoute
+  '/_authenticated/eligibility': typeof AuthenticatedEligibilityRoute
+  '/_authenticated/policy': typeof AuthenticatedPolicyRoute
+  '/_authenticated/schemes': typeof AuthenticatedSchemesRoute
+  '/_authenticated/workflow': typeof AuthenticatedWorkflowRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
+    | '/auth'
+    | '/sitemap.xml'
     | '/applications'
     | '/copilot'
     | '/documents'
@@ -119,11 +138,12 @@ export interface FileRouteTypes {
     | '/eligibility'
     | '/policy'
     | '/schemes'
-    | '/sitemap.xml'
     | '/workflow'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
+    | '/auth'
+    | '/sitemap.xml'
     | '/applications'
     | '/copilot'
     | '/documents'
@@ -131,44 +151,32 @@ export interface FileRouteTypes {
     | '/eligibility'
     | '/policy'
     | '/schemes'
-    | '/sitemap.xml'
     | '/workflow'
   id:
     | '__root__'
     | '/'
-    | '/applications'
-    | '/copilot'
-    | '/documents'
-    | '/drafts'
-    | '/eligibility'
-    | '/policy'
-    | '/schemes'
+    | '/_authenticated'
+    | '/auth'
     | '/sitemap.xml'
-    | '/workflow'
+    | '/_authenticated/applications'
+    | '/_authenticated/copilot'
+    | '/_authenticated/documents'
+    | '/_authenticated/drafts'
+    | '/_authenticated/eligibility'
+    | '/_authenticated/policy'
+    | '/_authenticated/schemes'
+    | '/_authenticated/workflow'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
-  ApplicationsRoute: typeof ApplicationsRoute
-  CopilotRoute: typeof CopilotRoute
-  DocumentsRoute: typeof DocumentsRoute
-  DraftsRoute: typeof DraftsRoute
-  EligibilityRoute: typeof EligibilityRoute
-  PolicyRoute: typeof PolicyRoute
-  SchemesRoute: typeof SchemesRoute
+  AuthenticatedRoute: typeof AuthenticatedRouteWithChildren
+  AuthRoute: typeof AuthRoute
   SitemapDotxmlRoute: typeof SitemapDotxmlRoute
-  WorkflowRoute: typeof WorkflowRoute
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
-    '/workflow': {
-      id: '/workflow'
-      path: '/workflow'
-      fullPath: '/workflow'
-      preLoaderRoute: typeof WorkflowRouteImport
-      parentRoute: typeof rootRouteImport
-    }
     '/sitemap.xml': {
       id: '/sitemap.xml'
       path: '/sitemap.xml'
@@ -176,53 +184,18 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof SitemapDotxmlRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/schemes': {
-      id: '/schemes'
-      path: '/schemes'
-      fullPath: '/schemes'
-      preLoaderRoute: typeof SchemesRouteImport
+    '/auth': {
+      id: '/auth'
+      path: '/auth'
+      fullPath: '/auth'
+      preLoaderRoute: typeof AuthRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/policy': {
-      id: '/policy'
-      path: '/policy'
-      fullPath: '/policy'
-      preLoaderRoute: typeof PolicyRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/eligibility': {
-      id: '/eligibility'
-      path: '/eligibility'
-      fullPath: '/eligibility'
-      preLoaderRoute: typeof EligibilityRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/drafts': {
-      id: '/drafts'
-      path: '/drafts'
-      fullPath: '/drafts'
-      preLoaderRoute: typeof DraftsRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/documents': {
-      id: '/documents'
-      path: '/documents'
-      fullPath: '/documents'
-      preLoaderRoute: typeof DocumentsRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/copilot': {
-      id: '/copilot'
-      path: '/copilot'
-      fullPath: '/copilot'
-      preLoaderRoute: typeof CopilotRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/applications': {
-      id: '/applications'
-      path: '/applications'
-      fullPath: '/applications'
-      preLoaderRoute: typeof ApplicationsRouteImport
+    '/_authenticated': {
+      id: '/_authenticated'
+      path: ''
+      fullPath: '/'
+      preLoaderRoute: typeof AuthenticatedRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/': {
@@ -232,20 +205,96 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/_authenticated/workflow': {
+      id: '/_authenticated/workflow'
+      path: '/workflow'
+      fullPath: '/workflow'
+      preLoaderRoute: typeof AuthenticatedWorkflowRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
+    '/_authenticated/schemes': {
+      id: '/_authenticated/schemes'
+      path: '/schemes'
+      fullPath: '/schemes'
+      preLoaderRoute: typeof AuthenticatedSchemesRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
+    '/_authenticated/policy': {
+      id: '/_authenticated/policy'
+      path: '/policy'
+      fullPath: '/policy'
+      preLoaderRoute: typeof AuthenticatedPolicyRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
+    '/_authenticated/eligibility': {
+      id: '/_authenticated/eligibility'
+      path: '/eligibility'
+      fullPath: '/eligibility'
+      preLoaderRoute: typeof AuthenticatedEligibilityRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
+    '/_authenticated/drafts': {
+      id: '/_authenticated/drafts'
+      path: '/drafts'
+      fullPath: '/drafts'
+      preLoaderRoute: typeof AuthenticatedDraftsRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
+    '/_authenticated/documents': {
+      id: '/_authenticated/documents'
+      path: '/documents'
+      fullPath: '/documents'
+      preLoaderRoute: typeof AuthenticatedDocumentsRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
+    '/_authenticated/copilot': {
+      id: '/_authenticated/copilot'
+      path: '/copilot'
+      fullPath: '/copilot'
+      preLoaderRoute: typeof AuthenticatedCopilotRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
+    '/_authenticated/applications': {
+      id: '/_authenticated/applications'
+      path: '/applications'
+      fullPath: '/applications'
+      preLoaderRoute: typeof AuthenticatedApplicationsRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
   }
 }
 
+interface AuthenticatedRouteChildren {
+  AuthenticatedApplicationsRoute: typeof AuthenticatedApplicationsRoute
+  AuthenticatedCopilotRoute: typeof AuthenticatedCopilotRoute
+  AuthenticatedDocumentsRoute: typeof AuthenticatedDocumentsRoute
+  AuthenticatedDraftsRoute: typeof AuthenticatedDraftsRoute
+  AuthenticatedEligibilityRoute: typeof AuthenticatedEligibilityRoute
+  AuthenticatedPolicyRoute: typeof AuthenticatedPolicyRoute
+  AuthenticatedSchemesRoute: typeof AuthenticatedSchemesRoute
+  AuthenticatedWorkflowRoute: typeof AuthenticatedWorkflowRoute
+}
+
+const AuthenticatedRouteChildren: AuthenticatedRouteChildren = {
+  AuthenticatedApplicationsRoute: AuthenticatedApplicationsRoute,
+  AuthenticatedCopilotRoute: AuthenticatedCopilotRoute,
+  AuthenticatedDocumentsRoute: AuthenticatedDocumentsRoute,
+  AuthenticatedDraftsRoute: AuthenticatedDraftsRoute,
+  AuthenticatedEligibilityRoute: AuthenticatedEligibilityRoute,
+  AuthenticatedPolicyRoute: AuthenticatedPolicyRoute,
+  AuthenticatedSchemesRoute: AuthenticatedSchemesRoute,
+  AuthenticatedWorkflowRoute: AuthenticatedWorkflowRoute,
+}
+
+const AuthenticatedRouteWithChildren = AuthenticatedRoute._addFileChildren(
+  AuthenticatedRouteChildren,
+)
+
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
-  ApplicationsRoute: ApplicationsRoute,
-  CopilotRoute: CopilotRoute,
-  DocumentsRoute: DocumentsRoute,
-  DraftsRoute: DraftsRoute,
-  EligibilityRoute: EligibilityRoute,
-  PolicyRoute: PolicyRoute,
-  SchemesRoute: SchemesRoute,
+  AuthenticatedRoute: AuthenticatedRouteWithChildren,
+  AuthRoute: AuthRoute,
   SitemapDotxmlRoute: SitemapDotxmlRoute,
-  WorkflowRoute: WorkflowRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

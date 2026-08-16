@@ -18,7 +18,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
 import { services } from "@/lib/demo-data";
 
-export const Route = createFileRoute("/workflow")({
+export const Route = createFileRoute("/_authenticated/workflow")({
   head: () => ({
     meta: [
       { title: "Workflow Copilot | GovCopilot" },

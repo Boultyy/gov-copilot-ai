@@ -19,7 +19,7 @@ import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 
-export const Route = createFileRoute("/eligibility")({
+export const Route = createFileRoute("/_authenticated/eligibility")({
   head: () => ({
     meta: [
       { title: "Eligibility Checker | GovCopilot" },
