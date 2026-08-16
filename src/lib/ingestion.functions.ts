@@ -122,6 +122,7 @@ export const triggerSourceSync = createServerFn({ method: "POST" })
           source_name: source.name,
           source_type: source.source_type,
           source_record_id: item.external_id,
+          state_ut: (item as any).state,
           active_status: true,
         };
 
