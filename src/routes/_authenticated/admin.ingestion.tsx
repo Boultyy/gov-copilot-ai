@@ -7,7 +7,7 @@ import { Database, RefreshCw, CheckCircle, XCircle, Clock } from 'lucide-react';
 import { toast } from 'sonner';
 import { format } from 'date-fns';
 
-export const Route = createFileRoute('/admin/ingestion')({
+export const Route = createFileRoute('/_authenticated/admin/ingestion')({
   component: IngestionManagementPage,
 });
 
@@ -20,7 +20,7 @@ function IngestionManagementPage() {
   });
 
   const syncMutation = useMutation({
-    mutationFn: (sourceId: string) => triggerSourceSync({ sourceId }),
+    mutationFn: (sourceId: string) => triggerSourceSync({ data: { sourceId } }),
     onSuccess: (data) => {
       toast.success(`Sync successful: Processed ${data.processed} records`);
       queryClient.invalidateQueries({ queryKey: ['ingestion-sources'] });
