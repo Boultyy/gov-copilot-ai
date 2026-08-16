@@ -4,89 +4,8 @@ import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { supabaseAdmin } from "@/integrations/supabase/client.server";
 
 /**
- * Creates a new conversation for the Citizen Copilot.
- */
-export const startNewConversation = createServerFn({ method: "POST" })
-  .middleware([requireSupabaseAuth])
-  .validator((data: { title?: string; type?: string }) =>
-    z.object({ 
-      title: z.string().optional(),
-      type: z.string().optional()
-    }).parse(data)
-  )
-  .handler(async ({ data, context }) => {
-    const { supabase, userId } = context;
-
-    const { data: conversation, error } = await supabase
-      .from("conversations")
-      .insert({
-        user_id: userId,
-        title: data.title || "New Conversation",
-        type: data.type || "copilot"
-      })
-      .select()
-      .single();
-
-    if (error) {
-      console.error("Error creating conversation:", error);
-      throw new Error("Failed to create conversation");
-    }
-
-    return conversation;
-  });
-
-/**
- * Fetches the user's conversation history.
- */
-export const getConversations = createServerFn({ method: "GET" })
-  .middleware([requireSupabaseAuth])
-  .handler(async ({ context }) => {
-    const { supabase, userId } = context;
-
-    const { data, error } = await supabase
-      .from("conversations")
-      .select("*")
-      .eq("user_id", userId)
-      .eq("type", "copilot")
-      .order("updated_at", { ascending: false });
-
-    if (error) {
-      console.error("Error fetching conversations:", error);
-      throw new Error("Failed to fetch conversations");
-    }
-
-    return data;
-  });
-
-/**
- * Fetches messages for a specific conversation.
- */
-export const getConversationMessages = createServerFn({ method: "GET" })
-  .middleware([requireSupabaseAuth])
-  .validator((data: { conversationId: string }) =>
-    z.object({ conversationId: z.string().uuid() }).parse(data)
-  )
-  .handler(async ({ data, context }) => {
-    const { supabase, userId } = context;
-
-    // Verify ownership via RLS or explicit check
-    const { data: messages, error } = await supabase
-      .from("messages")
-      .select("*")
-      .eq("conversation_id", data.conversationId)
-      .order("created_at", { ascending: true });
-
-    if (error) {
-      console.error("Error fetching messages:", error);
-      throw new Error("Failed to fetch messages");
-    }
-
-    return messages;
-  });
-
-/**
  * The core AI Engine for Citizen Copilot.
- * Grounded in verified government data.
+ * Grounded in verified government data AND user documents.
  */
 export const sendCopilotMessage = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
@@ -111,9 +30,7 @@ export const sendCopilotMessage = createServerFn({ method: "POST" })
 
     if (userMsgError) throw new Error("Failed to save user message");
 
-    // 2. Retrieve Context (Schemes)
-    // We use a simple ILIKE search for now as a baseline for grounding.
-    // In a full RAG setup, we'd use vector search.
+    // 2. Retrieve Government Context (Schemes)
     const { data: schemes } = await supabaseAdmin
       .from("schemes")
       .select("*")
@@ -121,18 +38,44 @@ export const sendCopilotMessage = createServerFn({ method: "POST" })
       .or(`name.ilike.%${content}%,description.ilike.%${content}%,benefits.ilike.%${content}%`)
       .limit(3);
 
-    const contextStr = schemes && schemes.length > 0 
+    // 3. Retrieve User Document Context (Vector Search)
+    const { searchUserDocuments } = await import("./documents.functions");
+    // We wrap search in a try-catch to not fail if RAG fails
+    let docChunks: any[] = [];
+    try {
+      docChunks = await searchUserDocuments({ data: { query: content, limit: 3 } });
+    } catch (e) {
+      console.warn("User document search failed:", e);
+    }
+
+    const schemeContext = schemes && schemes.length > 0 
       ? schemes.map(s => `
+        [GOVT SCHEME]
         Scheme: ${s.name}
-        Department: ${s.department}
         Benefits: ${s.benefits}
         Eligibility: ${s.eligibility_summary}
-        Source: ${s.official_source} (${s.source_url || 'N/A'})
-        Last Verified: ${s.last_verified_at || s.created_at}
+        Official Source: ${s.official_source}
       `).join("\n---\n")
-      : "No specific government scheme records found matching this query in the verified database.";
+      : "";
 
-    // 3. Call AI Gateway
+    const userDocContext = docChunks && docChunks.length > 0
+      ? docChunks.map(c => `
+        [USER DOCUMENT CHUNK]
+        Source Document: ${c.document_name}
+        Content: ${c.content}
+        Similarity: ${Math.round(c.similarity * 100)}%
+      `).join("\n---\n")
+      : "";
+
+    const combinedContext = `
+      GOVERNMENT SCHEMES CONTEXT:
+      ${schemeContext || "No relevant government schemes found."}
+      
+      USER DOCUMENTS CONTEXT:
+      ${userDocContext || "No relevant information found in your uploaded documents."}
+    `;
+
+    // 4. Call AI Gateway
     const { createAiGateway } = await import("@/lib/ai-gateway.server");
     const ai = createAiGateway();
 
@@ -140,15 +83,14 @@ export const sendCopilotMessage = createServerFn({ method: "POST" })
       You are GovCopilot, a professional AI assistant for the Indian Government.
       
       CRITICAL INSTRUCTIONS:
-      1. You must ONLY provide authoritative government information if it is present in the provided context.
-      2. If the context does not contain the answer, state that the information could not be verified in the official database.
-      3. DO NOT invent schemes, eligibility, benefits, URLs, or contacts.
-      4. Distinguish between your explanation and official data.
-      5. Always cite your sources using the data provided in the context.
-      6. If you find matching schemes, return a JSON-like structure in your response that the UI can parse, but also explain it naturally.
+      1. You must ONLY provide information if it is present in the provided context (Gov Schemes or User Documents).
+      2. If neither context contains the answer, state that you couldn't find verified information in the database or your documents.
+      3. DO NOT invent facts.
+      4. Always cite your sources using [Name of Scheme] or [Document Name].
+      5. If answering from user documents, mention the document name.
       
-      CONTEXT FROM VERIFIED DATABASE:
-      ${contextStr}
+      COMBINED CONTEXT:
+      ${combinedContext}
     `;
 
     // Get last 5 messages for history
@@ -170,32 +112,26 @@ export const sendCopilotMessage = createServerFn({ method: "POST" })
       messages: messages as any,
       temperature: 0.2, 
     }).catch(err => {
-      console.error("AI Gateway Error:", {
-        message: err.message,
-        name: err.name,
-        projectId: process.env.LOVABLE_PROJECT_ID,
-        hasKey: !!process.env.LOVABLE_API_KEY
-      });
-      throw new Error(`AI Citizen Copilot is temporarily unavailable (Reason: ${err.message}). Please ensure the AI connector is enabled in Project Settings.`);
+      console.error("AI Gateway Error:", err);
+      throw new Error(`AI Citizen Copilot is temporarily unavailable.`);
     });
 
-    const aiContent = response.choices[0].message.content || "I apologize, I encountered an error generating a response.";
+    const aiContent = response.choices[0].message.content || "I apologize, I encountered an error.";
 
-    // 4. Save AI response
+    // 5. Prepare citations for metadata
+    const citations = [
+      ...(schemes?.map(s => ({ type: 'govt', name: s.name, url: s.source_url })) || []),
+      ...(docChunks?.map(c => ({ type: 'user_doc', name: c.document_name })) || [])
+    ];
+
+    // 6. Save AI response
     const { data: aiMsg, error: aiMsgError } = await supabase
       .from("messages")
       .insert({
         conversation_id: conversationId,
         role: "assistant",
         content: aiContent,
-        metadata: {
-          sources: schemes?.map(s => ({
-            name: s.name,
-            source: s.official_source,
-            url: s.source_url,
-            verified_at: s.last_verified_at
-          })) || []
-        }
+        metadata: { sources: citations }
       })
       .select()
       .single();
@@ -210,3 +146,6 @@ export const sendCopilotMessage = createServerFn({ method: "POST" })
 
     return aiMsg;
   });
+
+// Re-export other functions from original implementation
+export { startNewConversation, getConversations, getConversationMessages } from "./copilot.functions.original";
