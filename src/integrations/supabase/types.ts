@@ -1021,6 +1021,23 @@ export type Database = {
         }
         Returns: boolean
       }
+      match_document_chunks: {
+        Args: {
+          match_count: number
+          match_threshold: number
+          p_user_id: string
+          query_embedding: string
+        }
+        Returns: {
+          content: string
+          document_id: string
+          document_name: string
+          id: string
+          metadata: Json
+          page_number: number
+          similarity: number
+        }[]
+      }
     }
     Enums: {
       app_role: "admin" | "moderator" | "user"
