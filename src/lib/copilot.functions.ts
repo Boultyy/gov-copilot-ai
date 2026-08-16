@@ -120,8 +120,10 @@ export const sendCopilotMessage = createServerFn({ method: "POST" })
       temperature: 0.1, // Lower temperature for higher grounding
     }).catch(err => {
       console.error("AI Gateway Completion Error:", err);
-      throw new Error(`Citizen Copilot is temporarily unavailable due to a connection issue.`);
+      throw new Error(`Citizen Copilot is temporarily unavailable due to a connection issue (${err.message}).`);
     });
+
+
 
     const aiContent = response.choices[0].message.content || "I apologize, but I am unable to process your request at the moment.";
 

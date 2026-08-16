@@ -5,7 +5,7 @@ export function createAiGateway() {
   // The official baseURL for the built-in AI connector in modern TanStack Start projects
   // is typically determined by the environment, but for external SDKs, 
   // we point to the gateway proxy.
-  const baseURL = "https://api.lovable.ai/v1";
+  const baseURL = "https://api.lovable.dev/v1";
 
   if (!apiKey) {
     console.warn("LOVABLE_API_KEY is not set. AI calls will likely fail.");
