@@ -1,7 +1,6 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { supabaseAdmin } from "@/integrations/supabase/client.server";
-import { crypto } from "crypto";
 
 // Helper to calculate hash for change detection
 const calculateFingerprint = (data: any) => {
@@ -18,7 +17,7 @@ const calculateFingerprint = (data: any) => {
     required_documents: data.required_documents,
     active_status: data.active_status
   };
-  return Buffer.from(JSON.stringify(significantFields)).toString('base64');
+  return btoa(JSON.stringify(significantFields));
 };
 
 export const triggerSourceSync = createServerFn({ method: "POST" })
