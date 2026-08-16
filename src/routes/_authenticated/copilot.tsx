@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from "react";
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, useSearch } from "@tanstack/react-router";
 import { useSuspenseQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import {
   Sparkles,
@@ -31,9 +31,14 @@ import {
 } from "@/lib/copilot.functions";
 import { useServerFn } from "@tanstack/react-start";
 import { toast } from "sonner";
+import { z } from "zod";
 
+const copilotSearchSchema = z.object({
+  id: z.string().uuid().optional(),
+});
 
 export const Route = createFileRoute("/_authenticated/copilot")({
+  validateSearch: (search) => copilotSearchSchema.parse(search),
   head: () => ({
     meta: [
       { title: "AI Citizen Copilot | GovCopilot" },
@@ -53,6 +58,7 @@ export const Route = createFileRoute("/_authenticated/copilot")({
 });
 
 
+
 const suggestedPrompts = [
   "Find scholarships I may qualify for",
   "What government schemes can help my family?",
@@ -68,8 +74,17 @@ type Message = {
 };
 
 function Copilot() {
-  const [activeId, setActiveId] = useState<string | null>(null);
+  const searchParams = useSearch({ from: "/_authenticated/copilot" });
+  const [activeId, setActiveId] = useState<string | null>(searchParams.id || null);
+
+  useEffect(() => {
+    if (searchParams.id) {
+      setActiveId(searchParams.id);
+    }
+  }, [searchParams.id]);
+
   const [input, setInput] = useState("");
+
   const scrollRef = useRef<HTMLDivElement>(null);
   const queryClient = useQueryClient();
 
