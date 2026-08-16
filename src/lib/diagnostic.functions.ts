@@ -25,6 +25,7 @@ export const runAiDiagnostic = createServerFn({ method: "POST" })
         messages: [{ role: "user", content: data.prompt || "Hello, are you there?" }],
         max_tokens: 5,
       });
+      console.log("DIAGNOSTIC SUCCESS:", response.model);
       results.tests.push({
         name: "Chat Completion (gpt-4o)",
         status: "SUCCESS",
