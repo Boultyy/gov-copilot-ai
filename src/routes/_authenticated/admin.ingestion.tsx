@@ -27,7 +27,7 @@ function IngestionManagementPage() {
   const syncMutation = useMutation({
     mutationFn: (sourceId: string) => triggerSourceSync({ data: { sourceId } }),
     onSuccess: (data) => {
-      toast.success(`Sync successful: Processed ${data.processed} records`);
+      toast.success(`Sync finished: ${data.inserted} new, ${data.updated} updated, ${data.rejected} rejected`);
       queryClient.invalidateQueries({ queryKey: ['ingestion-sources'] });
     },
     onError: (error) => {
