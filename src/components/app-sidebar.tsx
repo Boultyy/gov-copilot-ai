@@ -45,6 +45,7 @@ const advancedModules = [
   { title: "Draft Generator", url: "/drafts", icon: PenLine },
   { title: "Data Ingestion", url: "/admin/ingestion", icon: Database },
   { title: "Verification Queue", url: "/admin/verification", icon: ShieldCheck },
+  { title: "AI Diagnostic", url: "/_authenticated/admin/ai-diagnostic", icon: GitCompareArrows },
 ];
 
 export function AppSidebar() {

@@ -12,7 +12,7 @@ export const runAiDiagnostic = createServerFn({ method: "POST" })
 
     const apiKey = process.env.LOVABLE_API_KEY;
     const projectID = process.env.LOVABLE_PROJECT_ID;
-    const baseURL = "https://api.lovable.dev/v1";
+    const baseURL = "https://api.lovable.dev/v1/ai/openai";
 
     try {
       const ai = new OpenAI({
@@ -20,7 +20,8 @@ export const runAiDiagnostic = createServerFn({ method: "POST" })
         baseURL,
         defaultHeaders: {
           "x-lovable-project-id": projectID || "",
-        }
+        },
+        dangerouslyAllowBrowser: false,
       });
 
       const response = await ai.chat.completions.create({
