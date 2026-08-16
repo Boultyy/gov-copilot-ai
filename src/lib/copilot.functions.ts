@@ -46,9 +46,12 @@ export const sendCopilotMessage = createServerFn({ method: "POST" })
     const { searchUserDocuments } = await import("./documents.functions");
     let docChunks: any[] = [];
     try {
+      // searchUserDocuments might throw 404 if it uses the same faulty AI gateway config
       docChunks = await searchUserDocuments({ data: { query: content, limit: 5 } });
-    } catch (e) {
+    } catch (e: any) {
       console.warn("User document search failed:", e);
+      // Fallback: don't crash the whole chat if document search fails
+      docChunks = [];
     }
 
     // 4. Build Context
@@ -119,7 +122,12 @@ export const sendCopilotMessage = createServerFn({ method: "POST" })
       messages: messages as any,
       temperature: 0.1, // Lower temperature for higher grounding
     }).catch(err => {
-      console.error("AI Gateway Completion Error:", err);
+      console.error("AI Gateway Completion Error details:", {
+        message: err.message,
+        status: err.status,
+        name: err.name,
+        stack: err.stack
+      });
       throw new Error(`Citizen Copilot is temporarily unavailable due to a connection issue (${err.message}).`);
     });
 
