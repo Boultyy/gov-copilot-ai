@@ -10,7 +10,12 @@ export const getPendingSchemes = createServerFn({ method: "GET" })
     const { data: hasAdmin, error: roleError } = await context.supabase
       .rpc('has_role', { _user_id: context.userId, _role: 'admin' });
     
-    if (roleError || !hasAdmin) {
+    if (roleError) {
+      console.error("Verification Role Error:", roleError);
+      throw new Error(`Auth Error: ${roleError.message}`);
+    }
+
+    if (!hasAdmin) {
       throw new Error("Unauthorized: Admin role required");
     }
 
@@ -40,8 +45,13 @@ export const verifyScheme = createServerFn({ method: "POST" })
     const { schemeId, action, notes, updates } = data;
 
     // Check admin
-    const { data: hasAdmin } = await context.supabase
+    const { data: hasAdmin, error: roleError } = await context.supabase
       .rpc('has_role', { _user_id: context.userId, _role: 'admin' });
+    
+    if (roleError) {
+      console.error("Verification Action Role Error:", roleError);
+      throw new Error(`Auth Error: ${roleError.message}`);
+    }
     
     if (!hasAdmin) throw new Error("Unauthorized");
 
@@ -86,8 +96,14 @@ export const getVerificationLogs = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .inputValidator((data) => z.object({ schemeId: z.string().uuid() }).parse(data))
   .handler(async ({ data, context }) => {
-    const { data: hasAdmin } = await context.supabase
+    const { data: hasAdmin, error: roleError } = await context.supabase
       .rpc('has_role', { _user_id: context.userId, _role: 'admin' });
+    
+    if (roleError) {
+      console.error("Verification Logs Role Error:", roleError);
+      throw new Error(`Auth Error: ${roleError.message}`);
+    }
+
     if (!hasAdmin) throw new Error("Unauthorized");
 
     const { data: logs, error } = await supabaseAdmin
