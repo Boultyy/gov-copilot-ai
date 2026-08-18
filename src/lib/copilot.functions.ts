@@ -23,6 +23,23 @@ export const sendCopilotMessage = createServerFn({ method: "POST" })
       console.log(`[COPILOT_DIAGNOSTIC][${elapsed}ms] ${stage}`, JSON.stringify(extra));
     };
 
+    const getContextSchemeId = async (convId: string) => {
+      const { data: lastMsgs } = await supabase
+        .from("messages")
+        .select("metadata")
+        .eq("conversation_id", convId)
+        .order("created_at", { ascending: false })
+        .limit(5);
+      
+      for (const m of lastMsgs || []) {
+        const metadata = m.metadata as any;
+        if (metadata?.canonical_scheme_id) {
+          return metadata.canonical_scheme_id;
+        }
+      }
+      return null;
+    };
+
     try {
       log("COPILOT_START", { conversationId: currentConversationId, contentLen: content.length });
 
@@ -65,18 +82,32 @@ export const sendCopilotMessage = createServerFn({ method: "POST" })
       log("SCHEME_SEARCH_START");
       const { searchSchemes, fetchOfficialSchemeDetail } = await import("./schemes.server");
       
-      const schemesPromise = searchSchemes(content);
-      const schemesTimeoutPromise = new Promise((_, reject) => 
-        setTimeout(() => reject(new Error("SCHEME_SEARCH_TIMEOUT")), 5000)
-      );
-      
       let schemes: any[] = [];
-      try {
-        schemes = await Promise.race([schemesPromise, schemesTimeoutPromise]) as any[];
-        log("SCHEME_SEARCH_SUCCESS", { count: schemes.length });
-      } catch (e: any) {
-        log("SCHEME_SEARCH_FAILED", { error: e.message });
-        schemes = [];
+      const inheritedSchemeId = currentConversationId ? await getContextSchemeId(currentConversationId) : null;
+      
+      if (inheritedSchemeId) {
+        log("INHERITED_SCHEME_FOUND", { id: inheritedSchemeId });
+        const { data: inherited } = await supabase
+          .from("schemes")
+          .select("*")
+          .eq("id", inheritedSchemeId)
+          .single();
+        if (inherited) schemes = [inherited];
+      }
+
+      if (schemes.length === 0) {
+        const schemesPromise = searchSchemes(content);
+        const schemesTimeoutPromise = new Promise((_, reject) => 
+          setTimeout(() => reject(new Error("SCHEME_SEARCH_TIMEOUT")), 5000)
+        );
+        
+        try {
+          schemes = await Promise.race([schemesPromise, schemesTimeoutPromise]) as any[];
+          log("SCHEME_SEARCH_SUCCESS", { count: schemes.length });
+        } catch (e: any) {
+          log("SCHEME_SEARCH_FAILED", { error: e.message });
+          schemes = [];
+        }
       }
 
       // 3. Official Web Enrichment
@@ -147,7 +178,17 @@ export const sendCopilotMessage = createServerFn({ method: "POST" })
         `).join("\n---\n")
         : "";
 
+      const canonicalScheme = schemes && schemes.length > 0 ? schemes[0] : null;
+
       const combinedContext = `
+        CANONICAL_SCHEME_ID: ${canonicalScheme?.id || "NONE"}
+        CANONICAL_SCHEME_NAME: ${canonicalScheme?.name || "NONE"}
+        OFFICIAL_NAME: ${canonicalScheme?.official_name || "NONE"}
+        MINISTRY: ${canonicalScheme?.ministry || "NONE"}
+        DEPARTMENT: ${canonicalScheme?.department || "NONE"}
+        OFFICIAL_SOURCE: ${canonicalScheme?.official_source || "NONE"}
+        SOURCE_URL: ${canonicalScheme?.source_url || "NONE"}
+
         VERIFIED GOVERNMENT DATABASE RECORDS:
         ${schemeContext || "No specific government schemes found in database matching this query."}
         
@@ -167,9 +208,10 @@ export const sendCopilotMessage = createServerFn({ method: "POST" })
         
         CRITICAL INSTRUCTIONS:
         1. Primary Duty: Help citizens discover, understand, and access government schemes using ONLY the provided Verified Government Information.
-        2. Anti-Hallucination: DO NOT invent scheme names, eligibility rules, benefit amounts, launch dates, or application URLs.
-        3. Tone: Professional, clear, helpful, and empathetic. Avoid jargon.
+        2. Grounding: You MUST answer about the canonical scheme identified above (CANONICAL_SCHEME_NAME). Do not substitute another scheme.
+        3. Anti-Hallucination: DO NOT invent scheme names, eligibility rules, benefit amounts, launch dates, or application URLs. If information is missing, use ONLY the database fields or official web evidence provided.
         4. Citations: Always mention the scheme name and link to the official URL provided in the context.
+        5. Tone: Professional, clear, helpful, and empathetic.
         
         CONTEXT:
         ${combinedContext}
@@ -210,9 +252,11 @@ export const sendCopilotMessage = createServerFn({ method: "POST" })
             type: 'user_doc', 
             name: c.document_name, 
             page: c.page_number,
-            snippet: c.content.substring(0, 100) + "..."
+            snippet: (c.content as string).substring(0, 100) + "..."
           })) || [])
         ];
+
+        const canonicalSchemeId = schemes && schemes.length > 0 ? schemes[0].id : null;
 
         const { data: aiMsg, error: aiMsgError } = await supabase
           .from("messages")
@@ -220,7 +264,10 @@ export const sendCopilotMessage = createServerFn({ method: "POST" })
             conversation_id: currentConversationId,
             role: "assistant",
             content: aiContent,
-            metadata: { sources: citations }
+            metadata: { 
+              sources: citations,
+              canonical_scheme_id: canonicalSchemeId
+            }
           })
           .select()
           .single();
@@ -257,7 +304,8 @@ You can open the official source below for detailed information.`;
               metadata: { 
                 sources: [{ type: 'govt', name: topScheme.name, url: topScheme.source_url }],
                 is_fallback: true,
-                error_code: err.message === "AI_REQUEST_TIMEOUT" ? "AI_TIMEOUT" : "AI_UNAVAILABLE"
+                error_code: err.message === "AI_REQUEST_TIMEOUT" ? "AI_TIMEOUT" : "AI_UNAVAILABLE",
+                canonical_scheme_id: topScheme.id
               }
             })
             .select()

@@ -1,9 +1,27 @@
 import { supabaseAdmin } from "@/integrations/supabase/client.server";
 
+const SCHEME_ALIASES: Record<string, string[]> = {
+  "pm-kisan": ["pm kisan", "pmkisan", "pradhan mantri kisan samman nidhi", "kisan samman nidhi", "pm-kisan"],
+  "pmay": ["pradhan mantri awas yojana", "pm awas yojana", "pmay"],
+  "pmay-g": ["pradhan mantri awaas yojana - gramin", "pmay gramin", "pmay-g"],
+  "pmay-u": ["pradhan mantri awas yojana - urban", "pmay urban", "pmay-u"],
+  "pm vishwakarma": ["pm vishwakarma scheme", "vishwakarma scheme", "pm vishwakarma"],
+  "pm surya ghar": ["pm surya ghar: muft bijli yojana", "muft bijli yojana", "pm surya ghar"],
+  "ayushman bharat": ["ayushman bharat pm-jay", "pradhan mantri jan arogya yojana", "pm-jay", "pmjay", "ayushman bharat"]
+};
+
+function normalizeText(text: string): string {
+  return text
+    .toLowerCase()
+    .replace(/[^\w\s-]/g, '') // remove punctuation except hyphens
+    .replace(/[-\s]+/g, ' ')  // normalize spaces and hyphens to single space
+    .trim();
+}
+
 export async function searchSchemes(query: string, limit: number = 5) {
-  // Normalize query for alias matching
-  const normalizedQuery = query.toLowerCase().trim();
-  
+  const normalizedQuery = normalizeText(query);
+  console.log(`[COPILOT_RETRIEVAL] query: "${query}" normalized: "${normalizedQuery}"`);
+
   // 1. Precise Match (Name or Official Name)
   let { data: exactMatches } = await supabaseAdmin
     .from("schemes")
@@ -13,28 +31,100 @@ export async function searchSchemes(query: string, limit: number = 5) {
     .limit(limit);
 
   if (exactMatches && exactMatches.length > 0) {
+    console.log(`[COPILOT_RETRIEVAL] match_mode: "exact_name" count: ${exactMatches.length}`);
     return exactMatches;
   }
 
-  // 2. Keyword Match (Fuzzy-ish)
-  // We use multiple ilike patterns for better coverage
-  const keywords = normalizedQuery.split(/\s+/).filter(k => k.length > 2);
-  let keywordFilter = `name.ilike.%${normalizedQuery}%,description.ilike.%${normalizedQuery}%,benefits.ilike.%${normalizedQuery}%`;
-  
-  if (keywords.length > 0) {
-    // Also try matching first two keywords specifically if long query
-    keywordFilter += `,name.ilike.%${keywords[0]}%,description.ilike.%${keywords[0]}%`;
-  }
-
-  const { data: fuzzyMatches } = await supabaseAdmin
+  // 1b. Exact Match normalized check (handle cases where DB might have extra chars)
+  // We'll search for ILIKE but verify the normalized version matches
+  let { data: allCandidates } = await supabaseAdmin
     .from("schemes")
     .select("*")
     .eq("verification_status", "verified")
-    .or(keywordFilter)
-    .order("created_at", { ascending: false })
-    .limit(limit);
+    .ilike("name", `%${normalizedQuery}%`)
+    .limit(20);
+  
+  const strictMatches = allCandidates?.filter(s => 
+    normalizeText(s.name) === normalizedQuery || 
+    (s.official_name && normalizeText(s.official_name) === normalizedQuery)
+  );
 
-  return fuzzyMatches || [];
+  if (strictMatches && strictMatches.length > 0) {
+    console.log(`[COPILOT_RETRIEVAL] match_mode: "strict_normalized" count: ${strictMatches.length}`);
+    return strictMatches.slice(0, limit);
+  }
+
+  // 2. Alias Match
+  for (const [canonical, aliases] of Object.entries(SCHEME_ALIASES)) {
+    const isMatch = normalizedQuery.includes(canonical) || aliases.some(a => normalizedQuery.includes(a));
+    if (isMatch) {
+      console.log(`[COPILOT_RETRIEVAL] attempting alias match for: ${canonical}`);
+      const { data: aliasMatches } = await supabaseAdmin
+        .from("schemes")
+        .select("*")
+        .eq("verification_status", "verified")
+        .or(`name.ilike.%${canonical}%,official_name.ilike.%${canonical}%`)
+        .limit(limit);
+      
+      if (aliasMatches && aliasMatches.length > 0) {
+        console.log(`[COPILOT_RETRIEVAL] match_mode: "alias_match" canonical: ${canonical}`);
+        return aliasMatches;
+      }
+    }
+  }
+
+  // Token-based matching (strong lexical)
+  const tokens = normalizedQuery.split(/\s+/).filter(t => t.length > 3);
+  if (tokens.length > 0) {
+    const tokenFilter = tokens.map(t => `name.ilike.%${t}%`).join(',');
+    const { data: tokenMatches } = await supabaseAdmin
+      .from("schemes")
+      .select("*")
+      .eq("verification_status", "verified")
+      .or(tokenFilter)
+      .limit(limit);
+    
+    if (tokenMatches && tokenMatches.length > 0) {
+      console.log(`[COPILOT_RETRIEVAL] match_mode: "token_match" tokens: ${tokens.join(',')}`);
+      return tokenMatches;
+    }
+  }
+
+  // 3. Discovery / Fuzzy Match (ONLY for general queries)
+  const isBroadQuery = /scheme|help|support|farmer|student|woman|senior|benefit|what|how|available/i.test(normalizedQuery);
+  
+  if (isBroadQuery) {
+    // Enhanced discovery for common categories
+    const categories: Record<string, string[]> = {
+      "farmer": ["farming", "agriculture", "kisan", "krishi", "crop", "fertilizer", "livestock"],
+      "student": ["scholarship", "education", "fellowship", "stipend", "research"],
+      "woman": ["mahila", "girl", "mother", "janani", "beti"],
+      "senior": ["pension", "vaya vandana", "varishtha"]
+    };
+
+    let discoveryFilter = `name.ilike.%${normalizedQuery}%,description.ilike.%${normalizedQuery}%,category.ilike.%${normalizedQuery}%`;
+    
+    for (const [key, terms] of Object.entries(categories)) {
+      if (normalizedQuery.includes(key)) {
+        const categoryFilter = terms.map(t => `name.ilike.%${t}%,description.ilike.%${t}%,category.ilike.%${t}%`).join(',');
+        discoveryFilter += `,${categoryFilter}`;
+      }
+    }
+
+    const { data: discoveryMatches } = await supabaseAdmin
+      .from("schemes")
+      .select("*")
+      .eq("verification_status", "verified")
+      .or(discoveryFilter)
+      .order("created_at", { ascending: false })
+      .limit(limit);
+
+    console.log(`[COPILOT_RETRIEVAL] match_mode: "discovery" count: ${discoveryMatches?.length || 0}`);
+    return discoveryMatches || [];
+  }
+
+  console.log(`[COPILOT_RETRIEVAL] match_mode: "NO_SCHEME_MATCH"`);
+  return [];
 }
 
 export async function fetchOfficialSchemeDetail(url: string) {
@@ -56,18 +146,13 @@ export async function fetchOfficialSchemeDetail(url: string) {
     if (!response.ok) return null;
 
     const html = await response.text();
-    
-    // Basic extraction: we want to avoid complex parsing that might break or be slow
-    // Just grab common metadata or structural text if possible
-    // For now, let's just return a snippet of the page text to ground the AI
-    // We remove scripts, styles, and tags
     const text = html
       .replace(/<script\b[^>]*>([\s\S]*?)<\/script>/gmi, "")
       .replace(/<style\b[^>]*>([\s\S]*?)<\/style>/gmi, "")
       .replace(/<[^>]+>/g, " ")
       .replace(/\s+/g, " ")
       .trim()
-      .substring(0, 3000); // Limit context size
+      .substring(0, 3000);
 
     return text;
   } catch (e) {
