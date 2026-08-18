@@ -180,12 +180,13 @@ export const sendCopilotMessage = createServerFn({ method: "POST" })
         CONTEXT:
         ${combinedContext}
       `;
-
+      const { data: history } = await supabase
         .from("messages")
         .select("role, content")
         .eq("conversation_id", currentConversationId)
         .order("created_at", { ascending: false })
         .limit(10);
+
 
       
       const messages = [
@@ -198,6 +199,7 @@ export const sendCopilotMessage = createServerFn({ method: "POST" })
         // AI Request with hard timeout
         const aiPromise = ai.chat.completions.create({
           model: "gpt-4o",
+
 
           messages: messages as any,
           temperature: 0.1,
@@ -241,6 +243,7 @@ export const sendCopilotMessage = createServerFn({ method: "POST" })
           .from("conversations")
           .update({ updated_at: new Date().toISOString() })
           .eq("id", currentConversationId);
+
 
 
         log("COPILOT_RESPONSE_READY");
