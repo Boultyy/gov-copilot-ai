@@ -4,21 +4,19 @@ import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 
 export { startNewConversation, getConversations, getConversationMessages } from "./copilot.functions.original";
 
-
 export const sendCopilotMessage = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .validator((data: { conversationId: string; content: string }) =>
+  .validator((data: { conversationId?: string; content: string }) =>
     z.object({
-      conversationId: z.string().uuid(),
+      conversationId: z.string().uuid().optional(),
       content: z.string().min(1)
     }).parse(data)
   )
   .handler(async ({ data, context }) => {
     const { supabase, userId } = context;
-    const { conversationId, content } = data;
+    const { content } = data;
+    let currentConversationId = data.conversationId;
     const startTime = Date.now();
-    let currentConversationId = conversationId;
-
 
     const log = (stage: string, extra = {}) => {
       const elapsed = Date.now() - startTime;
@@ -49,7 +47,6 @@ export const sendCopilotMessage = createServerFn({ method: "POST" })
         log("AUTO_CREATE_CONVERSATION_SUCCESS", { id: currentConversationId });
       }
 
-
       // 1. Save user message
       const { error: userMsgError } = await supabase
         .from("messages")
@@ -58,7 +55,6 @@ export const sendCopilotMessage = createServerFn({ method: "POST" })
           role: "user",
           content: content
         });
-
 
       if (userMsgError) {
         log("COPILOT_FATAL_ERROR", { error: "Failed to save user message", details: userMsgError });
@@ -69,7 +65,6 @@ export const sendCopilotMessage = createServerFn({ method: "POST" })
       log("SCHEME_SEARCH_START");
       const { searchSchemes, fetchOfficialSchemeDetail } = await import("./schemes.server");
       
-      // Add timeout to database search
       const schemesPromise = searchSchemes(content);
       const schemesTimeoutPromise = new Promise((_, reject) => 
         setTimeout(() => reject(new Error("SCHEME_SEARCH_TIMEOUT")), 5000)
@@ -95,7 +90,6 @@ export const sendCopilotMessage = createServerFn({ method: "POST" })
         if (needsDeepInfo && topScheme.source_url) {
           log("SOURCE_FETCH_START", { url: topScheme.source_url });
           try {
-            // fetchOfficialSchemeDetail already has a 5s timeout inside it
             const officialText = await fetchOfficialSchemeDetail(topScheme.source_url);
             if (officialText) {
               log("SOURCE_FETCH_SUCCESS", { textLen: officialText.length });
@@ -180,14 +174,13 @@ export const sendCopilotMessage = createServerFn({ method: "POST" })
         CONTEXT:
         ${combinedContext}
       `;
+
       const { data: history } = await supabase
         .from("messages")
         .select("role, content")
         .eq("conversation_id", currentConversationId)
         .order("created_at", { ascending: false })
         .limit(10);
-
-
       
       const messages = [
         { role: "system", content: systemPrompt },
@@ -196,11 +189,8 @@ export const sendCopilotMessage = createServerFn({ method: "POST" })
       ];
 
       try {
-        // AI Request with hard timeout
         const aiPromise = ai.chat.completions.create({
           model: "gpt-4o",
-
-
           messages: messages as any,
           temperature: 0.1,
         });
@@ -214,7 +204,6 @@ export const sendCopilotMessage = createServerFn({ method: "POST" })
 
         const aiContent = response.choices[0].message.content || "I apologize, but I am unable to process your request at the moment.";
 
-        // 7. Citations
         const citations = [
           ...(schemes?.map(s => ({ type: 'govt', name: s.name, url: s.source_url })) || []),
           ...(docChunks?.map(c => ({ 
@@ -225,7 +214,6 @@ export const sendCopilotMessage = createServerFn({ method: "POST" })
           })) || [])
         ];
 
-        // 8. Save AI response
         const { data: aiMsg, error: aiMsgError } = await supabase
           .from("messages")
           .insert({
@@ -244,14 +232,11 @@ export const sendCopilotMessage = createServerFn({ method: "POST" })
           .update({ updated_at: new Date().toISOString() })
           .eq("id", currentConversationId);
 
-
-
         log("COPILOT_RESPONSE_READY");
         return aiMsg;
       } catch (err: any) {
         log("AI_REQUEST_FAILED", { error: err.message, status: err.status });
         
-        // Handle Fallback if AI fails but scheme was found
         if (schemes && schemes.length > 0) {
           const topScheme = schemes[0];
           const fallbackContent = `${topScheme.name} is available in the GovCopilot government-scheme database. I can retrieve its official scheme record, but the AI explanation service is temporarily unavailable. 
@@ -277,7 +262,6 @@ You can open the official source below for detailed information.`;
             })
             .select()
             .single();
-
             
           return fallbackMsg;
         }
@@ -286,13 +270,9 @@ You can open the official source below for detailed information.`;
       }
     } catch (err: any) {
       log("COPILOT_FATAL_ERROR", { error: err.message });
-      
-      // Return a structured error that the frontend can handle without hanging
-      // Since this is a server function, throwing will be caught by TanStack Start
       if (err.message === "AI_REQUEST_TIMEOUT" || err.message === "AI_UNAVAILABLE" || err.status === 404 || err.message?.includes("404")) {
          throw new Error("Citizen Copilot is temporarily unavailable due to a service configuration issue. Please try again later.");
       }
-      
       throw new Error(`Citizen Copilot encountered an unexpected error: ${err.message}`);
     }
   });
