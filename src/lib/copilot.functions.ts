@@ -17,6 +17,8 @@ export const sendCopilotMessage = createServerFn({ method: "POST" })
     const { supabase, userId } = context;
     const { conversationId, content } = data;
     const startTime = Date.now();
+    let currentConversationId = conversationId;
+
 
     const log = (stage: string, extra = {}) => {
       const elapsed = Date.now() - startTime;
@@ -24,16 +26,39 @@ export const sendCopilotMessage = createServerFn({ method: "POST" })
     };
 
     try {
-      log("COPILOT_START", { conversationId, contentLen: content.length });
+      log("COPILOT_START", { conversationId: currentConversationId, contentLen: content.length });
+
+      // 0. Auto-create conversation if missing
+      if (!currentConversationId) {
+        log("AUTO_CREATE_CONVERSATION_START");
+        const { data: newConv, error: convError } = await supabase
+          .from("conversations")
+          .insert({
+            user_id: userId,
+            title: content.slice(0, 50),
+            type: "copilot"
+          })
+          .select()
+          .single();
+
+        if (convError || !newConv) {
+          log("COPILOT_FATAL_ERROR", { error: "Failed to auto-create conversation", details: convError });
+          throw new Error("Failed to create conversation session");
+        }
+        currentConversationId = newConv.id;
+        log("AUTO_CREATE_CONVERSATION_SUCCESS", { id: currentConversationId });
+      }
+
 
       // 1. Save user message
       const { error: userMsgError } = await supabase
         .from("messages")
         .insert({
-          conversation_id: conversationId,
+          conversation_id: currentConversationId,
           role: "user",
           content: content
         });
+
 
       if (userMsgError) {
         log("COPILOT_FATAL_ERROR", { error: "Failed to save user message", details: userMsgError });
@@ -156,12 +181,12 @@ export const sendCopilotMessage = createServerFn({ method: "POST" })
         ${combinedContext}
       `;
 
-      const { data: history } = await supabase
         .from("messages")
         .select("role, content")
-        .eq("conversation_id", conversationId)
+        .eq("conversation_id", currentConversationId)
         .order("created_at", { ascending: false })
         .limit(10);
+
       
       const messages = [
         { role: "system", content: systemPrompt },
@@ -173,6 +198,7 @@ export const sendCopilotMessage = createServerFn({ method: "POST" })
         // AI Request with hard timeout
         const aiPromise = ai.chat.completions.create({
           model: "gpt-4o",
+
           messages: messages as any,
           temperature: 0.1,
         });
@@ -201,7 +227,7 @@ export const sendCopilotMessage = createServerFn({ method: "POST" })
         const { data: aiMsg, error: aiMsgError } = await supabase
           .from("messages")
           .insert({
-            conversation_id: conversationId,
+            conversation_id: currentConversationId,
             role: "assistant",
             content: aiContent,
             metadata: { sources: citations }
@@ -214,7 +240,8 @@ export const sendCopilotMessage = createServerFn({ method: "POST" })
         await supabase
           .from("conversations")
           .update({ updated_at: new Date().toISOString() })
-          .eq("id", conversationId);
+          .eq("id", currentConversationId);
+
 
         log("COPILOT_RESPONSE_READY");
         return aiMsg;
@@ -236,7 +263,7 @@ You can open the official source below for detailed information.`;
           const { data: fallbackMsg } = await supabase
             .from("messages")
             .insert({
-              conversation_id: conversationId,
+              conversation_id: currentConversationId,
               role: "assistant",
               content: fallbackContent,
               metadata: { 
@@ -247,6 +274,7 @@ You can open the official source below for detailed information.`;
             })
             .select()
             .single();
+
             
           return fallbackMsg;
         }
