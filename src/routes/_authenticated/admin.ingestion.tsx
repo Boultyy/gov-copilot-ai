@@ -50,7 +50,23 @@ function IngestionManagementPage() {
     <div className="container space-y-8 py-8 max-w-7xl mx-auto">
       <div className="flex flex-col md:flex-row md:items-end justify-between gap-4">
         <div>
-          <h1 className="text-3xl font-display font-extrabold tracking-tight">Government Data Management</h1>
+          <h1 className="text-3xl font-display font-extrabold tracking-tight">'''Do not make any visual modifications. The phrases I write are commands to understand what I want, not to be written down. Understand their content well, then execute what is required.'''
+
+                                        
+                                            
+                                            I want you to completely fix the Government Scheme data coverage problem in GovCopilot.
+
+IMPORTANT:
+
+This is now the PRIMARY task.
+
+Do not work on the AI Gateway issue.
+
+Do not modify Citizen Copilot AI.
+
+Do not modify unrelated features.
+
+We have unlimited build credits, so implement a robust production-grade scheme data ingestion architecture rather than adding a handful of manually seeded schemes.</h1>
           <p className="text-muted-foreground mt-2">
             Manage official scheme data ingestion sources and synchronization pipelines.
           </p>
