@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Loader2, AlertCircle, CheckCircle2 } from 'lucide-react'
 
-export const Route = createFileRoute('/_authenticated/admin/ai-diagnostic')({
+export const Route = createFileRoute('/_authenticated/admin-ai-diagnostic')({
   component: AiDiagnosticPage
 })
 
