@@ -8,11 +8,10 @@ import React from 'react'
 
 const Auth = React.lazy(() => import('@supabase/auth-ui-react').then(m => ({ default: m.Auth })));
 let ThemeSupa: any = null;
-if (typeof window !== 'undefined') {
-  import('@supabase/auth-ui-shared').then(m => {
-    ThemeSupa = m.ThemeSupa;
-  });
-}
+// Lazy load theme shared
+const ThemeSupaPromise = typeof window !== 'undefined' 
+  ? import('@supabase/auth-ui-shared').then(m => m.ThemeSupa)
+  : Promise.resolve(null);
 
 export const Route = createFileRoute('/auth')({
   component: AuthPage,
@@ -21,8 +20,13 @@ export const Route = createFileRoute('/auth')({
 function AuthPage() {
   const navigate = useNavigate()
   const search = Route.useSearch() as { redirect?: string }
+  const [themeSupa, setThemeSupa] = useState<any>(null)
+  const [isMounted, setIsMounted] = useState(false)
 
   useEffect(() => {
+    setIsMounted(true)
+    ThemeSupaPromise.then(setThemeSupa)
+
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
       if ((event === 'SIGNED_IN' || event === 'INITIAL_SESSION') && session) {
         navigate({ to: search.redirect || '/' })
@@ -43,12 +47,12 @@ function AuthPage() {
           <p className="text-sm text-muted-foreground mt-2">Sign in to access your secure government assistant</p>
         </CardHeader>
         <CardContent>
-          {typeof window !== 'undefined' ? (
+          {isMounted ? (
             <React.Suspense fallback={<div className="flex justify-center py-8"><Loader2 className="h-8 w-8 animate-spin text-primary" /></div>}>
               <Auth
                 supabaseClient={supabase}
                 appearance={{
-                  theme: ThemeSupa as any,
+                  theme: themeSupa,
                   variables: {
                     default: {
                       colors: {
