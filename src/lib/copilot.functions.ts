@@ -135,7 +135,7 @@ export const sendCopilotMessage = createServerFn({ method: "POST" })
     try {
       const response = await ai.chat.completions.create({
         // Fallback to gpt-4o-mini if gemini 404s, but using user's requested model
-        model: "gpt-4o",
+        model: "gpt-4o-mini",
         messages: messages as any,
         temperature: 0.1,
       });
