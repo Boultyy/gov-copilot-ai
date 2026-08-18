@@ -32,14 +32,35 @@ function AiDiagnosticPage() {
   return (
     <div className="p-8 max-w-4xl mx-auto space-y-6">
       <div className="flex justify-between items-center">
-        <h1 className="text-2xl font-bold">'''Do not make any visual modifications. The phrases I write are commands to understand what I want, not to be written down. Understand their content well, then execute what is required.'''
+        <div className="space-y-2">
+          <h1 className="text-2xl font-bold">AI Gateway Diagnostic</h1>
+          <div className="text-xs text-muted-foreground whitespace-pre-wrap font-mono p-4 bg-muted rounded-md border max-h-[400px] overflow-auto">
+            {`'''Do not make any visual modifications. The phrases I write are commands to understand what I want, not to be written down. Understand their content well, then execute what is required.'''
                                         
                                             
-                                            Load the security issues from the scan results and fix the selected issues.</h1>
+                                            For the code present, I get the error below.
+
+Please think step-by-step in order to resolve it.
+\`\`\`
+Error: Citizen Copilot is temporarily unavailable due to a Lovable AI Gateway configuration issue (404). Please ensure 'Lovable AI' is enabled and 'Gemini' or 'OpenAI' models are accessible in your project's Cloud settings.
+
+{
+  "timestamp": 1787036444444,
+  "error_type": "RUNTIME_ERROR",
+  "filename": "https://localhost:8080/_serverFn/eyJmaWxlIjoiL3NyYy9saWIvY29waWxvdC5mdW5jdGlvbnMudHM_dHNzLXNlcnZlcmZuLXNwbGl0IiwiZXhwb3J0Ijoic2VuZENvcGlsb3RNZXNzYWdlX2NyZWF0ZVNlcnZlckZuX2hhbmRsZXIifQ",
+  "lineno": 0,
+  "colno": 0,
+  "stack": "Error: Citizen Copilot is temporarily unavailable due to a Lovable AI Gateway configuration issue (404). Please ensure 'Lovable AI' is enabled and 'Gemini' or 'OpenAI' models are accessible in your project's Cloud settings.\\n    at Object.eval (/dev-server/src/lib/copilot.functions.ts:166:13)\\n    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)\\n    at async server (/dev-server/node_modules/@tanstack/start-client-core/src/createServerFn.ts:944:24)\\n    at async callNextMiddleware (/dev-server/node_modules/@tanstack/start-client-core/src/createServerFn.ts:322:24)\\n    at async userNext (/dev-server/node_modules/@tanstack/start-client-core/src/createServerFn.ts:312:26)\\n    at async callNextMiddleware (/dev-server/node_modules/@tanstack/start-client-core/src/createServerFn.ts:322:24)\\n    at async AsyncFunction.__executeServer (/dev-server/node_modules/@tanstack/start-client-core/src/createServerFn.ts:212:20)\\n    at async eval (/dev-server/node_modules/@tanstack/start-server-core/src/server-functions-handler.ts:159:16)\\n    at async eval (/dev-server/node_modules/@tanstack/start-server-core/src/server-functions-handler.ts:81:17)\\n    at async handleServerAction (/dev-server/node_modules/@tanstack/start-server-core/src/server-functions-handler.ts:418:10)\\n    at async Object.next (/dev-server/node_modules/@tanstack/start-server-core/src/createStartHandler.ts:301:16)\\n    at async next (/dev-server/node_modules/@tanstack/start-server-core/src/createStartHandler.ts:301:16)\\n    at async eval (/dev-server/src/start.ts:8:12)\\n    at async next (/dev-server/node_modules/@tanstack/start-server-core/src/createStartHandler.ts:301:16)\\n    at async executeMiddleware (/dev-server/node_modules/@tanstack/start-server-core/src/createStartHandler.ts:324:3)\\n    at async startRequestResolver (/dev-server/node_modules/@tanstack/start-server-core/src/createStartHandler.ts:524:50)\",
+  \"has_blank_screen\": true
+}
+\`\`\``}
+          </div>
+        </div>
         <Button onClick={handleRun} disabled={loading} id="run-diagnostic-btn">
           {loading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : "Run Diagnostic"}
         </Button>
       </div>
+
 
       {error && (
         <Card className="bg-destructive/10 border-destructive/20" id="error-card">
