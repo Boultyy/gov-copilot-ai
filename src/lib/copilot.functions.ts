@@ -2,6 +2,9 @@ import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 
+export { startNewConversation, getConversations, getConversationMessages } from "./copilot.functions.original";
+
+
 export const sendCopilotMessage = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .validator((data: { conversationId: string; content: string }) =>
