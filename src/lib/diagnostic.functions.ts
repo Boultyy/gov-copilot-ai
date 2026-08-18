@@ -18,7 +18,8 @@ export const runAiDiagnostic = createServerFn({ method: "POST" })
     const modelsToTest = [
       "gpt-4o",
       "gpt-4o-mini",
-      "anthropic/claude-3-5-sonnet",
+      "claude-3-5-sonnet-20241022",
+      "gemini-1.5-pro",
       "openai/gpt-4o"
     ];
 
