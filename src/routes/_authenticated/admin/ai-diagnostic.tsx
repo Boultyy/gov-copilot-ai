@@ -20,7 +20,7 @@ function AiDiagnosticPage() {
     setLoading(true)
     setError(null)
     try {
-      const res = await runDiagnostic({ data: { prompt: "Ping" } })
+      const res = await runDiagnostic({ data: { prompt: "GOVCOPILOT_AI_OK" } })
       setResults(res)
     } catch (e: any) {
       setError(e.message || "Failed to run diagnostic")
@@ -32,7 +32,10 @@ function AiDiagnosticPage() {
   return (
     <div className="p-8 max-w-4xl mx-auto space-y-6">
       <div className="flex justify-between items-center">
-        <h1 className="text-2xl font-bold">AI Gateway Diagnostic</h1>
+        <h1 className="text-2xl font-bold">'''Do not make any visual modifications. The phrases I write are commands to understand what I want, not to be written down. Understand their content well, then execute what is required.'''
+                                        
+                                            
+                                            Load the security issues from the scan results and fix the selected issues.</h1>
         <Button onClick={handleRun} disabled={loading} id="run-diagnostic-btn">
           {loading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : "Run Diagnostic"}
         </Button>

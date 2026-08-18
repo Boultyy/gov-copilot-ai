@@ -28,7 +28,7 @@ export const runAiDiagnostic = createServerFn({ method: "POST" })
 
       const response = await ai.chat.completions.create({
         model: requestedModel,
-        messages: [{ role: "user", content: data.prompt || "Ping" }],
+        messages: [{ role: "user", content: data.prompt || "GOVCOPILOT_AI_OK" }],
         max_tokens: 5,
       });
 
