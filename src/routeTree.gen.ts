@@ -22,7 +22,6 @@ import { Route as AuthenticatedDraftsRouteImport } from './routes/_authenticated
 import { Route as AuthenticatedDocumentsRouteImport } from './routes/_authenticated/documents'
 import { Route as AuthenticatedCopilotRouteImport } from './routes/_authenticated/copilot'
 import { Route as AuthenticatedApplicationsRouteImport } from './routes/_authenticated/applications'
-import { Route as AuthenticatedAdminAiDiagnosticRouteImport } from './routes/_authenticated/admin-ai-diagnostic'
 import { Route as AuthenticatedEligibilityIndexRouteImport } from './routes/_authenticated/eligibility/index'
 import { Route as AuthenticatedAdminVerificationRouteImport } from './routes/_authenticated/admin/verification'
 import { Route as AuthenticatedAdminProvenanceRouteImport } from './routes/_authenticated/admin/provenance'
@@ -95,12 +94,6 @@ const AuthenticatedApplicationsRoute =
     path: '/applications',
     getParentRoute: () => AuthenticatedRoute,
   } as any)
-const AuthenticatedAdminAiDiagnosticRoute =
-  AuthenticatedAdminAiDiagnosticRouteImport.update({
-    id: '/admin-ai-diagnostic',
-    path: '/admin-ai-diagnostic',
-    getParentRoute: () => AuthenticatedRoute,
-  } as any)
 const AuthenticatedEligibilityIndexRoute =
   AuthenticatedEligibilityIndexRouteImport.update({
     id: '/',
@@ -136,7 +129,6 @@ export interface FileRoutesByFullPath {
   '/': typeof AuthenticatedIndexRoute
   '/auth': typeof AuthRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
-  '/admin-ai-diagnostic': typeof AuthenticatedAdminAiDiagnosticRoute
   '/applications': typeof AuthenticatedApplicationsRoute
   '/copilot': typeof AuthenticatedCopilotRoute
   '/documents': typeof AuthenticatedDocumentsRoute
@@ -155,7 +147,6 @@ export interface FileRoutesByFullPath {
 export interface FileRoutesByTo {
   '/auth': typeof AuthRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
-  '/admin-ai-diagnostic': typeof AuthenticatedAdminAiDiagnosticRoute
   '/applications': typeof AuthenticatedApplicationsRoute
   '/copilot': typeof AuthenticatedCopilotRoute
   '/documents': typeof AuthenticatedDocumentsRoute
@@ -176,7 +167,6 @@ export interface FileRoutesById {
   '/_authenticated': typeof AuthenticatedRouteWithChildren
   '/auth': typeof AuthRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
-  '/_authenticated/admin-ai-diagnostic': typeof AuthenticatedAdminAiDiagnosticRoute
   '/_authenticated/applications': typeof AuthenticatedApplicationsRoute
   '/_authenticated/copilot': typeof AuthenticatedCopilotRoute
   '/_authenticated/documents': typeof AuthenticatedDocumentsRoute
@@ -199,7 +189,6 @@ export interface FileRouteTypes {
     | '/'
     | '/auth'
     | '/sitemap.xml'
-    | '/admin-ai-diagnostic'
     | '/applications'
     | '/copilot'
     | '/documents'
@@ -218,7 +207,6 @@ export interface FileRouteTypes {
   to:
     | '/auth'
     | '/sitemap.xml'
-    | '/admin-ai-diagnostic'
     | '/applications'
     | '/copilot'
     | '/documents'
@@ -238,7 +226,6 @@ export interface FileRouteTypes {
     | '/_authenticated'
     | '/auth'
     | '/sitemap.xml'
-    | '/_authenticated/admin-ai-diagnostic'
     | '/_authenticated/applications'
     | '/_authenticated/copilot'
     | '/_authenticated/documents'
@@ -355,13 +342,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedApplicationsRouteImport
       parentRoute: typeof AuthenticatedRoute
     }
-    '/_authenticated/admin-ai-diagnostic': {
-      id: '/_authenticated/admin-ai-diagnostic'
-      path: '/admin-ai-diagnostic'
-      fullPath: '/admin-ai-diagnostic'
-      preLoaderRoute: typeof AuthenticatedAdminAiDiagnosticRouteImport
-      parentRoute: typeof AuthenticatedRoute
-    }
     '/_authenticated/eligibility/': {
       id: '/_authenticated/eligibility/'
       path: '/'
@@ -415,7 +395,6 @@ const AuthenticatedEligibilityRouteWithChildren =
   )
 
 interface AuthenticatedRouteChildren {
-  AuthenticatedAdminAiDiagnosticRoute: typeof AuthenticatedAdminAiDiagnosticRoute
   AuthenticatedApplicationsRoute: typeof AuthenticatedApplicationsRoute
   AuthenticatedCopilotRoute: typeof AuthenticatedCopilotRoute
   AuthenticatedDocumentsRoute: typeof AuthenticatedDocumentsRoute
@@ -433,7 +412,6 @@ interface AuthenticatedRouteChildren {
 }
 
 const AuthenticatedRouteChildren: AuthenticatedRouteChildren = {
-  AuthenticatedAdminAiDiagnosticRoute: AuthenticatedAdminAiDiagnosticRoute,
   AuthenticatedApplicationsRoute: AuthenticatedApplicationsRoute,
   AuthenticatedCopilotRoute: AuthenticatedCopilotRoute,
   AuthenticatedDocumentsRoute: AuthenticatedDocumentsRoute,
