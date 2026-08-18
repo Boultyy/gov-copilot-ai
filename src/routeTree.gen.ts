@@ -27,6 +27,7 @@ import { Route as AuthenticatedEligibilityIndexRouteImport } from './routes/_aut
 import { Route as AuthenticatedAdminVerificationRouteImport } from './routes/_authenticated/admin/verification'
 import { Route as AuthenticatedAdminProvenanceRouteImport } from './routes/_authenticated/admin/provenance'
 import { Route as AuthenticatedAdminIngestionRouteImport } from './routes/_authenticated/admin.ingestion'
+import { Route as AuthenticatedAdminAiDiagnosticRouteImport } from './routes/_authenticated/admin/ai-diagnostic'
 
 const SitemapDotxmlRoute = SitemapDotxmlRouteImport.update({
   id: '/sitemap.xml',
@@ -124,6 +125,12 @@ const AuthenticatedAdminIngestionRoute =
     path: '/admin/ingestion',
     getParentRoute: () => AuthenticatedRoute,
   } as any)
+const AuthenticatedAdminAiDiagnosticRoute =
+  AuthenticatedAdminAiDiagnosticRouteImport.update({
+    id: '/admin/ai-diagnostic',
+    path: '/admin/ai-diagnostic',
+    getParentRoute: () => AuthenticatedRoute,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof AuthenticatedIndexRoute
@@ -139,6 +146,7 @@ export interface FileRoutesByFullPath {
   '/profile': typeof AuthenticatedProfileRoute
   '/schemes': typeof AuthenticatedSchemesRoute
   '/workflow': typeof AuthenticatedWorkflowRoute
+  '/admin/ai-diagnostic': typeof AuthenticatedAdminAiDiagnosticRoute
   '/admin/ingestion': typeof AuthenticatedAdminIngestionRoute
   '/admin/provenance': typeof AuthenticatedAdminProvenanceRoute
   '/admin/verification': typeof AuthenticatedAdminVerificationRoute
@@ -157,6 +165,7 @@ export interface FileRoutesByTo {
   '/schemes': typeof AuthenticatedSchemesRoute
   '/workflow': typeof AuthenticatedWorkflowRoute
   '/': typeof AuthenticatedIndexRoute
+  '/admin/ai-diagnostic': typeof AuthenticatedAdminAiDiagnosticRoute
   '/admin/ingestion': typeof AuthenticatedAdminIngestionRoute
   '/admin/provenance': typeof AuthenticatedAdminProvenanceRoute
   '/admin/verification': typeof AuthenticatedAdminVerificationRoute
@@ -178,6 +187,7 @@ export interface FileRoutesById {
   '/_authenticated/schemes': typeof AuthenticatedSchemesRoute
   '/_authenticated/workflow': typeof AuthenticatedWorkflowRoute
   '/_authenticated/': typeof AuthenticatedIndexRoute
+  '/_authenticated/admin/ai-diagnostic': typeof AuthenticatedAdminAiDiagnosticRoute
   '/_authenticated/admin/ingestion': typeof AuthenticatedAdminIngestionRoute
   '/_authenticated/admin/provenance': typeof AuthenticatedAdminProvenanceRoute
   '/_authenticated/admin/verification': typeof AuthenticatedAdminVerificationRoute
@@ -199,6 +209,7 @@ export interface FileRouteTypes {
     | '/profile'
     | '/schemes'
     | '/workflow'
+    | '/admin/ai-diagnostic'
     | '/admin/ingestion'
     | '/admin/provenance'
     | '/admin/verification'
@@ -217,6 +228,7 @@ export interface FileRouteTypes {
     | '/schemes'
     | '/workflow'
     | '/'
+    | '/admin/ai-diagnostic'
     | '/admin/ingestion'
     | '/admin/provenance'
     | '/admin/verification'
@@ -237,6 +249,7 @@ export interface FileRouteTypes {
     | '/_authenticated/schemes'
     | '/_authenticated/workflow'
     | '/_authenticated/'
+    | '/_authenticated/admin/ai-diagnostic'
     | '/_authenticated/admin/ingestion'
     | '/_authenticated/admin/provenance'
     | '/_authenticated/admin/verification'
@@ -377,6 +390,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAdminIngestionRouteImport
       parentRoute: typeof AuthenticatedRoute
     }
+    '/_authenticated/admin/ai-diagnostic': {
+      id: '/_authenticated/admin/ai-diagnostic'
+      path: '/admin/ai-diagnostic'
+      fullPath: '/admin/ai-diagnostic'
+      preLoaderRoute: typeof AuthenticatedAdminAiDiagnosticRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
   }
 }
 
@@ -406,6 +426,7 @@ interface AuthenticatedRouteChildren {
   AuthenticatedSchemesRoute: typeof AuthenticatedSchemesRoute
   AuthenticatedWorkflowRoute: typeof AuthenticatedWorkflowRoute
   AuthenticatedIndexRoute: typeof AuthenticatedIndexRoute
+  AuthenticatedAdminAiDiagnosticRoute: typeof AuthenticatedAdminAiDiagnosticRoute
   AuthenticatedAdminIngestionRoute: typeof AuthenticatedAdminIngestionRoute
   AuthenticatedAdminProvenanceRoute: typeof AuthenticatedAdminProvenanceRoute
   AuthenticatedAdminVerificationRoute: typeof AuthenticatedAdminVerificationRoute
@@ -423,6 +444,7 @@ const AuthenticatedRouteChildren: AuthenticatedRouteChildren = {
   AuthenticatedSchemesRoute: AuthenticatedSchemesRoute,
   AuthenticatedWorkflowRoute: AuthenticatedWorkflowRoute,
   AuthenticatedIndexRoute: AuthenticatedIndexRoute,
+  AuthenticatedAdminAiDiagnosticRoute: AuthenticatedAdminAiDiagnosticRoute,
   AuthenticatedAdminIngestionRoute: AuthenticatedAdminIngestionRoute,
   AuthenticatedAdminProvenanceRoute: AuthenticatedAdminProvenanceRoute,
   AuthenticatedAdminVerificationRoute: AuthenticatedAdminVerificationRoute,
