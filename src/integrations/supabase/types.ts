@@ -1055,15 +1055,20 @@ export type Database = {
           description: string | null
           eligibility_rules: Json | null
           eligibility_summary: string | null
+          exclusions: string | null
           government_level: string | null
           id: string
           last_verified_at: string | null
+          launch_date: string | null
           ministry: string | null
           name: string
+          objective: string | null
           official_name: string | null
           official_source: string | null
           required_documents: Json | null
           short_name: string | null
+          source_content: string | null
+          source_last_checked: string | null
           source_last_updated_at: string | null
           source_name: string | null
           source_record_id: string | null
@@ -1089,15 +1094,20 @@ export type Database = {
           description?: string | null
           eligibility_rules?: Json | null
           eligibility_summary?: string | null
+          exclusions?: string | null
           government_level?: string | null
           id?: string
           last_verified_at?: string | null
+          launch_date?: string | null
           ministry?: string | null
           name: string
+          objective?: string | null
           official_name?: string | null
           official_source?: string | null
           required_documents?: Json | null
           short_name?: string | null
+          source_content?: string | null
+          source_last_checked?: string | null
           source_last_updated_at?: string | null
           source_name?: string | null
           source_record_id?: string | null
@@ -1123,15 +1133,20 @@ export type Database = {
           description?: string | null
           eligibility_rules?: Json | null
           eligibility_summary?: string | null
+          exclusions?: string | null
           government_level?: string | null
           id?: string
           last_verified_at?: string | null
+          launch_date?: string | null
           ministry?: string | null
           name?: string
+          objective?: string | null
           official_name?: string | null
           official_source?: string | null
           required_documents?: Json | null
           short_name?: string | null
+          source_content?: string | null
+          source_last_checked?: string | null
           source_last_updated_at?: string | null
           source_name?: string | null
           source_record_id?: string | null
