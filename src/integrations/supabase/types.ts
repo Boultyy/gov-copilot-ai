@@ -635,6 +635,41 @@ export type Database = {
         }
         Relationships: []
       }
+      scheme_category_mappings: {
+        Row: {
+          created_at: string
+          id: string
+          is_ambiguous: boolean | null
+          mapped_category: string
+          source_category: string
+          source_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          is_ambiguous?: boolean | null
+          mapped_category: string
+          source_category: string
+          source_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          is_ambiguous?: boolean | null
+          mapped_category?: string
+          source_category?: string
+          source_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "scheme_category_mappings_source_id_fkey"
+            columns: ["source_id"]
+            isOneToOne: false
+            referencedRelation: "scheme_sources"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       scheme_change_history: {
         Row: {
           detected_at: string | null
@@ -789,6 +824,179 @@ export type Database = {
             columns: ["source_id"]
             isOneToOne: false
             referencedRelation: "ingestion_sources"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      scheme_source_records: {
+        Row: {
+          content_hash: string | null
+          created_at: string
+          fetched_at: string
+          id: string
+          normalized_scheme_id: string | null
+          processing_error: string | null
+          processing_status: string | null
+          raw_payload: Json
+          source_id: string
+          source_record_id: string | null
+          source_updated_at: string | null
+        }
+        Insert: {
+          content_hash?: string | null
+          created_at?: string
+          fetched_at?: string
+          id?: string
+          normalized_scheme_id?: string | null
+          processing_error?: string | null
+          processing_status?: string | null
+          raw_payload: Json
+          source_id: string
+          source_record_id?: string | null
+          source_updated_at?: string | null
+        }
+        Update: {
+          content_hash?: string | null
+          created_at?: string
+          fetched_at?: string
+          id?: string
+          normalized_scheme_id?: string | null
+          processing_error?: string | null
+          processing_status?: string | null
+          raw_payload?: Json
+          source_id?: string
+          source_record_id?: string | null
+          source_updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "scheme_source_records_normalized_scheme_id_fkey"
+            columns: ["normalized_scheme_id"]
+            isOneToOne: false
+            referencedRelation: "schemes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "scheme_source_records_source_id_fkey"
+            columns: ["source_id"]
+            isOneToOne: false
+            referencedRelation: "scheme_sources"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      scheme_sources: {
+        Row: {
+          authentication_required: boolean | null
+          authorized: boolean | null
+          base_url: string | null
+          configured: boolean | null
+          created_at: string
+          dataset_id: string | null
+          enabled: boolean | null
+          endpoint: string | null
+          government_level: string | null
+          id: string
+          last_error: string | null
+          last_failure_at: string | null
+          last_success_at: string | null
+          last_sync_at: string | null
+          organization: string | null
+          source_name: string
+          source_type: Database["public"]["Enums"]["scheme_source_type"]
+          state_ut: string | null
+          updated_at: string
+        }
+        Insert: {
+          authentication_required?: boolean | null
+          authorized?: boolean | null
+          base_url?: string | null
+          configured?: boolean | null
+          created_at?: string
+          dataset_id?: string | null
+          enabled?: boolean | null
+          endpoint?: string | null
+          government_level?: string | null
+          id?: string
+          last_error?: string | null
+          last_failure_at?: string | null
+          last_success_at?: string | null
+          last_sync_at?: string | null
+          organization?: string | null
+          source_name: string
+          source_type: Database["public"]["Enums"]["scheme_source_type"]
+          state_ut?: string | null
+          updated_at?: string
+        }
+        Update: {
+          authentication_required?: boolean | null
+          authorized?: boolean | null
+          base_url?: string | null
+          configured?: boolean | null
+          created_at?: string
+          dataset_id?: string | null
+          enabled?: boolean | null
+          endpoint?: string | null
+          government_level?: string | null
+          id?: string
+          last_error?: string | null
+          last_failure_at?: string | null
+          last_success_at?: string | null
+          last_sync_at?: string | null
+          organization?: string | null
+          source_name?: string
+          source_type?: Database["public"]["Enums"]["scheme_source_type"]
+          state_ut?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      scheme_sync_logs: {
+        Row: {
+          error_message: string | null
+          finished_at: string | null
+          id: string
+          records_failed: number | null
+          records_fetched: number | null
+          records_inserted: number | null
+          records_skipped: number | null
+          records_updated: number | null
+          source_id: string
+          started_at: string
+          status: string
+        }
+        Insert: {
+          error_message?: string | null
+          finished_at?: string | null
+          id?: string
+          records_failed?: number | null
+          records_fetched?: number | null
+          records_inserted?: number | null
+          records_skipped?: number | null
+          records_updated?: number | null
+          source_id: string
+          started_at?: string
+          status: string
+        }
+        Update: {
+          error_message?: string | null
+          finished_at?: string | null
+          id?: string
+          records_failed?: number | null
+          records_fetched?: number | null
+          records_inserted?: number | null
+          records_skipped?: number | null
+          records_updated?: number | null
+          source_id?: string
+          started_at?: string
+          status?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "scheme_sync_logs_source_id_fkey"
+            columns: ["source_id"]
+            isOneToOne: false
+            referencedRelation: "scheme_sources"
             referencedColumns: ["id"]
           },
         ]
@@ -1136,6 +1344,13 @@ export type Database = {
         | "authorized_partner_feed"
         | "manual_verified_import"
       ingestion_sync_status: "success" | "failed" | "pending" | "processing"
+      scheme_source_type:
+        | "official_api"
+        | "official_dataset"
+        | "official_csv"
+        | "official_json"
+        | "official_feed"
+        | "manual_official_source"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -1273,6 +1488,14 @@ export const Constants = {
         "manual_verified_import",
       ],
       ingestion_sync_status: ["success", "failed", "pending", "processing"],
+      scheme_source_type: [
+        "official_api",
+        "official_dataset",
+        "official_csv",
+        "official_json",
+        "official_feed",
+        "manual_official_source",
+      ],
     },
   },
 } as const
