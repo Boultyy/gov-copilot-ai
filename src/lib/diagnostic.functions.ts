@@ -14,44 +14,55 @@ export const runAiDiagnostic = createServerFn({ method: "POST" })
     const projectID = process.env.LOVABLE_PROJECT_ID;
     const baseURL = "https://api.lovable.dev/v1/ai/openai";
 
-    const requestedModel = "google/gemini-3.6-flash";
+    // Test multiple models to find what's working
+    const modelsToTest = [
+      "google/gemini-2.0-flash-exp",
+      "google/gemini-2.0-flash",
+      "google/gemini-1.5-flash",
+      "openai/gpt-4o-mini",
+      "openai/gpt-4o"
+    ];
 
-    try {
-      const ai = new OpenAI({
-        apiKey: apiKey || "dummy-key",
-        baseURL,
-        defaultHeaders: {
-          "x-lovable-project-id": projectID || "",
-        },
-        dangerouslyAllowBrowser: false,
-      });
+    for (const requestedModel of modelsToTest) {
+      try {
+        const ai = new OpenAI({
+          apiKey: apiKey || "dummy-key",
+          baseURL,
+          defaultHeaders: {
+            "x-lovable-project-id": projectID || "",
+          },
+          dangerouslyAllowBrowser: false,
+        });
 
-      const response = await ai.chat.completions.create({
-        model: requestedModel,
-        messages: [{ role: "user", content: data.prompt || "GOVCOPILOT_AI_OK" }],
-        max_tokens: 5,
-      });
+        const response = await ai.chat.completions.create({
+          model: requestedModel,
+          messages: [{ role: "user", content: data.prompt || "GOVCOPILOT_AI_OK" }],
+          max_tokens: 5,
+        });
 
-      results.tests.push({
-        name: `Lovable AI Gateway`,
-        status: "SUCCESS",
-        model: response.model,
-        requestedModel: requestedModel,
-        details: "Built-in Lovable AI integration responded successfully."
-      });
-    } catch (err: any) {
-      results.tests.push({
-        name: `Lovable AI Gateway`,
-        status: "FAILED",
-        requestedModel: requestedModel,
-        error: { 
-          message: err.status === 404 
-            ? `404 Not Found: The Lovable AI Gateway returned a 404 for model '${requestedModel}'.` 
-            : err.message, 
-          status: err.status,
-          body: err.body
-        }
-      });
+        results.tests.push({
+          name: `Lovable AI Gateway (${requestedModel})`,
+          status: "SUCCESS",
+          model: response.model,
+          requestedModel: requestedModel,
+          details: "Built-in Lovable AI integration responded successfully."
+        });
+        
+        // If one works, we can stop or continue
+      } catch (err: any) {
+        results.tests.push({
+          name: `Lovable AI Gateway (${requestedModel})`,
+          status: "FAILED",
+          requestedModel: requestedModel,
+          error: { 
+            message: err.status === 404 
+              ? `404 Not Found: The Lovable AI Gateway returned a 404 for model '${requestedModel}'.` 
+              : err.message, 
+            status: err.status,
+            body: err.body
+          }
+        });
+      }
     }
 
     return results;
