@@ -16,11 +16,10 @@ export const runAiDiagnostic = createServerFn({ method: "POST" })
 
     // Test multiple models to find what's working
     const modelsToTest = [
-      "google/gemini-2.0-flash-exp",
-      "google/gemini-2.0-flash",
-      "google/gemini-1.5-flash",
+      "openai/gpt-4o",
       "openai/gpt-4o-mini",
-      "openai/gpt-4o"
+      "google/gemini-2.0-flash",
+      "google/gemini-1.5-flash"
     ];
 
     for (const requestedModel of modelsToTest) {
