@@ -20,7 +20,7 @@ function AiDiagnosticPage() {
     setLoading(true)
     setError(null)
     try {
-      const res = await runDiagnostic({ data: { prompt: "Ping" } })
+      const res = await runDiagnostic({ data: { prompt: "GOVCOPILOT_AI_OK" } })
       setResults(res)
     } catch (e: any) {
       setError(e.message || "Failed to run diagnostic")
