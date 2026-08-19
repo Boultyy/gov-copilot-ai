@@ -76,20 +76,28 @@ export async function searchSchemes(query: string, limit: number = 5) {
     return strictMatches.slice(0, limit);
   }
 
-  // 2. Alias Match
+  // 2. Alias Match — search across every alias variant, then rank against the
+  // longest alias phrase actually present in the user's query.
   for (const [canonical, aliases] of Object.entries(SCHEME_ALIASES)) {
-    const isMatch = normalizedQuery.includes(canonical) || aliases.some(a => normalizedQuery.includes(a));
-    if (isMatch) {
+    const variants = [canonical, ...aliases];
+    const present = variants
+      .filter(v => normalizedQuery.includes(normalizeText(v)))
+      .sort((a, b) => b.length - a.length);
+
+    if (present.length > 0) {
       console.log(`[COPILOT_RETRIEVAL] attempting alias match for: ${canonical}`);
+      const filter = variants
+        .map(v => `name.ilike.%${v}%,official_name.ilike.%${v}%`)
+        .join(",");
       const { data: aliasMatches } = await supabaseAdmin
         .from("schemes")
         .select("*")
         .eq("verification_status", "verified")
-        .or(`name.ilike.%${canonical}%,official_name.ilike.%${canonical}%`)
-        .limit(20);
+        .or(filter)
+        .limit(30);
 
       if (aliasMatches && aliasMatches.length > 0) {
-        const ranked = rankByNameCloseness(aliasMatches, canonical);
+        const ranked = rankByNameCloseness(aliasMatches, present[0]);
         console.log(`[COPILOT_RETRIEVAL] match_mode: "alias_match" canonical: ${canonical} top: "${ranked[0].name}"`);
         return ranked.slice(0, limit);
       }
