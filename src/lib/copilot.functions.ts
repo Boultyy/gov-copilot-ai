@@ -6,7 +6,7 @@ export { startNewConversation, getConversations, getConversationMessages } from 
 
 export const sendCopilotMessage = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .validator((data: { conversationId?: string; content: string }) =>
+  .inputValidator((data: { conversationId?: string; content: string }) =>
     z.object({
       conversationId: z.string().uuid().optional(),
       content: z.string().min(1)
