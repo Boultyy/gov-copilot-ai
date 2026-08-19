@@ -1,3 +1,5 @@
 import { searchSchemes } from "@/lib/schemes.server";
-const r = await searchSchemes("tell me about pradhan mantri awas yojana", 10);
-console.log(r.map((x:any)=>x.name));
+for (const q of ["What schemes are available for farmers?","schemes for students","Tell me about PM-KISAN."]) {
+  const r = await searchSchemes(q, 5);
+  console.log(q, "->", r.map((x:any)=>x.name));
+}
