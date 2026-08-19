@@ -132,11 +132,12 @@ function Copilot() {
     }
   }, [messages]); // Remove sendMessage.isPending to avoid confusion with thinking state
 
-  const handleSend = async () => {
-    if (!input.trim() || sendMessage.isPending) return;
+  const handleSend = async (overrideInput?: string) => {
+    const textToSend = overrideInput || input;
+    if (!textToSend.trim() || sendMessage.isPending) return;
     
     let currentId = activeId;
-    const userMsg = input;
+    const userMsg = textToSend;
     setInput("");
 
     try {
@@ -144,8 +145,6 @@ function Copilot() {
         const newConv = (await startConv.mutateAsync(userMsg.slice(0, 30))) as any;
         currentId = newConv.id;
         setActiveId(currentId);
-        // Important: navigate or update search params if needed, 
-        // but here we just update local state to keep the conversation active.
       }
 
       await sendMessage.mutateAsync({ 
@@ -155,8 +154,7 @@ function Copilot() {
     } catch (error) {
       toast.error("Failed to send message. Please try again.");
       console.error(error);
-      // Reset input on error so user can try again
-      setInput(userMsg);
+      if (!overrideInput) setInput(userMsg);
     }
   };
 
