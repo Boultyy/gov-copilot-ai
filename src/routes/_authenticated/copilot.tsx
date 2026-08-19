@@ -146,35 +146,51 @@ function Copilot() {
   }, [messages]); // Remove sendMessage.isPending to avoid confusion with thinking state
 
   const handleSend = async (overrideInput?: string) => {
-    console.log("[COPILOT_DEBUG] handleSend started", { overrideInput, input, isPending: sendMessage.isPending, activeId });
     const textToSend = overrideInput || input;
+    
+    console.log("[COPILOT_DEBUG] handleSend triggered", { 
+      textToSend, 
+      isPending: sendMessage.isPending, 
+      activeId,
+      inputState: input
+    });
+
     if (!textToSend.trim() || sendMessage.isPending) {
-      console.log("[COPILOT_DEBUG] handleSend blocked", { trim: !textToSend.trim(), isPending: sendMessage.isPending });
+      console.log("[COPILOT_DEBUG] handleSend blocked", { 
+        isEmpty: !textToSend.trim(), 
+        isPending: sendMessage.isPending 
+      });
       return;
     }
     
     let currentId = activeId;
     const userMsg = textToSend;
+    
+    // Clear input immediately for better UX
     setInput("");
 
     try {
       if (!currentId) {
-        console.log("[COPILOT_DEBUG] starting new conversation");
-        const newConv = (await startConv.mutateAsync(userMsg.slice(0, 30))) as any;
-        currentId = newConv.id;
-        console.log("[COPILOT_DEBUG] new conversation created", { currentId });
+        console.log("[COPILOT_DEBUG] No activeId, starting new conversation...");
+        const newConv = await startConv.mutateAsync(userMsg.slice(0, 30));
+        currentId = (newConv as any).id;
+        console.log("[COPILOT_DEBUG] New conversation created", { currentId });
         setActiveId(currentId);
       }
 
-      console.log("[COPILOT_DEBUG] sending message", { currentId, userMsg });
-      await sendMessage.mutateAsync({ 
+      console.log("[COPILOT_DEBUG] Mutating sendMessage", { currentId, userMsg });
+      
+      // We use mutateAsync to ensure we can catch errors and track completion
+      const response = await sendMessage.mutateAsync({ 
         conversationId: currentId as string, 
         content: userMsg 
       });
-      console.log("[COPILOT_DEBUG] message sent successfully");
+      
+      console.log("[COPILOT_DEBUG] sendMessage mutation complete", { responseReceived: !!response });
     } catch (error) {
+      console.error("[COPILOT_DEBUG] handleSend execution error", error);
       toast.error("Failed to send message. Please try again.");
-      console.error("[COPILOT_DEBUG] handleSend error", error);
+      // Restore input on failure
       if (!overrideInput) setInput(userMsg);
     }
   };
