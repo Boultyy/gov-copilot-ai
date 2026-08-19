@@ -115,17 +115,22 @@ function Copilot() {
 
   const sendMessage = useMutation({
     mutationFn: (args: { conversationId: string; content: string }) => sendMsgFn({ data: args }),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["messages", activeId] });
-      queryClient.invalidateQueries({ queryKey: ["conversations"] });
+    onSuccess: async (data, variables) => {
+      // Invalidate queries to get the new messages
+      await queryClient.invalidateQueries({ queryKey: ["messages", variables.conversationId] });
+      await queryClient.invalidateQueries({ queryKey: ["conversations"] });
     },
+    onSettled: (data, error, variables) => {
+      // Ensure loading state is cleared and we have latest data
+      queryClient.invalidateQueries({ queryKey: ["messages", variables.conversationId] });
+    }
   });
 
   useEffect(() => {
     if (scrollRef.current) {
       scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
     }
-  }, [messages, sendMessage.isPending]);
+  }, [messages]); // Remove sendMessage.isPending to avoid confusion with thinking state
 
   const handleSend = async () => {
     if (!input.trim() || sendMessage.isPending) return;
@@ -138,6 +143,9 @@ function Copilot() {
       if (!currentId) {
         const newConv = (await startConv.mutateAsync(userMsg.slice(0, 30))) as any;
         currentId = newConv.id;
+        setActiveId(currentId);
+        // Important: navigate or update search params if needed, 
+        // but here we just update local state to keep the conversation active.
       }
 
       await sendMessage.mutateAsync({ 
@@ -147,6 +155,8 @@ function Copilot() {
     } catch (error) {
       toast.error("Failed to send message. Please try again.");
       console.error(error);
+      // Reset input on error so user can try again
+      setInput(userMsg);
     }
   };
 
