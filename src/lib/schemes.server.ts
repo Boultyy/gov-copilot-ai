@@ -64,17 +64,22 @@ export async function searchSchemes(query: string, limit: number = 5) {
         .select("*")
         .eq("verification_status", "verified")
         .or(`name.ilike.%${canonical}%,official_name.ilike.%${canonical}%`)
-        .limit(limit);
-      
+        .limit(20);
+
       if (aliasMatches && aliasMatches.length > 0) {
-        console.log(`[COPILOT_RETRIEVAL] match_mode: "alias_match" canonical: ${canonical}`);
-        return aliasMatches;
+        const ranked = rankByNameCloseness(aliasMatches, canonical);
+        console.log(`[COPILOT_RETRIEVAL] match_mode: "alias_match" canonical: ${canonical} top: "${ranked[0].name}"`);
+        return ranked.slice(0, limit);
       }
     }
   }
 
-  // Token-based matching (strong lexical)
-  const tokens = normalizedQuery.split(/\s+/).filter(t => t.length > 3);
+  // Token-based matching (strong lexical) — stopwords removed so question words
+  // like "tell"/"about" can never select an unrelated scheme.
+  const tokens = normalizedQuery
+    .split(/\s+/)
+    .filter(t => t.length > 3 && !STOPWORDS.has(t));
+
   if (tokens.length > 0) {
     const tokenFilter = tokens.map(t => `name.ilike.%${t}%`).join(',');
     const { data: tokenMatches } = await supabaseAdmin
@@ -82,11 +87,18 @@ export async function searchSchemes(query: string, limit: number = 5) {
       .select("*")
       .eq("verification_status", "verified")
       .or(tokenFilter)
-      .limit(limit);
-    
-    if (tokenMatches && tokenMatches.length > 0) {
-      console.log(`[COPILOT_RETRIEVAL] match_mode: "token_match" tokens: ${tokens.join(',')}`);
-      return tokenMatches;
+      .limit(20);
+
+    // Validation: the selected scheme name must actually contain a query token.
+    const validated = (tokenMatches || []).filter(s => {
+      const n = normalizeText(`${s.name} ${s.official_name || ""}`);
+      return tokens.some(t => n.includes(t));
+    });
+
+    if (validated.length > 0) {
+      const ranked = rankByNameCloseness(validated, tokens.join(" "));
+      console.log(`[COPILOT_RETRIEVAL] match_mode: "token_match" tokens: ${tokens.join(',')} top: "${ranked[0].name}"`);
+      return ranked.slice(0, limit);
     }
   }
 
