@@ -130,8 +130,12 @@ function Copilot() {
     onError: (error) => {
       console.error("[COPILOT_DEBUG] mutation onError", error);
     },
-    onSettled: () => {
-      console.log("[COPILOT_DEBUG] mutation onSettled (loading state should clear now)");
+    onSettled: (data, error, variables) => {
+      console.log("[COPILOT_DEBUG] mutation onSettled (loading state should clear now)", { variables });
+      // CRITICAL: Force message refetch to ensure client state matches server even if mutation result was partial
+      if (variables?.conversationId) {
+        queryClient.invalidateQueries({ queryKey: ["messages", variables.conversationId] });
+      }
     }
   });
 
