@@ -345,9 +345,13 @@ function Copilot() {
             <div className="relative">
               <Input
                 value={input}
-                onChange={(e) => setInput(e.target.value)}
+                onChange={(e) => {
+                  console.log("[COPILOT_DEBUG] Input changed", e.target.value);
+                  setInput(e.target.value);
+                }}
                 onKeyDown={(e) => {
                   if (e.key === "Enter") {
+                    console.log("[COPILOT_DEBUG] Enter key pressed");
                     e.preventDefault();
                     handleSend();
                   }
