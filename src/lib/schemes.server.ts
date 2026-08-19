@@ -28,7 +28,13 @@ function rankByNameCloseness<T extends { name: string; official_name?: string | 
     const o = normalizeText(r.official_name || "");
     if (n === t || o === t) return 0;
     if (n.startsWith(t) || o.startsWith(t)) return 1 + n.length / 1000;
-    return 2 + n.length / 1000;
+
+    // Token overlap: a name sharing more of the query's words is the closer scheme.
+    const targetTokens = t.split(/\s+/).filter(Boolean);
+    const nameTokens = new Set(`${n} ${o}`.split(/\s+/).filter(Boolean));
+    const overlap = targetTokens.filter(tok => nameTokens.has(tok)).length;
+    const ratio = targetTokens.length ? overlap / targetTokens.length : 0;
+    return 2 + (1 - ratio) + n.length / 1000;
   }
 }
 
