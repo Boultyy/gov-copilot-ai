@@ -92,15 +92,23 @@ export async function searchSchemes(query: string, limit: number = 5) {
 
     if (present.length > 0) {
       console.log(`[COPILOT_RETRIEVAL] attempting alias match for: ${canonical}`);
-      const filter = variants
-        .map(v => `name.ilike.%${v}%,official_name.ilike.%${v}%`)
-        .join(",");
+      // Also match on the distinctive words of the alias phrase so spelling
+      // variants in official records (e.g. "Yojna" vs "Yojana") still surface.
+      const phraseWords = normalizeText(present[0])
+        .split(/\s+/)
+        .filter(w => w.length > 3 && !GENERIC_SCHEME_WORDS.has(w));
+
+      const filter = [
+        ...variants.flatMap(v => [`name.ilike.%${v}%`, `official_name.ilike.%${v}%`]),
+        ...phraseWords.map(w => `name.ilike.%${w}%`),
+      ].join(",");
+
       const { data: aliasMatches } = await supabaseAdmin
         .from("schemes")
         .select("*")
         .eq("verification_status", "verified")
         .or(filter)
-        .limit(30);
+        .limit(50);
 
       if (aliasMatches && aliasMatches.length > 0) {
         const ranked = rankByNameCloseness(aliasMatches, present[0]);
