@@ -38,7 +38,22 @@ function AiDiagnosticPage() {
             {`'''Do not make any visual modifications. The phrases I write are commands to understand what I want, not to be written down. Understand their content well, then execute what is required.'''
                                         
                                             
-                                            hi`}
+                                            For the code present, I get the error below.
+
+Please think step-by-step in order to resolve it.
+\`\`\`
+Failed to fetch
+
+{
+  "timestamp": 1787177335161,
+  "error_type": "RUNTIME_ERROR",
+  "filename": "/copilot",
+  "lineno": 0,
+  "colno": 0,
+  "stack": "TypeError: Failed to fetch\\n    at getResponse (https://7af24417-ad52-4825-abbf-82e4c88cd467.lovableproject.com/node_modules/@tanstack/start-client-core/dist/esm/client-rpc/serverFnFetcher.js?v=b03f884d:164:39)\\n    at async serverFnFetcher (https://7af24417-ad52-4825-abbf-82e4c88cd467.lovableproject.com/node_modules/@tanstack/start-client-core/dist/esm/client-rpc/serverFnFetcher.js?v=b03f884d:84:9)\\n    at async client (https://7af24417-ad52-4825-abbf-82e4c88cd467.lovableproject.com/node_modules/@tanstack/start-client-core/dist/esm/createServerFn.js?v=b03f884d:190:17)\\n    at async callNextMiddleware (https://7af24417-ad52-4825-abbf-82e4c88cd467.lovableproject.com/node_modules/@tanstack/start-client-core/dist/esm/createServerFn.js?v=b03f884d:121:20)\\n    at async userNext (https://7af24417-ad52-4825-abbf-82e4c88cd467.lovableproject.com/node_modules/@tanstack/start-client-core/dist/esm/createServerFn.js?v=b03f884d:107:21)\\n    at async callNextMiddleware (https://7af24417-ad52-4825-abbf-82e4c88cd467.lovableproject.com/node_modules/@tanstack/start-client-core/dist/esm/createServerFn.js?v=b03f884d:121:20)\\n    at async Object.assign (https://7af24417-ad52-4825-abbf-82e4c88cd467.lovableproject.com/node_modules/@tanstack/start-client-core/dist/esm/createServerFn.js?v=b03f884d:46:20)",
+  "has_blank_screen": true
+}
+\`\`\``}
           </div>
         </div>
         <Button onClick={handleRun} disabled={loading} id="run-diagnostic-btn">
