@@ -271,36 +271,42 @@ export async function buildSchemeContext(scheme: any): Promise<SchemeContext> {
 /* Deterministic (AI-free) answer rendering                             */
 /* ------------------------------------------------------------------ */
 
-const UNAVAILABLE = "Not available in the retrieved official source.";
+const UNAVAILABLE = "Not available in the verified scheme information.";
 
 const SECTION_ORDER: Record<SchemeIntent, string[]> = {
-  overview: ["ABOUT", "HOW_IT_WORKS", "BENEFITS", "WHO_CAN_BENEFIT", "EXCLUSIONS", "HOW_TO_APPLY", "HISTORY"],
-  how_it_works: ["HOW_IT_WORKS", "BENEFITS", "ABOUT", "HOW_TO_APPLY"],
-  eligibility: ["WHO_CAN_BENEFIT", "EXCLUSIONS", "ABOUT"],
+  overview: ["ABOUT", "OBJECTIVE", "HOW_IT_WORKS", "WHO_CAN_BENEFIT", "EXCLUSIONS", "BENEFITS", "HOW_TO_APPLY", "HISTORY", "FRESHNESS"],
+  how_it_works: ["HOW_IT_WORKS", "OBJECTIVE", "BENEFITS", "ABOUT", "HOW_TO_APPLY"],
+  eligibility: ["WHO_CAN_BENEFIT", "EXCLUSIONS", "DOCUMENTS", "ABOUT"],
   benefits: ["BENEFITS", "HOW_IT_WORKS", "ABOUT"],
-  application: ["HOW_TO_APPLY", "DOCUMENTS", "WHO_CAN_BENEFIT"],
-  documents: ["DOCUMENTS", "HOW_TO_APPLY"],
+  application: ["HOW_TO_APPLY", "DOCUMENTS", "STATUS_CHECK", "WHO_CAN_BENEFIT"],
+  documents: ["DOCUMENTS", "STATUS_CHECK", "HOW_TO_APPLY"],
   history: ["HISTORY", "ABOUT"],
-  status: ["HOW_TO_APPLY", "ABOUT"],
+  status: ["STATUS_CHECK", "HOW_TO_APPLY", "ABOUT"],
 };
 
 const SECTION_TITLES: Record<string, string> = {
-  ABOUT: "ABOUT THE SCHEME",
-  HOW_IT_WORKS: "HOW IT WORKS",
-  WHO_CAN_BENEFIT: "WHO CAN BENEFIT",
-  BENEFITS: "BENEFITS",
-  HOW_TO_APPLY: "HOW TO ACCESS / APPLY",
-  DOCUMENTS: "DOCUMENTS REQUIRED",
-  EXCLUSIONS: "IMPORTANT EXCLUSIONS",
-  HISTORY: "HISTORY",
+  ABOUT: "### What it is",
+  OBJECTIVE: "### Objective",
+  HOW_IT_WORKS: "### How it works",
+  WHO_CAN_BENEFIT: "### Who it is for",
+  BENEFITS: "### Benefits",
+  HOW_TO_APPLY: "### How to apply / access",
+  DOCUMENTS: "### Documents required",
+  EXCLUSIONS: "### Who is excluded",
+  HISTORY: "### Launch / operational history",
+  STATUS_CHECK: "### How to check status",
+  FRESHNESS: "### Official Source",
 };
 
 function sectionValue(key: string, c: SchemeContext): string | null {
   switch (key) {
     case "ABOUT":
       return c.description;
-    case "HOW_IT_WORKS":
+    case "OBJECTIVE":
       return c.objective;
+    case "HOW_IT_WORKS":
+      // Combine objective and mechanism if needed
+      return c.objective && c.objective.length > 200 ? c.objective : null;
     case "WHO_CAN_BENEFIT":
       return c.eligibility;
     case "BENEFITS":
@@ -313,46 +319,69 @@ function sectionValue(key: string, c: SchemeContext): string | null {
       return c.exclusions;
     case "HISTORY":
       return c.launchDate;
+    case "STATUS_CHECK":
+      // Detect application status info in process
+      if (c.applicationProcess && /status|check|track/i.test(c.applicationProcess)) {
+        return c.applicationProcess.split(/\.|\n/).filter(s => /status|check|track/i.test(s)).join(". ").trim();
+      }
+      return null;
     default:
       return null;
   }
 }
 
 export function renderFallbackAnswer(c: SchemeContext, intent: SchemeIntent): string {
-  const header: string[] = [];
-  header.push(`${c.officialName || c.schemeName}`);
-  if (c.ministry) header.push(`Ministry: ${c.ministry}`);
-  if (c.department && c.department !== c.ministry) header.push(`Department: ${c.department}`);
-  if (c.governmentLevel) header.push(`Government level: ${c.governmentLevel}`);
+  const lines: string[] = [];
 
+  // 1. Header
+  lines.push(`## ${c.officialName || c.schemeName}`);
+  const details = [];
+  if (c.ministry) details.push(`**Ministry:** ${c.ministry}`);
+  if (c.department && c.department !== c.ministry) details.push(`**Department:** ${c.department}`);
+  if (c.governmentLevel) details.push(`**Level:** ${c.governmentLevel}`);
+  if (details.length) lines.push(details.join(" | "));
+
+  lines.push(""); // Spacer
+
+  // 2. Body Sections
   const order = SECTION_ORDER[intent];
-  const primary = order[0];
-  const body: string[] = [];
+  const primaryKey = order[0];
+  const renderedSections = new Set<string>();
 
   for (const key of order) {
+    if (key === "FRESHNESS") continue;
     const value = sectionValue(key, c);
     if (value) {
-      body.push(`${SECTION_TITLES[key]}\n${value}`);
-    } else if (key === primary) {
-      // Always answer the question that was asked, even if only to say it is unknown.
-      body.push(`${SECTION_TITLES[key]}\n${UNAVAILABLE}`);
+      lines.push(SECTION_TITLES[key]);
+      lines.push(value);
+      lines.push("");
+      renderedSections.add(key);
+    } else if (key === primaryKey) {
+      lines.push(SECTION_TITLES[key]);
+      lines.push(UNAVAILABLE);
+      lines.push("");
     }
   }
 
-  const attribution: string[] = [];
-  attribution.push("OFFICIAL SOURCE");
-  attribution.push(`Official source: ${c.officialSource || "Official government source"}`);
-  if (c.sourceUrl) attribution.push(`Source URL: ${c.sourceUrl}`);
-  if (c.sourceLastChecked) attribution.push(`Last checked: ${new Date(c.sourceLastChecked).toUTCString()}`);
-  if (c.sourceStatus === "cached") {
-    attribution.push("Note: the official website could not be reached just now; the most recent cached copy of the official page was used.");
-  } else if (c.sourceStatus === "unavailable") {
-    attribution.push("Note: live enrichment from the official website could not be retrieved right now. The details above come from GovCopilot's verified government scheme record.");
-  } else if (c.sourceStatus === "no_source_url") {
-    attribution.push("Note: no official URL is stored for this scheme, so live enrichment was not attempted.");
+  // 3. Attribution / Freshness
+  lines.push(SECTION_TITLES["FRESHNESS"]);
+  lines.push(`- **Source:** ${c.officialSource || "Official government source"}`);
+  if (c.sourceUrl) lines.push(`- **Link:** [${c.sourceUrl}](${c.sourceUrl})`);
+  
+  if (c.sourceLastChecked) {
+    const dateStr = new Date(c.sourceLastChecked).toLocaleDateString('en-IN', {
+      day: '2-digit', month: 'long', year: 'numeric'
+    });
+    lines.push(`- **Verified on:** ${dateStr}`);
   }
 
-  return [header.join("\n"), body.join("\n\n"), attribution.join("\n")].filter(Boolean).join("\n\n");
+  if (c.sourceStatus === "cached") {
+    lines.push("\n*Note: Current information is from a verified snapshot as the official site is temporarily unreachable.*");
+  } else if (c.sourceStatus === "unavailable") {
+    lines.push("\n*Note: Information is based on the latest verified database record.*");
+  }
+
+  return lines.join("\n").trim();
 }
 
 /** Compact, grounded context block handed to the AI when it is available. */
