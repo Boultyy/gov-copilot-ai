@@ -56,7 +56,7 @@ export function detectIntent(query: string): SchemeIntent {
   if (/\b(status|check my|beneficiary status|installment status|payment status)\b/.test(q)) return "status";
   if (/\b(document|documents|paperwork|papers required|kyc)\b/.test(q)) return "documents";
   if (/\b(apply|application|register|registration|enroll|sign up|how do i get)\b/.test(q)) return "application";
-  if (/\b(eligib|who can|qualify|criteria|exclusion|excluded)\b/.test(q)) return "eligibility";
+  if (/(\beligib|\bwho\s+(can|is|are)\b|\bqualif|\bcriteria\b|\bexclu)/.test(q)) return "eligibility";
   if (/\b(benefit|amount|how much|money|subsidy|instalment|installment|payout)\b/.test(q)) return "benefits";
   if (/\b(launch|started|when was|history|introduced|operational since)\b/.test(q)) return "history";
   if (/\b(how does .* work|how it works|mechanism|working|process flow)\b/.test(q)) return "how_it_works";
