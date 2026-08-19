@@ -10,6 +10,28 @@ const SCHEME_ALIASES: Record<string, string[]> = {
   "ayushman bharat": ["ayushman bharat pm-jay", "pradhan mantri jan arogya yojana", "pm-jay", "pmjay", "ayushman bharat"]
 };
 
+const STOPWORDS = new Set([
+  "tell", "about", "what", "which", "when", "where", "whom", "does", "know", "give",
+  "information", "info", "details", "detail", "please", "explain", "scheme", "schemes",
+  "yojana", "government", "govt", "india", "indian", "there", "their", "this", "that",
+  "help", "with", "from", "have", "need", "want", "more", "some", "under", "eligible",
+  "eligibility", "benefit", "benefits", "apply", "application", "documents", "document",
+]);
+
+/** Rank candidates by closeness of their name to the target term. */
+function rankByNameCloseness<T extends { name: string; official_name?: string | null }>(rows: T[], target: string): T[] {
+  const t = normalizeText(target);
+  return [...rows].sort((a, b) => score(a) - score(b));
+
+  function score(r: T): number {
+    const n = normalizeText(r.name);
+    const o = normalizeText(r.official_name || "");
+    if (n === t || o === t) return 0;
+    if (n.startsWith(t) || o.startsWith(t)) return 1 + n.length / 1000;
+    return 2 + n.length / 1000;
+  }
+}
+
 function normalizeText(text: string): string {
   return text
     .toLowerCase()
