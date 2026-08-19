@@ -133,8 +133,12 @@ function Copilot() {
   }, [messages]); // Remove sendMessage.isPending to avoid confusion with thinking state
 
   const handleSend = async (overrideInput?: string) => {
+    console.log("[COPILOT_DEBUG] handleSend started", { overrideInput, input, isPending: sendMessage.isPending, activeId });
     const textToSend = overrideInput || input;
-    if (!textToSend.trim() || sendMessage.isPending) return;
+    if (!textToSend.trim() || sendMessage.isPending) {
+      console.log("[COPILOT_DEBUG] handleSend blocked", { trim: !textToSend.trim(), isPending: sendMessage.isPending });
+      return;
+    }
     
     let currentId = activeId;
     const userMsg = textToSend;
@@ -142,18 +146,22 @@ function Copilot() {
 
     try {
       if (!currentId) {
+        console.log("[COPILOT_DEBUG] starting new conversation");
         const newConv = (await startConv.mutateAsync(userMsg.slice(0, 30))) as any;
         currentId = newConv.id;
+        console.log("[COPILOT_DEBUG] new conversation created", { currentId });
         setActiveId(currentId);
       }
 
+      console.log("[COPILOT_DEBUG] sending message", { currentId, userMsg });
       await sendMessage.mutateAsync({ 
         conversationId: currentId as string, 
         content: userMsg 
       });
+      console.log("[COPILOT_DEBUG] message sent successfully");
     } catch (error) {
       toast.error("Failed to send message. Please try again.");
-      console.error(error);
+      console.error("[COPILOT_DEBUG] handleSend error", error);
       if (!overrideInput) setInput(userMsg);
     }
   };
@@ -309,12 +317,27 @@ function Copilot() {
               <Input
                 value={input}
                 onChange={(e) => setInput(e.target.value)}
-                onKeyDown={(e) => e.key === "Enter" && handleSend()}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter") {
+                    e.preventDefault();
+                    handleSend();
+                  }
+                }}
+                disabled={sendMessage.isPending}
                 placeholder="Ask GovCopilot about schemes, documents, or eligibility..."
                 className="h-14 rounded-2xl border-border bg-muted/30 pl-6 pr-14 shadow-inner"
               />
-              <Button onClick={() => handleSend()} size="icon" className="absolute right-2 top-2 h-10 w-10 rounded-xl bg-primary text-white hover:bg-primary/90 shadow-lg shadow-primary/20 transition-all active:scale-95">
-                <SendHorizonal className="h-5 w-5" />
+              <Button 
+                onClick={() => handleSend()} 
+                size="icon" 
+                disabled={sendMessage.isPending || !input.trim()}
+                className="absolute right-2 top-2 h-10 w-10 rounded-xl bg-primary text-white hover:bg-primary/90 shadow-lg shadow-primary/20 transition-all active:scale-95"
+              >
+                {sendMessage.isPending ? (
+                  <Loader2 className="h-5 w-5 animate-spin" />
+                ) : (
+                  <SendHorizonal className="h-5 w-5" />
+                )}
               </Button>
             </div>
             <p className="text-center text-[10px] text-muted-foreground">
