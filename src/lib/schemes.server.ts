@@ -129,7 +129,11 @@ export async function searchSchemes(query: string, limit: number = 5) {
     .split(/\s+/)
     .filter(t => t.length > 3 && !STOPWORDS.has(t));
 
-  if (tokens.length > 0) {
+  // Mode B (discovery) queries must NOT be answered with a single lexical hit.
+  const isDiscoveryQuery =
+    /\b(schemes|list|available|options|for (farmers|students|women|girls|seniors|elderly|artisans|msme))\b/.test(normalizedQuery);
+
+  if (tokens.length > 0 && !isDiscoveryQuery) {
     const tokenFilter = tokens.map(t => `name.ilike.%${t}%`).join(',');
     const { data: tokenMatches } = await supabaseAdmin
       .from("schemes")
