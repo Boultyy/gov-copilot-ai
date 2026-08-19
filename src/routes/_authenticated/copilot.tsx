@@ -361,7 +361,11 @@ function Copilot() {
                 className="h-14 rounded-2xl border-border bg-muted/30 pl-6 pr-14 shadow-inner"
               />
               <Button 
-                onClick={() => handleSend()} 
+                onClick={(e) => {
+                  console.log("[COPILOT_DEBUG] Send button clicked");
+                  e.preventDefault();
+                  handleSend();
+                }} 
                 size="icon" 
                 disabled={sendMessage.isPending || !input.trim()}
                 className="absolute right-2 top-2 h-10 w-10 rounded-xl bg-primary text-white hover:bg-primary/90 shadow-lg shadow-primary/20 transition-all active:scale-95"
