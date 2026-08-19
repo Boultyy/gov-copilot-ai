@@ -23,3 +23,9 @@ for (const q of queries) {
   console.log(renderFallbackAnswer(ctx, intent));
   console.log(`--- elapsed ${Date.now() - t0}ms`);
 }
+
+// discovery mode
+for (const q of ["What schemes are available for farmers?"]) {
+  const s = await searchSchemes(q);
+  console.log("\nDISCOVERY:", q, "->", s.map((x:any)=>x.name));
+}
