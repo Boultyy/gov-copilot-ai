@@ -296,11 +296,7 @@ function Copilot() {
                 {suggestedPrompts.map((p) => (
                   <button 
                     key={p} 
-                    onClick={() => { 
-                      setInput(p);
-                      // Use a slight delay or handleSend with the prompt value directly
-                      // because setInput is async.
-                    }} 
+                    onClick={() => handleSend(p)} 
                     className="rounded-full border border-border px-4 py-1.5 text-xs text-muted-foreground transition-all hover:border-primary hover:bg-primary/5 hover:text-primary"
                   >
                     {p}
