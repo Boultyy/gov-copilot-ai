@@ -117,7 +117,7 @@ function Copilot() {
     mutationFn: (args: { conversationId: string; content: string }) => sendMsgFn({ data: args }),
     onSuccess: async (data, variables) => {
       // Invalidate queries to get the new messages
-      await queryClient.invalidateQueries({ queryKey: ["messages", variables.conversationId] });
+      await queryClient.setQueryData(["messages", variables.conversationId], (old: any) => [...(old || []), data]);
       await queryClient.invalidateQueries({ queryKey: ["conversations"] });
     },
     onSettled: (data, error, variables) => {
