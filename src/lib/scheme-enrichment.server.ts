@@ -56,7 +56,7 @@ export function detectIntent(query: string): SchemeIntent {
   if (/\b(status|check my|beneficiary status|installment status|payment status)\b/.test(q)) return "status";
   if (/\b(document|documents|paperwork|papers required|kyc)\b/.test(q)) return "documents";
   if (/\b(apply|application|register|registration|enroll|sign up|how do i get)\b/.test(q)) return "application";
-  if (/\b(eligib|who can|qualify|criteria|exclusion|excluded)\b/.test(q)) return "eligibility";
+  if (/(\beligib|\bwho\s+(can|is|are)\b|\bqualif|\bcriteria\b|\bexclu)/.test(q)) return "eligibility";
   if (/\b(benefit|amount|how much|money|subsidy|instalment|installment|payout)\b/.test(q)) return "benefits";
   if (/\b(launch|started|when was|history|introduced|operational since)\b/.test(q)) return "history";
   if (/\b(how does .* work|how it works|mechanism|working|process flow)\b/.test(q)) return "how_it_works";
@@ -135,11 +135,23 @@ async function fetchOnce(url: string): Promise<string | null> {
 /** Fetch the scheme's own official URL. Bounded, no crawling, never throws. */
 export async function fetchOfficialSource(url: string | null): Promise<string | null> {
   if (!url || !/^https?:\/\//i.test(url)) return null;
+  if (isGenericDirectoryUrl(url)) {
+    console.log(`[COPILOT_ENRICHMENT] skipping non-scheme-specific source URL: ${url}`);
+    return null;
+  }
   for (let attempt = 0; attempt <= MAX_RETRIES; attempt++) {
     const text = await fetchOnce(url);
     if (text) return text;
   }
   return null;
+}
+
+/**
+ * Directory/listing pages are not scheme-specific: scraping them would attach
+ * another scheme's text to this scheme. Never enrich from them.
+ */
+export function isGenericDirectoryUrl(url: string): boolean {
+  return /dbtbharat\.gov\.in\/central-scheme\/list|\/schemes?\/?$|\/scheme-list|\/all-schemes/i.test(url);
 }
 
 /* ------------------------------------------------------------------ */

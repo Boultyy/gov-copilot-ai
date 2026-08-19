@@ -10,6 +10,39 @@ const SCHEME_ALIASES: Record<string, string[]> = {
   "ayushman bharat": ["ayushman bharat pm-jay", "pradhan mantri jan arogya yojana", "pm-jay", "pmjay", "ayushman bharat"]
 };
 
+const STOPWORDS = new Set([
+  "tell", "about", "what", "which", "when", "where", "whom", "does", "know", "give",
+  "information", "info", "details", "detail", "please", "explain", "scheme", "schemes",
+  "yojana", "government", "govt", "india", "indian", "there", "their", "this", "that",
+  "help", "with", "from", "have", "need", "want", "more", "some", "under", "eligible",
+  "eligibility", "benefit", "benefits", "apply", "application", "documents", "document",
+]);
+
+/** Words too common across Indian scheme names to identify a scheme on their own. */
+const GENERIC_SCHEME_WORDS = new Set([
+  "pradhan", "mantri", "yojana", "yojna", "scheme", "national", "bharat", "india",
+]);
+
+/** Rank candidates by closeness of their name to the target term. */
+function rankByNameCloseness<T extends { name: string; official_name?: string | null }>(rows: T[], target: string): T[] {
+  const t = normalizeText(target);
+  return [...rows].sort((a, b) => score(a) - score(b));
+
+  function score(r: T): number {
+    const n = normalizeText(r.name);
+    const o = normalizeText(r.official_name || "");
+    if (n === t || o === t) return 0;
+    if (n.startsWith(t) || o.startsWith(t)) return 1 + n.length / 1000;
+
+    // Token overlap: a name sharing more of the query's words is the closer scheme.
+    const targetTokens = t.split(/\s+/).filter(Boolean);
+    const nameTokens = new Set(`${n} ${o}`.split(/\s+/).filter(Boolean));
+    const overlap = targetTokens.filter(tok => nameTokens.has(tok)).length;
+    const ratio = targetTokens.length ? overlap / targetTokens.length : 0;
+    return 2 + (1 - ratio) + n.length / 1000;
+  }
+}
+
 function normalizeText(text: string): string {
   return text
     .toLowerCase()
@@ -54,39 +87,71 @@ export async function searchSchemes(query: string, limit: number = 5) {
     return strictMatches.slice(0, limit);
   }
 
-  // 2. Alias Match
+  // 2. Alias Match — search across every alias variant, then rank against the
+  // longest alias phrase actually present in the user's query.
   for (const [canonical, aliases] of Object.entries(SCHEME_ALIASES)) {
-    const isMatch = normalizedQuery.includes(canonical) || aliases.some(a => normalizedQuery.includes(a));
-    if (isMatch) {
+    const variants = [canonical, ...aliases];
+    const present = variants
+      .filter(v => normalizedQuery.includes(normalizeText(v)))
+      .sort((a, b) => b.length - a.length);
+
+    if (present.length > 0) {
       console.log(`[COPILOT_RETRIEVAL] attempting alias match for: ${canonical}`);
+      // Also match on the distinctive words of the alias phrase so spelling
+      // variants in official records (e.g. "Yojna" vs "Yojana") still surface.
+      const phraseWords = normalizeText(present[0])
+        .split(/\s+/)
+        .filter(w => w.length > 3 && !GENERIC_SCHEME_WORDS.has(w));
+
+      const filter = [
+        ...variants.flatMap(v => [`name.ilike.%${v}%`, `official_name.ilike.%${v}%`]),
+        ...phraseWords.map(w => `name.ilike.%${w}%`),
+      ].join(",");
+
       const { data: aliasMatches } = await supabaseAdmin
         .from("schemes")
         .select("*")
         .eq("verification_status", "verified")
-        .or(`name.ilike.%${canonical}%,official_name.ilike.%${canonical}%`)
-        .limit(limit);
-      
+        .or(filter)
+        .limit(50);
+
       if (aliasMatches && aliasMatches.length > 0) {
-        console.log(`[COPILOT_RETRIEVAL] match_mode: "alias_match" canonical: ${canonical}`);
-        return aliasMatches;
+        const ranked = rankByNameCloseness(aliasMatches, present[0]);
+        console.log(`[COPILOT_RETRIEVAL] match_mode: "alias_match" canonical: ${canonical} top: "${ranked[0].name}"`);
+        return ranked.slice(0, limit);
       }
     }
   }
 
-  // Token-based matching (strong lexical)
-  const tokens = normalizedQuery.split(/\s+/).filter(t => t.length > 3);
-  if (tokens.length > 0) {
+  // Token-based matching (strong lexical) — stopwords removed so question words
+  // like "tell"/"about" can never select an unrelated scheme.
+  const tokens = normalizedQuery
+    .split(/\s+/)
+    .filter(t => t.length > 3 && !STOPWORDS.has(t));
+
+  // Mode B (discovery) queries must NOT be answered with a single lexical hit.
+  const isDiscoveryQuery =
+    /\b(schemes|list|available|options|for (farmers|students|women|girls|seniors|elderly|artisans|msme))\b/.test(normalizedQuery);
+
+  if (tokens.length > 0 && !isDiscoveryQuery) {
     const tokenFilter = tokens.map(t => `name.ilike.%${t}%`).join(',');
     const { data: tokenMatches } = await supabaseAdmin
       .from("schemes")
       .select("*")
       .eq("verification_status", "verified")
       .or(tokenFilter)
-      .limit(limit);
-    
-    if (tokenMatches && tokenMatches.length > 0) {
-      console.log(`[COPILOT_RETRIEVAL] match_mode: "token_match" tokens: ${tokens.join(',')}`);
-      return tokenMatches;
+      .limit(20);
+
+    // Validation: the selected scheme name must actually contain a query token.
+    const validated = (tokenMatches || []).filter(s => {
+      const n = normalizeText(`${s.name} ${s.official_name || ""}`);
+      return tokens.some(t => n.includes(t));
+    });
+
+    if (validated.length > 0) {
+      const ranked = rankByNameCloseness(validated, tokens.join(" "));
+      console.log(`[COPILOT_RETRIEVAL] match_mode: "token_match" tokens: ${tokens.join(',')} top: "${ranked[0].name}"`);
+      return ranked.slice(0, limit);
     }
   }
 
