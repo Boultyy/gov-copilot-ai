@@ -135,11 +135,23 @@ async function fetchOnce(url: string): Promise<string | null> {
 /** Fetch the scheme's own official URL. Bounded, no crawling, never throws. */
 export async function fetchOfficialSource(url: string | null): Promise<string | null> {
   if (!url || !/^https?:\/\//i.test(url)) return null;
+  if (isGenericDirectoryUrl(url)) {
+    console.log(`[COPILOT_ENRICHMENT] skipping non-scheme-specific source URL: ${url}`);
+    return null;
+  }
   for (let attempt = 0; attempt <= MAX_RETRIES; attempt++) {
     const text = await fetchOnce(url);
     if (text) return text;
   }
   return null;
+}
+
+/**
+ * Directory/listing pages are not scheme-specific: scraping them would attach
+ * another scheme's text to this scheme. Never enrich from them.
+ */
+export function isGenericDirectoryUrl(url: string): boolean {
+  return /dbtbharat\.gov\.in\/central-scheme\/list|\/schemes?\/?$|\/scheme-list|\/all-schemes/i.test(url);
 }
 
 /* ------------------------------------------------------------------ */
