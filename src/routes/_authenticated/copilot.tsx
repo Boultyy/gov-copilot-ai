@@ -114,13 +114,21 @@ function Copilot() {
   });
 
   const sendMessage = useMutation({
-    mutationFn: (args: { conversationId: string; content: string }) => sendMsgFn({ data: args }),
+    mutationFn: (args: { conversationId: string; content: string }) => {
+      console.log("[COPILOT_DEBUG] mutationFn calling sendMsgFn", args);
+      return sendMsgFn({ data: args });
+    },
     onSuccess: async (data, variables) => {
+      console.log("[COPILOT_DEBUG] mutation onSuccess", { data, variables });
       // Invalidate queries to get the new messages
-      await queryClient.setQueryData(["messages", variables.conversationId], (old: any) => [...(old || []), data]);
+      queryClient.setQueryData(["messages", variables.conversationId], (old: any) => [...(old || []), data]);
       await queryClient.invalidateQueries({ queryKey: ["conversations"] });
     },
+    onError: (error) => {
+      console.error("[COPILOT_DEBUG] mutation onError", error);
+    },
     onSettled: (data, error, variables) => {
+      console.log("[COPILOT_DEBUG] mutation onSettled", { variables });
       // Ensure loading state is cleared and we have latest data
       queryClient.invalidateQueries({ queryKey: ["messages", variables.conversationId] });
     }
