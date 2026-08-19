@@ -130,8 +130,12 @@ function Copilot() {
     onError: (error) => {
       console.error("[COPILOT_DEBUG] mutation onError", error);
     },
-    onSettled: () => {
-      console.log("[COPILOT_DEBUG] mutation onSettled (loading state should clear now)");
+    onSettled: (data, error, variables) => {
+      console.log("[COPILOT_DEBUG] mutation onSettled (loading state should clear now)", { variables });
+      // CRITICAL: Force message refetch to ensure client state matches server even if mutation result was partial
+      if (variables?.conversationId) {
+        queryClient.invalidateQueries({ queryKey: ["messages", variables.conversationId] });
+      }
     }
   });
 
@@ -142,35 +146,51 @@ function Copilot() {
   }, [messages]); // Remove sendMessage.isPending to avoid confusion with thinking state
 
   const handleSend = async (overrideInput?: string) => {
-    console.log("[COPILOT_DEBUG] handleSend started", { overrideInput, input, isPending: sendMessage.isPending, activeId });
     const textToSend = overrideInput || input;
+    
+    console.log("[COPILOT_DEBUG] handleSend triggered", { 
+      textToSend, 
+      isPending: sendMessage.isPending, 
+      activeId,
+      inputState: input
+    });
+
     if (!textToSend.trim() || sendMessage.isPending) {
-      console.log("[COPILOT_DEBUG] handleSend blocked", { trim: !textToSend.trim(), isPending: sendMessage.isPending });
+      console.log("[COPILOT_DEBUG] handleSend blocked", { 
+        isEmpty: !textToSend.trim(), 
+        isPending: sendMessage.isPending 
+      });
       return;
     }
     
     let currentId = activeId;
     const userMsg = textToSend;
+    
+    // Clear input immediately for better UX
     setInput("");
 
     try {
       if (!currentId) {
-        console.log("[COPILOT_DEBUG] starting new conversation");
-        const newConv = (await startConv.mutateAsync(userMsg.slice(0, 30))) as any;
-        currentId = newConv.id;
-        console.log("[COPILOT_DEBUG] new conversation created", { currentId });
+        console.log("[COPILOT_DEBUG] No activeId, starting new conversation...");
+        const newConv = await startConv.mutateAsync(userMsg.slice(0, 30));
+        currentId = (newConv as any).id;
+        console.log("[COPILOT_DEBUG] New conversation created", { currentId });
         setActiveId(currentId);
       }
 
-      console.log("[COPILOT_DEBUG] sending message", { currentId, userMsg });
-      await sendMessage.mutateAsync({ 
+      console.log("[COPILOT_DEBUG] Mutating sendMessage", { currentId, userMsg });
+      
+      // We use mutateAsync to ensure we can catch errors and track completion
+      const response = await sendMessage.mutateAsync({ 
         conversationId: currentId as string, 
         content: userMsg 
       });
-      console.log("[COPILOT_DEBUG] message sent successfully");
+      
+      console.log("[COPILOT_DEBUG] sendMessage mutation complete", { responseReceived: !!response });
     } catch (error) {
+      console.error("[COPILOT_DEBUG] handleSend execution error", error);
       toast.error("Failed to send message. Please try again.");
-      console.error("[COPILOT_DEBUG] handleSend error", error);
+      // Restore input on failure
       if (!overrideInput) setInput(userMsg);
     }
   };
@@ -325,9 +345,13 @@ function Copilot() {
             <div className="relative">
               <Input
                 value={input}
-                onChange={(e) => setInput(e.target.value)}
+                onChange={(e) => {
+                  console.log("[COPILOT_DEBUG] Input changed", e.target.value);
+                  setInput(e.target.value);
+                }}
                 onKeyDown={(e) => {
                   if (e.key === "Enter") {
+                    console.log("[COPILOT_DEBUG] Enter key pressed");
                     e.preventDefault();
                     handleSend();
                   }
@@ -337,7 +361,11 @@ function Copilot() {
                 className="h-14 rounded-2xl border-border bg-muted/30 pl-6 pr-14 shadow-inner"
               />
               <Button 
-                onClick={() => handleSend()} 
+                onClick={(e) => {
+                  console.log("[COPILOT_DEBUG] Send button clicked");
+                  e.preventDefault();
+                  handleSend();
+                }} 
                 size="icon" 
                 disabled={sendMessage.isPending || !input.trim()}
                 className="absolute right-2 top-2 h-10 w-10 rounded-xl bg-primary text-white hover:bg-primary/90 shadow-lg shadow-primary/20 transition-all active:scale-95"
