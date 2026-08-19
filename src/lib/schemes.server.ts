@@ -18,6 +18,11 @@ const STOPWORDS = new Set([
   "eligibility", "benefit", "benefits", "apply", "application", "documents", "document",
 ]);
 
+/** Words too common across Indian scheme names to identify a scheme on their own. */
+const GENERIC_SCHEME_WORDS = new Set([
+  "pradhan", "mantri", "yojana", "yojna", "scheme", "national", "bharat", "india",
+]);
+
 /** Rank candidates by closeness of their name to the target term. */
 function rankByNameCloseness<T extends { name: string; official_name?: string | null }>(rows: T[], target: string): T[] {
   const t = normalizeText(target);
