@@ -60,14 +60,18 @@ export const sendCopilotMessage = createServerFn({ method: "POST" })
       }
 
       // 1. Save user message
-      const { error: userMsgError } = await supabase
+      log("PERSISTING_USER_MESSAGE");
+      const { data: userMsg, error: userMsgError } = await supabase
         .from("messages")
-        .insert({ conversation_id: currentConversationId, role: "user", content });
-
+        .insert({ conversation_id: currentConversationId, role: "user", content })
+        .select()
+        .single();
+        
       if (userMsgError) {
         log("COPILOT_FATAL_ERROR", { error: "Failed to save user message", details: userMsgError });
         throw new Error("Failed to save user message");
       }
+      log("USER_MESSAGE_PERSISTED", { id: userMsg.id });
 
       // 2. Resolve canonical scheme (inherited context first, then strict retrieval)
       log("SCHEME_SEARCH_START");
@@ -274,16 +278,16 @@ ${userDocContext || "NONE"}`;
 
         log("AI_REQUEST_SUCCESS");
         const finalMsg = await saveAssistant(aiContent, { is_fallback: false });
-        log("COPILOT_TERMINAL_SUCCESS");
-        return finalMsg;
+        log("COPILOT_TERMINAL_SUCCESS", { assistantMsgId: finalMsg.id });
+        return { userMessage: userMsg, assistantMessage: finalMsg };
       } catch (err: any) {
         log("AI_UNAVAILABLE_USING_DETERMINISTIC_FALLBACK", { error: err.message, status: err.status });
         const finalMsg = await saveAssistant(deterministicAnswer, {
           is_fallback: true,
           error_code: err.message === "AI_REQUEST_TIMEOUT" ? "AI_TIMEOUT" : "AI_UNAVAILABLE",
         });
-        log("COPILOT_TERMINAL_FALLBACK");
-        return finalMsg;
+        log("COPILOT_TERMINAL_FALLBACK", { assistantMsgId: finalMsg.id });
+        return { userMessage: userMsg, assistantMessage: finalMsg };
       }
     } catch (err: any) {
       log("COPILOT_TERMINAL_FATAL", { error: err.message });
