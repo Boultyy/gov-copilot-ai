@@ -38,7 +38,7 @@ export const generateDraft = createServerFn({ method: "POST" })
 
     try {
       const response = await ai.chat.completions.create({
-        model: "gpt-4o",
+        model: "google/gemini-2.5-flash",
         messages: [
           { role: "system", content: systemPrompt },
           { role: "user", content: `Generate a draft for: ${data.prompt}` }
@@ -57,7 +57,7 @@ export const generateDraft = createServerFn({ method: "POST" })
         metadata: {
           type: data.type,
           reference: data.reference,
-          model: "gpt-4o"
+          model: "google/gemini-2.5-flash"
         }
       });
 
