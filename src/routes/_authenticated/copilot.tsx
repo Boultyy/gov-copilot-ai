@@ -115,27 +115,32 @@ function Copilot() {
 
   const sendMessage = useMutation({
     mutationFn: async (args: { conversationId: string; content: string }) => {
-      console.log("[COPILOT_DEBUG] mutationFn starting", args);
+      console.log("[COPILOT_DIAGNOSTIC] client:mutation:start", args);
       const result = await sendMsgFn({ data: args });
-      console.log("[COPILOT_DEBUG] mutationFn raw result received", !!result);
+      console.log("[COPILOT_DIAGNOSTIC] client:mutation:complete", { success: !!result });
       return result;
     },
     onSuccess: async (data, variables) => {
-      console.log("[COPILOT_DEBUG] mutation onSuccess", { hasData: !!data, variables });
+      console.log("[COPILOT_DIAGNOSTIC] client:mutation:onSuccess");
       if (data) {
-        queryClient.setQueryData(["messages", variables.conversationId], (old: any) => [...(old || []), data]);
+        queryClient.setQueryData(["messages", variables.conversationId], (old: any) => {
+          const messages = old || [];
+          // Avoid duplicates if the data matches the last message
+          if (messages.length > 0 && messages[messages.length - 1].id === data.id) {
+            return messages;
+          }
+          return [...messages, data];
+        });
       }
-      await queryClient.invalidateQueries({ queryKey: ["conversations"] });
+      // Trigger background refreshes
+      queryClient.invalidateQueries({ queryKey: ["conversations"] });
+      queryClient.invalidateQueries({ queryKey: ["messages", variables.conversationId] });
     },
     onError: (error) => {
-      console.error("[COPILOT_DEBUG] mutation onError", error);
+      console.error("[COPILOT_DIAGNOSTIC] client:mutation:onError", error);
     },
-    onSettled: (data, error, variables) => {
-      console.log("[COPILOT_DEBUG] mutation onSettled (loading state should clear now)", { variables });
-      // CRITICAL: Force message refetch to ensure client state matches server even if mutation result was partial
-      if (variables?.conversationId) {
-        queryClient.invalidateQueries({ queryKey: ["messages", variables.conversationId] });
-      }
+    onSettled: () => {
+      console.log("[COPILOT_DIAGNOSTIC] client:mutation:onSettled");
     }
   });
 
