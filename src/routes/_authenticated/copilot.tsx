@@ -142,19 +142,33 @@ function Copilot() {
       return { previousMessages };
     },
     onSuccess: async (data, variables) => {
-      console.log("[COPILOT_DIAGNOSTIC] client:mutation:onSuccess", { dataId: data?.id, conversationId: variables.conversationId });
-      if (data) {
+      console.log("[COPILOT_DIAGNOSTIC] client:mutation:onSuccess", { 
+        hasUserMsg: !!(data as any)?.userMessage, 
+        hasAssistantMsg: !!(data as any)?.assistantMessage,
+        conversationId: variables.conversationId 
+      });
+      
+      const result = data as any;
+      if (result?.userMessage && result?.assistantMessage) {
         queryClient.setQueryData(["messages", variables.conversationId], (old: any) => {
           const messages = old || [];
           console.log("[COPILOT_DIAGNOSTIC] onSuccess: updating query data, old count:", messages.length);
-          // Replace temp user message and add assistant response
+          
+          // Filter out the specific temporary message if possible, or all temp messages
           const filtered = messages.filter((m: any) => !m.id?.toString().startsWith('temp-'));
           
-          const newMsgs = [...filtered, { role: "user", content: variables.content }, data];
+          const newMsgs = [...filtered, result.userMessage, result.assistantMessage];
           console.log("[COPILOT_DIAGNOSTIC] onSuccess: new count:", newMsgs.length);
           return newMsgs;
         });
+      } else if (result) {
+        // Fallback for old single-message return format if any
+        queryClient.setQueryData(["messages", variables.conversationId], (old: any) => {
+          const filtered = (old || []).filter((m: any) => !m.id?.toString().startsWith('temp-'));
+          return [...filtered, { role: "user", content: variables.content }, result];
+        });
       }
+      
       // Trigger background refreshes
       queryClient.invalidateQueries({ queryKey: ["conversations"] });
     },
@@ -171,8 +185,16 @@ function Copilot() {
         hasError: !!error,
         conversationId: variables.conversationId 
       });
-      // Always refetch after error or success to ensure we're in sync with the server
-      queryClient.invalidateQueries({ queryKey: ["messages", variables.conversationId] });
+      // CRITICAL FIX: Only invalidate if the mutation was NOT successful or if we strictly need to sync.
+      // For multi-turn conversations, invalidating while another query is potentially loading
+      // or during high-frequency turns can cause race conditions where optimistic data is wiped by a stale refetch.
+      queryClient.invalidateQueries({ 
+        queryKey: ["messages", variables.conversationId],
+        exact: true,
+        refetchType: 'none' // Don't trigger an immediate background refetch that might overwrite state
+      });
+      // We still want the conversation list to update
+      queryClient.invalidateQueries({ queryKey: ["conversations"] });
     }
   });
 
