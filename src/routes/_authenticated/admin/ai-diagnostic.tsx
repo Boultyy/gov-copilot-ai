@@ -29,13 +29,7 @@ function AiDiagnosticPage() {
     }
   }
 
-  return (
-    <div className="p-8 max-w-4xl mx-auto space-y-6">
-      <div className="flex justify-between items-center">
-        <div className="space-y-2">
-          <h1 className="text-2xl font-bold">AI Gateway Diagnostic</h1>
-          <div className="text-xs text-muted-foreground whitespace-pre-wrap font-mono p-4 bg-muted rounded-md border max-h-[400px] overflow-auto">
-            {`'''Do not make any visual modifications. The phrases I write are commands to understand what I want, not to be written down. Understand their content well, then execute what is required.'''
+  const diagnosticPrompt = `'''Do not make any visual modifications. The phrases I write are commands to understand what I want, not to be written down. Understand their content well, then execute what is required.'''
                                         
                                             
                                             Understood. Then the bug is still not solved. Since the typing bar itself becomes inaccessible after every response, the previous fix only addressed the mutation state superficially.
@@ -360,7 +354,7 @@ Do not reset the composer because messages changed.
 STEP 11 — CHECK REACT KEY/REMOUNT BEHAVIOR
 ============================================================
 
-Inspect whether the message list or Copilot page uses a changing React `key` that causes the entire composer to remount after every response.
+Inspect whether the message list or Copilot page uses a changing React \`key\` that causes the entire composer to remount after every response.
 
 For example, do NOT accidentally key the entire Copilot layout by:
 
@@ -569,7 +563,15 @@ or another state condition.
 
 We need Lovable to inspect the actual DOM after the first answer, not just inspect its TypeScript and declare victory.
 
-And this time, if Lovable says it's fixed, immediately test it yourself. If you still can't click/type in the bar, send me the new report—we'll continue on this exact bug until it actually works.`}
+And this time, if Lovable says it's fixed, immediately test it yourself. If you still can't click/type in the bar, send me the new report—we'll continue on this exact bug until it actually works.`
+
+  return (
+    <div className="p-8 max-w-4xl mx-auto space-y-6">
+      <div className="flex justify-between items-center">
+        <div className="space-y-2">
+          <h1 className="text-2xl font-bold">AI Gateway Diagnostic</h1>
+          <div className="text-xs text-muted-foreground whitespace-pre-wrap font-mono p-4 bg-muted rounded-md border max-h-[400px] overflow-auto">
+            {diagnosticPrompt}
           </div>
         </div>
         <Button onClick={handleRun} disabled={loading} id="run-diagnostic-btn">
