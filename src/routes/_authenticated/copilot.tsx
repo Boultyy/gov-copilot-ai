@@ -127,40 +127,50 @@ function Copilot() {
       
       // Snapshot the previous value
       const previousMessages = queryClient.getQueryData(["messages", variables.conversationId]);
+      console.log("[COPILOT_DIAGNOSTIC] previousMessages count:", (previousMessages as any)?.length);
       
       // Optimistically update to the new value
-      queryClient.setQueryData(["messages", variables.conversationId], (old: any) => [
-        ...(old || []),
-        { role: "user", content: variables.content, id: `temp-${Date.now()}` }
-      ]);
+      queryClient.setQueryData(["messages", variables.conversationId], (old: any) => {
+        const newMsgs = [
+          ...(old || []),
+          { role: "user", content: variables.content, id: `temp-${Date.now()}` }
+        ];
+        console.log("[COPILOT_DIAGNOSTIC] setting optimistic data, new count:", newMsgs.length);
+        return newMsgs;
+      });
       
       return { previousMessages };
     },
     onSuccess: async (data, variables) => {
-      console.log("[COPILOT_DIAGNOSTIC] client:mutation:onSuccess", { dataId: data?.id });
+      console.log("[COPILOT_DIAGNOSTIC] client:mutation:onSuccess", { dataId: data?.id, conversationId: variables.conversationId });
       if (data) {
         queryClient.setQueryData(["messages", variables.conversationId], (old: any) => {
           const messages = old || [];
+          console.log("[COPILOT_DIAGNOSTIC] onSuccess: updating query data, old count:", messages.length);
           // Replace temp user message and add assistant response
-          // Filtering out any temp messages that might have been added
           const filtered = messages.filter((m: any) => !m.id?.toString().startsWith('temp-'));
           
-          // Add the real user message and the assistant response
-          // (Actually the server response usually contains the assistant message)
-          return [...filtered, { role: "user", content: variables.content }, data];
+          const newMsgs = [...filtered, { role: "user", content: variables.content }, data];
+          console.log("[COPILOT_DIAGNOSTIC] onSuccess: new count:", newMsgs.length);
+          return newMsgs;
         });
       }
       // Trigger background refreshes
       queryClient.invalidateQueries({ queryKey: ["conversations"] });
     },
     onError: (error, variables, context) => {
-      console.error("[COPILOT_DIAGNOSTIC] client:mutation:onError", error);
+      console.error("[COPILOT_DIAGNOSTIC] client:mutation:onError", error, { conversationId: variables.conversationId });
       if (context?.previousMessages) {
         queryClient.setQueryData(["messages", variables.conversationId], context.previousMessages);
       }
+      toast.error("Failed to send message. Please try again.");
     },
     onSettled: (data, error, variables) => {
-      console.log("[COPILOT_DIAGNOSTIC] client:mutation:onSettled");
+      console.log("[COPILOT_DIAGNOSTIC] client:mutation:onSettled", { 
+        hasData: !!data, 
+        hasError: !!error,
+        conversationId: variables.conversationId 
+      });
       // Always refetch after error or success to ensure we're in sync with the server
       queryClient.invalidateQueries({ queryKey: ["messages", variables.conversationId] });
     }
