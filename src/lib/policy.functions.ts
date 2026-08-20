@@ -80,7 +80,7 @@ export const comparePolicies = createServerFn({ method: "POST" })
     Only include conflicts with evidence from the text. Label as "Potential conflict requiring human review."`;
 
     const response = await ai.chat.completions.create({
-      model: "openai/gpt-5-mini",
+      model: "google/gemini-2.5-flash",
       messages: [{ role: "user", content: prompt }],
       response_format: { type: "json_object" },
     });

@@ -269,7 +269,7 @@ ${userDocContext || "NONE"}`;
         ];
 
         const response = (await Promise.race([
-          ai.chat.completions.create({ model: "openai/gpt-5-mini", messages: messages as any, temperature: 0.1 }),
+          ai.chat.completions.create({ model: "google/gemini-2.5-flash", messages: messages as any, temperature: 0.1 }),
           new Promise((_, r) => setTimeout(() => r(new Error("AI_REQUEST_TIMEOUT")), 25000)),
         ])) as any;
 
