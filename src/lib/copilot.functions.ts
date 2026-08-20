@@ -79,7 +79,7 @@ export const sendCopilotMessage = createServerFn({ method: "POST" })
       log("INTENT_DETECTED", { intent });
 
       let schemes: any[] = [];
-      const looksLikeNewSchemeQuery = /\b(scheme|yojana|pm[- ]|pradhan mantri|about|list|available)\b/i.test(content);
+      const looksLikeNewSchemeQuery = /\b(scheme|yojana|pm[- ]|pradhan mantri|about|list|available|benefit|apply|eligib)\b/i.test(content);
       const inheritedSchemeId = await getContextSchemeId(currentConversationId);
 
       if (inheritedSchemeId) {

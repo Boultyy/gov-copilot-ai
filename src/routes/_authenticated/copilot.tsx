@@ -123,18 +123,24 @@ function Copilot() {
     onSuccess: async (data, variables) => {
       console.log("[COPILOT_DIAGNOSTIC] client:mutation:onSuccess");
       if (data) {
-        queryClient.setQueryData(["messages", variables.conversationId], (old: any) => [...(old || []), data]);
+        queryClient.setQueryData(["messages", variables.conversationId], (old: any) => {
+          const messages = old || [];
+          // Avoid duplicates if the data matches the last message
+          if (messages.length > 0 && messages[messages.length - 1].id === data.id) {
+            return messages;
+          }
+          return [...messages, data];
+        });
       }
-      await queryClient.invalidateQueries({ queryKey: ["conversations"] });
+      // Trigger background refreshes
+      queryClient.invalidateQueries({ queryKey: ["conversations"] });
+      queryClient.invalidateQueries({ queryKey: ["messages", variables.conversationId] });
     },
     onError: (error) => {
       console.error("[COPILOT_DIAGNOSTIC] client:mutation:onError", error);
     },
-    onSettled: (data, error, variables) => {
+    onSettled: () => {
       console.log("[COPILOT_DIAGNOSTIC] client:mutation:onSettled");
-      if (variables?.conversationId) {
-        queryClient.invalidateQueries({ queryKey: ["messages", variables.conversationId] });
-      }
     }
   });
 
