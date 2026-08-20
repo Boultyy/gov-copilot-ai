@@ -159,7 +159,7 @@ function Copilot() {
           const messages = old || [];
           console.log("[COPILOT_DIAGNOSTIC] onSuccess: updating query data, old count:", messages.length);
           
-          // Filter out the specific temporary message if possible, or all temp messages
+          // Filter out ONLY the temp messages to avoid clearing everything if a race happens
           const filtered = messages.filter((m: any) => !m.id?.toString().startsWith('temp-'));
           
           const newMsgs = [...filtered, result.userMessage, result.assistantMessage];
