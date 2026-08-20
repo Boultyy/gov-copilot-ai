@@ -133,7 +133,12 @@ function Copilot() {
       queryClient.setQueryData(["messages", variables.conversationId], (old: any) => {
         const newMsgs = [
           ...(old || []),
-          { role: "user", content: variables.content, id: `temp-${Date.now()}` }
+          { 
+            role: "user", 
+            content: variables.content, 
+            id: `temp-${Date.now()}`,
+            created_at: new Date().toISOString()
+          }
         ];
         console.log("[COPILOT_DIAGNOSTIC] setting optimistic data, new count:", newMsgs.length);
         return newMsgs;
