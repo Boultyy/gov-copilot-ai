@@ -272,8 +272,12 @@ export type Database = {
       }
       documents: {
         Row: {
+          analysis: Json | null
+          char_count: number | null
+          chunk_count: number | null
           created_at: string
           error_message: string | null
+          extracted_text: string | null
           id: string
           mime_type: string | null
           name: string
@@ -281,11 +285,17 @@ export type Database = {
           size_bytes: number | null
           status: string | null
           storage_path: string
+          updated_at: string
           user_id: string
+          word_count: number | null
         }
         Insert: {
+          analysis?: Json | null
+          char_count?: number | null
+          chunk_count?: number | null
           created_at?: string
           error_message?: string | null
+          extracted_text?: string | null
           id?: string
           mime_type?: string | null
           name: string
@@ -293,11 +303,17 @@ export type Database = {
           size_bytes?: number | null
           status?: string | null
           storage_path: string
+          updated_at?: string
           user_id: string
+          word_count?: number | null
         }
         Update: {
+          analysis?: Json | null
+          char_count?: number | null
+          chunk_count?: number | null
           created_at?: string
           error_message?: string | null
+          extracted_text?: string | null
           id?: string
           mime_type?: string | null
           name?: string
@@ -305,7 +321,9 @@ export type Database = {
           size_bytes?: number | null
           status?: string | null
           storage_path?: string
+          updated_at?: string
           user_id?: string
+          word_count?: number | null
         }
         Relationships: []
       }
@@ -1339,6 +1357,25 @@ export type Database = {
           query_embedding: string
         }
         Returns: {
+          content: string
+          document_id: string
+          document_name: string
+          id: string
+          metadata: Json
+          page_number: number
+          similarity: number
+        }[]
+      }
+      match_document_chunks_scoped: {
+        Args: {
+          match_count: number
+          match_threshold: number
+          p_document_id?: string
+          p_user_id: string
+          query_embedding: string
+        }
+        Returns: {
+          chunk_index: number
           content: string
           document_id: string
           document_name: string
