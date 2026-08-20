@@ -120,27 +120,49 @@ function Copilot() {
       console.log("[COPILOT_DIAGNOSTIC] client:mutation:complete", { success: !!result });
       return result;
     },
+    onMutate: async (variables) => {
+      console.log("[COPILOT_DIAGNOSTIC] onMutate start", variables);
+      // Cancel any outgoing refetches (so they don't overwrite our optimistic update)
+      await queryClient.cancelQueries({ queryKey: ["messages", variables.conversationId] });
+      
+      // Snapshot the previous value
+      const previousMessages = queryClient.getQueryData(["messages", variables.conversationId]);
+      
+      // Optimistically update to the new value
+      queryClient.setQueryData(["messages", variables.conversationId], (old: any) => [
+        ...(old || []),
+        { role: "user", content: variables.content, id: `temp-${Date.now()}` }
+      ]);
+      
+      return { previousMessages };
+    },
     onSuccess: async (data, variables) => {
-      console.log("[COPILOT_DIAGNOSTIC] client:mutation:onSuccess");
+      console.log("[COPILOT_DIAGNOSTIC] client:mutation:onSuccess", { dataId: data?.id });
       if (data) {
         queryClient.setQueryData(["messages", variables.conversationId], (old: any) => {
           const messages = old || [];
-          // Avoid duplicates if the data matches the last message
-          if (messages.length > 0 && messages[messages.length - 1].id === data.id) {
-            return messages;
-          }
-          return [...messages, data];
+          // Replace temp user message and add assistant response
+          // Filtering out any temp messages that might have been added
+          const filtered = messages.filter((m: any) => !m.id?.toString().startsWith('temp-'));
+          
+          // Add the real user message and the assistant response
+          // (Actually the server response usually contains the assistant message)
+          return [...filtered, { role: "user", content: variables.content }, data];
         });
       }
       // Trigger background refreshes
       queryClient.invalidateQueries({ queryKey: ["conversations"] });
-      queryClient.invalidateQueries({ queryKey: ["messages", variables.conversationId] });
     },
-    onError: (error) => {
+    onError: (error, variables, context) => {
       console.error("[COPILOT_DIAGNOSTIC] client:mutation:onError", error);
+      if (context?.previousMessages) {
+        queryClient.setQueryData(["messages", variables.conversationId], context.previousMessages);
+      }
     },
-    onSettled: () => {
+    onSettled: (data, error, variables) => {
       console.log("[COPILOT_DIAGNOSTIC] client:mutation:onSettled");
+      // Always refetch after error or success to ensure we're in sync with the server
+      queryClient.invalidateQueries({ queryKey: ["messages", variables.conversationId] });
     }
   });
 
@@ -183,18 +205,19 @@ function Copilot() {
         setActiveId(currentId);
       }
 
-      console.log("[COPILOT_DEBUG] Mutating sendMessage", { currentId, userMsg });
+      console.log("[COPILOT_DEBUG] Calling sendMessage.mutate", { currentId, userMsg });
       
-      // We use mutateAsync to ensure we can catch errors and track completion
-      const response = await sendMessage.mutateAsync({ 
+      // We use the fire-and-forget mutate instead of mutateAsync to avoid awaiting the whole lifecycle
+      // which can sometimes lead to state inconsistencies if not handled carefully
+      sendMessage.mutate({ 
         conversationId: currentId as string, 
         content: userMsg 
       });
       
-      console.log("[COPILOT_DEBUG] sendMessage mutation complete", { responseReceived: !!response });
+      console.log("[COPILOT_DEBUG] sendMessage mutation triggered");
     } catch (error) {
       console.error("[COPILOT_DEBUG] handleSend execution error", error);
-      toast.error("Failed to send message. Please try again.");
+      toast.error("Failed to start conversation. Please try again.");
       // Restore input on failure
       if (!overrideInput) setInput(userMsg);
     }
@@ -333,7 +356,7 @@ function Copilot() {
 
         <div className="border-t border-border bg-background p-6">
           <div className="mx-auto max-w-3xl space-y-4">
-            {(!activeId || messages.length === 0) && !sendMessage.isPending && (
+            {(messages.length === 0) && !sendMessage.isPending && (
               <div className="flex flex-wrap gap-2">
                 {suggestedPrompts.map((p) => (
                   <button 
