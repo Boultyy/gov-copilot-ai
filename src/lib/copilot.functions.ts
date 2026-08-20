@@ -212,11 +212,20 @@ export const sendCopilotMessage = createServerFn({ method: "POST" })
           })
           .select()
           .single();
-        if (error) throw new Error("Failed to save assistant response");
-        await supabase
+        if (error) {
+          log("DATABASE_SAVE_ASSISTANT_FAILED", { error });
+          throw new Error("Failed to save assistant response");
+        }
+        
+        // Fire-and-forget conversation update to avoid blocking the main response
+        supabase
           .from("conversations")
           .update({ updated_at: new Date().toISOString() })
-          .eq("id", currentConversationId!);
+          .eq("id", currentConversationId!)
+          .then(({ error: updateError }) => {
+            if (updateError) log("CONVERSATION_UPDATE_FAILED", { error: updateError });
+          });
+          
         return msg;
       };
 
@@ -264,16 +273,20 @@ ${userDocContext || "NONE"}`;
         if (!aiContent) throw new Error("AI_EMPTY_RESPONSE");
 
         log("AI_REQUEST_SUCCESS");
-        return await saveAssistant(aiContent, { is_fallback: false });
+        const finalMsg = await saveAssistant(aiContent, { is_fallback: false });
+        log("COPILOT_TERMINAL_SUCCESS");
+        return finalMsg;
       } catch (err: any) {
         log("AI_UNAVAILABLE_USING_DETERMINISTIC_FALLBACK", { error: err.message, status: err.status });
-        return await saveAssistant(deterministicAnswer, {
+        const finalMsg = await saveAssistant(deterministicAnswer, {
           is_fallback: true,
           error_code: err.message === "AI_REQUEST_TIMEOUT" ? "AI_TIMEOUT" : "AI_UNAVAILABLE",
         });
+        log("COPILOT_TERMINAL_FALLBACK");
+        return finalMsg;
       }
     } catch (err: any) {
-      log("COPILOT_FATAL_ERROR", { error: err.message });
+      log("COPILOT_TERMINAL_FATAL", { error: err.message });
       throw new Error(`Citizen Copilot encountered an unexpected error: ${err.message}`);
     }
   });
