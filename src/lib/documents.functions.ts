@@ -282,7 +282,7 @@ export const askDocuments = createServerFn({ method: "POST" })
       match_threshold: 0.15,
       match_count: 8,
       p_user_id: userId,
-      p_document_id: data.documentId ?? null,
+      p_document_id: data.documentId ?? undefined,
     });
 
     if (error) {
@@ -386,3 +386,38 @@ export const deleteDocument = createServerFn({ method: "POST" })
   });
 
 export { ALLOWED_MIME };
+
+/**
+ * Backwards-compatible semantic search over the user's own documents.
+ * Used by the global Copilot and global search.
+ */
+export const searchUserDocuments = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((data: unknown) =>
+    z.object({ query: z.string().min(1), limit: z.number().optional().default(5) }).parse(data),
+  )
+  .handler(async ({ data, context }) => {
+    const { supabase, userId } = context;
+    const { createAiGateway, EMBEDDING_MODEL } = await import("@/lib/ai-gateway.server");
+    const ai = createAiGateway();
+
+    const embeddingResponse = await ai.embeddings.create({
+      model: EMBEDDING_MODEL,
+      input: data.query,
+    });
+    const queryEmbedding = embeddingResponse.data[0].embedding;
+
+    const { data: results, error } = await supabase.rpc("match_document_chunks_scoped", {
+      query_embedding: `[${queryEmbedding.join(",")}]` as any,
+      match_threshold: 0.15,
+      match_count: data.limit,
+      p_user_id: userId,
+    });
+
+    if (error) {
+      console.error("[DOCS] search failed", error);
+      throw new Error("Failed to search documents");
+    }
+
+    return results || [];
+  });
