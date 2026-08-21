@@ -392,7 +392,7 @@ function Documents() {
                   label="Uploaded"
                   value={new Date(selected.created_at).toLocaleString("en-IN")}
                 />
-                <Row label="Status" value={STATUS_LABEL[selected.status] || selected.status} />
+                <Row label="Status" value={STATUS_LABEL[selected.status ?? ""] ?? selected.status ?? "—"} />
                 {selected.page_count ? <Row label="Pages" value={String(selected.page_count)} /> : null}
                 {selected.word_count ? (
                   <Row
