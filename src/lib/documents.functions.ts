@@ -282,7 +282,7 @@ export const askDocuments = createServerFn({ method: "POST" })
       match_threshold: 0.15,
       match_count: 8,
       p_user_id: userId,
-      p_document_id: data.documentId ?? null,
+      p_document_id: data.documentId ?? undefined,
     });
 
     if (error) {
